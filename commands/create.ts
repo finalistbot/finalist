@@ -4,6 +4,8 @@ import {
   ButtonStyle,
   ChannelType,
   ChatInputCommandInteraction,
+  Embed,
+  EmbedBuilder,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -39,7 +41,7 @@ const templates = [
 ] as const;
 
 const templateMap = new Map(
-  templates.map((template) => [template.value, template]),
+  templates.map((template) => [template.value, template])
 );
 
 async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {
@@ -48,9 +50,28 @@ async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {
       .setCustomId(`show_team_config_modal:${scrim.id}`)
       .setLabel("Set Teams")
       .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
+      .setLabel("Set Timing")
+      .setStyle(ButtonStyle.Primary)
   );
+
+  const lines = [
+    `Scrim Name: ${scrim.name}`,
+    `Max Teams: ${scrim.maxTeams}`,
+    `Players per Team: ${scrim.minPlayersPerTeam} - ${scrim.maxPlayersPerTeam}`,
+    `Substitutes per Team: ${scrim.maxSubstitutePerTeam}`,
+    `Registration Time: ${
+      scrim.registrationStartTime?.toLocaleString() || "Not set"
+    }`,
+  ];
+  const embed = new EmbedBuilder()
+    .setTitle("Scrim Configuration")
+    .setDescription(lines.join("\n"))
+    .setColor("Green");
+
   await channel.send({
-    content: "Please configure the scrim settings.",
+    embeds: [embed],
     components: [scrimTeamConfig],
   });
 }
@@ -63,7 +84,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addStringOption((option) =>
       option
@@ -74,8 +95,8 @@ export default class CreateScrim extends Command {
           ...templates.map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
