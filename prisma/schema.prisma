@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GuildConfig {
+  id               Int      @id @default(autoincrement())
+  guildId          String   @unique
+  adminRoleId      String?
+  updatesChannelId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Scrim {
+  id                    Int       @id @default(autoincrement())
+  guildId               String
+  name                  String
+  registrationStartTime DateTime?
+  maxTeams              Int
+  minPlayersPerTeam     Int
+  maxPlayersPerTeam     Int
+  maxSubstitutePerTeam  Int
+
+  // ########
+  // Generated Details
+  registrationChannelId String
+  logsChannelId         String
+  discordCategoryId     String
+  adminChannelId        String
+  // ########
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
