@@ -39,6 +39,7 @@ model Scrim {
   logsChannelId         String
   discordCategoryId     String
   adminChannelId        String
+  adminConfigMessageId  String
   // ########
 
   createdAt DateTime @default(now())

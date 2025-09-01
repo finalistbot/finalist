@@ -4,6 +4,8 @@ import { BracketClient } from "../base/classes/client";
 import { Events, Interaction } from "discord.js";
 import { Event } from "../base/classes/event";
 import { prisma } from "../lib/prisma";
+import { ZodIssueCode } from "zod/v3";
+import { editScrimConfigEmbed } from "../commands/create";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -11,7 +13,7 @@ const TimingConfigSchema = z.object({
     const isValid = dateFns.isValid(parsed);
     if (!isValid) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: ZodIssueCode.custom,
         message: "Invalid date format. Please use YYYY-MM-DD HH:MM (24-hour)",
       });
       return z.NEVER;
@@ -37,7 +39,7 @@ export default class TimingConfigSubmit extends Event {
     }
     const rawBody = {
       registrationStartTime: interaction.fields.getTextInputValue(
-        "registrationStartTime"
+        "registrationStartTime",
       ),
     };
 
@@ -52,7 +54,7 @@ export default class TimingConfigSubmit extends Event {
       return;
     }
     const data = parsed.data;
-    await prisma.scrim.update({
+    const scrim = await prisma.scrim.update({
       where: {
         id: scrimId,
       },
@@ -64,5 +66,6 @@ export default class TimingConfigSubmit extends Event {
       content: "Scrim timing configuration updated successfully.",
       flags: ["Ephemeral"],
     });
+    await editScrimConfigEmbed(this.client, scrim);
   }
 }

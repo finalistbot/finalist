@@ -16,6 +16,7 @@ export default class Ready extends Event {
 
   public async execute() {
     console.log(`Ready! Logged in as ${this.client.user!.tag}`);
+    return;
     await rest.put(Routes.applicationCommands(this.client.user!.id), {
       body: this.client.commands.map((command) => command.data.toJSON()),
     });
