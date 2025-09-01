@@ -5,10 +5,10 @@ import {
   ModalBuilder,
   TextInputBuilder,
 } from "discord.js";
-import { Event } from "../base/classes/event";
-import { prisma } from "../lib/prisma";
+import { Event } from "@/base/classes/event";
+import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
-import { BracketClient } from "../base/classes/client";
+import { BracketClient } from "@/base/classes/client";
 
 function teamConfigModal(scrim: Scrim) {
   return new ModalBuilder()
@@ -24,7 +24,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(3)
           .setValue(scrim.maxTeams.toString())
           .setPlaceholder("e.g., 25")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -35,7 +35,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.minPlayersPerTeam.toString())
           .setPlaceholder("e.g., 4")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -46,7 +46,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.maxPlayersPerTeam.toString())
           .setPlaceholder("e.g., 4")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -57,8 +57,8 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.maxSubstitutePerTeam.toString())
           .setPlaceholder("e.g., 1")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
     );
 }
 

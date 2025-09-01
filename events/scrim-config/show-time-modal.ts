@@ -5,9 +5,9 @@ import {
   ModalBuilder,
   TextInputBuilder,
 } from "discord.js";
-import { BracketClient } from "../base/classes/client";
-import { Event } from "../base/classes/event";
-import { prisma } from "../lib/prisma";
+import { BracketClient } from "@/base/classes/client";
+import { Event } from "@/base/classes/event";
+import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
 
@@ -23,14 +23,14 @@ function timingConfigModal(scrim: Scrim) {
 
   if (scrim.registrationStartTime) {
     input.setValue(
-      dateFns.format(scrim.registrationStartTime, "yyyy-MM-dd HH:mm")
+      dateFns.format(scrim.registrationStartTime, "yyyy-MM-dd HH:mm"),
     );
   }
   return new ModalBuilder()
     .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
     .setTitle("Scrim Timing Configuration")
     .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(input)
+      new ActionRowBuilder<TextInputBuilder>().addComponents(input),
     );
 }
 

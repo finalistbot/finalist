@@ -1,3 +1,4 @@
+import path from "path";
 import { BracketClient } from "./base/classes/client";
 import { Event } from "./base/classes/event";
 import config from "./config";
@@ -7,13 +8,20 @@ const client = new BracketClient({
   intents: ["Guilds", "GuildMessages"],
 });
 
-function registerHandlers() {
-  fs.readdirSync("./events").forEach(async (file) => {
-    if (!file.endsWith(".ts")) return;
-    const { default: Handler } = await import(`./events/${file}`);
-    const handler = new Handler(client) as Event;
-    client.on(handler.event.toString(), (...args) => handler.execute(...args));
-  });
+function registerHandlers(dir = "./events") {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      registerHandlers(filePath);
+    } else if (file.endsWith(".ts")) {
+      import(path.resolve(filePath)).then(({ default: Handler }) => {
+        const event: Event = new Handler(client);
+        client.on(event.event.toString(), (...args) => event.execute(...args));
+      });
+    }
+  }
 }
 
 registerHandlers();

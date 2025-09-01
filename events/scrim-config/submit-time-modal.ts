@@ -1,11 +1,11 @@
 import { z } from "zod";
 import * as dateFns from "date-fns";
-import { BracketClient } from "../base/classes/client";
+import { BracketClient } from "@/base/classes/client";
 import { Events, Interaction } from "discord.js";
-import { Event } from "../base/classes/event";
-import { prisma } from "../lib/prisma";
+import { Event } from "@/base/classes/event";
+import { prisma } from "@/lib/prisma";
 import { ZodIssueCode } from "zod/v3";
-import { editScrimConfigEmbed } from "../commands/create";
+import { editScrimConfigEmbed } from "@/commands/create";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {

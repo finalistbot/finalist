@@ -1,9 +1,9 @@
 import { Events, Interaction } from "discord.js";
-import { Event } from "../base/classes/event";
-import { BracketClient } from "../base/classes/client";
+import { Event } from "@/base/classes/event";
+import { BracketClient } from "@/base/classes/client";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
-import { editScrimConfigEmbed } from "../commands/create";
+import { prisma } from "@/lib/prisma";
+import { editScrimConfigEmbed } from "@/commands/create";
 
 const TeamConfigSchema = z.object({
   maxTeams: z.coerce.number().min(1).max(999),
