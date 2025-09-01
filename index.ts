@@ -1,12 +1,8 @@
 import path from "path";
-import { BracketClient } from "./base/classes/client";
+import { client } from "./client";
 import { Event } from "./base/classes/event";
 import config from "./config";
 import fs from "fs";
-
-const client = new BracketClient({
-  intents: ["Guilds", "GuildMessages"],
-});
 
 function registerHandlers(dir = "./events") {
   const files = fs.readdirSync(dir);

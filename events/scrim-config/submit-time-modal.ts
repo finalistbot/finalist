@@ -6,6 +6,7 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { ZodIssueCode } from "zod/v3";
 import { editScrimConfigEmbed } from "@/commands/create";
+import { queue } from "@/lib/bullmq";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -54,6 +55,13 @@ export default class TimingConfigSubmit extends Event {
       return;
     }
     const data = parsed.data;
+    if (dateFns.isBefore(data.registrationStartTime, new Date())) {
+      await interaction.reply({
+        content: "Registration start time must be in the future.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
     const scrim = await prisma.scrim.update({
       where: {
         id: scrimId,
@@ -67,5 +75,20 @@ export default class TimingConfigSubmit extends Event {
       flags: ["Ephemeral"],
     });
     await editScrimConfigEmbed(this.client, scrim);
+    const job = await queue.getJob(`scrim_registration_start:${scrim.id}`);
+    if (job) {
+      await job.remove();
+    }
+    const delay = dateFns.differenceInMilliseconds(
+      scrim.registrationStartTime!,
+      new Date(),
+    );
+    await queue.add(
+      `scrim_registration_start:${scrim.id}`,
+      { scrimId: scrim.id },
+      {
+        delay: delay > 0 ? delay : 0,
+      },
+    );
   }
 }

@@ -19,6 +19,7 @@ model GuildConfig {
   guildId          String   @unique
   adminRoleId      String?
   updatesChannelId String?
+  timezone         String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

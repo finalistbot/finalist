@@ -48,6 +48,7 @@ export default class SetupCommand extends Command {
         guildId: guild.id,
         adminRoleId: adminRole.id,
         updatesChannelId: updatesChannel.id,
+        timezone: "UTC",
       },
     });
     await interaction.reply({
