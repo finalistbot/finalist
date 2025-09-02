@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
+import { Stage } from "@prisma/client";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class JoinTeam extends Command {
@@ -12,9 +13,16 @@ export default class JoinTeam extends Command {
         .setName("teamcode")
         .setDescription("The code of the team to join")
         .setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option
+        .setName("substitute")
+        .setDescription("Join as a substitute")
+        .setRequired(false),
     );
   async execute(interaction: ChatInputCommandInteraction) {
     const teamCode = interaction.options.getString("teamcode", true);
+    const isSubstitute = interaction.options.getBoolean("substitute") ?? false;
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,
@@ -27,6 +35,14 @@ export default class JoinTeam extends Command {
       });
       return;
     }
+    if (scrim.stage != Stage.REGISTRATION && scrim.stage != Stage.CHECKIN) {
+      await interaction.reply({
+        content: "Team registration is not open.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
     const team = await prisma.team.findUnique({
       where: { code: teamCode.toLowerCase(), scrimId: scrim.id },
       include: { scrim: true, TeamMember: true },
@@ -71,6 +87,7 @@ export default class JoinTeam extends Command {
         scrimId: scrim.id,
         userId: interaction.user.id,
         isCaptain: false,
+        isSubstitute,
       },
     });
 

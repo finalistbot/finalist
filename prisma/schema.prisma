@@ -24,27 +24,33 @@ model GuildConfig {
   updatedAt        DateTime @updatedAt
 }
 
+enum Stage {
+  CONFIGURATION
+  REGISTRATION
+  CHECKIN
+  ONGOING
+  COMPLETED
+}
+
 model Scrim {
-  id                    Int      @id @default(autoincrement())
+  id                    Int       @id @default(autoincrement())
   guildId               String
   name                  String
   registrationStartTime DateTime
+  registrationEndedTime DateTime?
   maxTeams              Int
   minPlayersPerTeam     Int
   maxPlayersPerTeam     Int
   maxSubstitutePerTeam  Int
   slotListMessageId     String?
 
-  // ########
-  // Generated Details
   registrationChannelId String
   logsChannelId         String
   teamChannelId         String
   discordCategoryId     String
   adminChannelId        String
   adminConfigMessageId  String
-
-  // ########
+  stage                 Stage  @default(CONFIGURATION)
 
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt

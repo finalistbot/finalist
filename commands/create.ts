@@ -7,37 +7,7 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
-
-const templates = [
-  {
-    name: "PUBG - Squad",
-    maxTeams: 25,
-    minPlayersPerTeam: 4,
-    maxPlayersPerTeam: 4,
-    maxSubstitutePerTeam: 1,
-    value: "pubg_squad",
-  },
-  {
-    name: "PUBG - Duo",
-    maxTeams: 50,
-    minPlayersPerTeam: 2,
-    maxPlayersPerTeam: 2,
-    maxSubstitutePerTeam: 1,
-    value: "pubg_duo",
-  },
-  {
-    name: "PUBG - Solo",
-    maxTeams: 100,
-    minPlayersPerTeam: 1,
-    maxPlayersPerTeam: 1,
-    maxSubstitutePerTeam: 0,
-    value: "pubg_solo",
-  },
-] as const;
-
-const templateMap = new Map(
-  templates.map((template) => [template.value, template]),
-);
+import { scrimTemplateMap } from "@/templates/scrim";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -55,7 +25,7 @@ export default class CreateScrim extends Command {
         .setDescription("Template for the scrim")
         .setRequired(false)
         .addChoices(
-          ...templates.map((template) => ({
+          ...scrimTemplateMap.values().map((template) => ({
             name: template.name,
             value: template.value,
           })),
@@ -89,7 +59,7 @@ export default class CreateScrim extends Command {
     await interaction.deferReply({ flags: ["Ephemeral"] });
     const templateValue = interaction.options.getString("template");
     const template = templateValue
-      ? templateMap.get(templateValue as any)
+      ? scrimTemplateMap.get(templateValue as any)
       : undefined;
     const name = interaction.options.getString("name", true);
     const category = await guild.channels.create({

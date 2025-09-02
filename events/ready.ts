@@ -13,6 +13,7 @@ export default class Ready extends Event {
 
   public async execute() {
     logger.info(`Logged in as ${this.client.user?.tag}!`);
+    return;
     const globalCommands = this.client.commands.filter(
       (cmd) => !cmd.developerOnly,
     );

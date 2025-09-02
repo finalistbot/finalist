@@ -47,6 +47,7 @@ export default class CacheGuilds extends Event {
         ),
       );
     }
+
     logger.info("Cached guilds, channels, and roles to Redis.");
   }
 }

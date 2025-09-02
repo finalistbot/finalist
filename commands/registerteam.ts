@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
+import { Stage } from "@prisma/client";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -31,12 +32,9 @@ export default class RegisterTeam extends Command {
       return;
     }
 
-    if (
-      !scrim.registrationStartTime ||
-      scrim.registrationStartTime > new Date()
-    ) {
+    if (scrim.stage !== Stage.REGISTRATION) {
       await interaction.reply({
-        content: "Team registration has not started yet.",
+        content: "Team registration is not open.",
         flags: ["Ephemeral"],
       });
       return;
