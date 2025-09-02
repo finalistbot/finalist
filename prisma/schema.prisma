@@ -33,14 +33,17 @@ model Scrim {
   minPlayersPerTeam     Int
   maxPlayersPerTeam     Int
   maxSubstitutePerTeam  Int
+  slotListMessageId     String?
 
   // ########
   // Generated Details
   registrationChannelId String
   logsChannelId         String
+  teamChannelId         String
   discordCategoryId     String
   adminChannelId        String
   adminConfigMessageId  String
+
   // ########
 
   createdAt  DateTime     @default(now())
@@ -50,12 +53,13 @@ model Scrim {
 }
 
 model Team {
-  id        Int      @id @default(autoincrement())
-  scrimId   Int
-  name      String
-  code      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   Int      @id @default(autoincrement())
+  scrimId              Int
+  name                 String
+  code                 String   @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  teamDetailsMessageId String?
 
   scrim      Scrim        @relation(fields: [scrimId], references: [id], onDelete: Cascade)
   TeamMember TeamMember[]
