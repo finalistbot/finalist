@@ -14,6 +14,7 @@ import { prisma } from "../lib/prisma";
 import { Scrim } from "@prisma/client";
 import { BracketClient } from "../base/classes/client";
 import * as dateFns from "date-fns";
+import { discordTimestamp } from "@/lib/utils";
 
 const templates = [
   {
@@ -70,9 +71,7 @@ function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
       },
       {
         name: "Registration Start Time",
-        value: scrim.registrationStartTime
-          ? scrim.registrationStartTime.toLocaleString()
-          : "Not set",
+        value: discordTimestamp(scrim.registrationStartTime),
         inline: false,
       },
     )

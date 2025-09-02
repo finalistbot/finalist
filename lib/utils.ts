@@ -7,3 +7,7 @@ export function randomString(length: number): string {
   }
   return result;
 }
+
+export function discordTimestamp(date: Date, format: string = "f"): string {
+  return `<t:${Math.floor(date.getTime() / 1000)}:${format}>`;
+}
