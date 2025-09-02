@@ -1,6 +1,5 @@
-import { BracketClient } from "@/base/classes/client";
 import { Event } from "@/base/classes/event";
-import { Events, Guild } from "discord.js";
+import { Guild } from "discord.js";
 import { redis } from "@/lib/redis";
 
 import {
@@ -11,13 +10,8 @@ import {
 
 import SuperJSON from "superjson";
 
-export default class CacheGuilds extends Event {
-  constructor(client: BracketClient) {
-    super(client, {
-      event: Events.GuildCreate,
-      once: false,
-    });
-  }
+export default class CacheGuilds extends Event<"guildCreate"> {
+  public event = "guildCreate" as const;
   async execute(guild: Guild) {
     const channels = guild.channels.cache.values();
     const roles = guild.roles.cache.values();

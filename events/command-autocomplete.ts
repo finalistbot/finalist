@@ -1,10 +1,6 @@
-import { BracketClient } from "@/base/classes/client";
 import { Event } from "@/base/classes/event";
-import { Events } from "discord.js";
-export default class CommandAutocomplete extends Event {
-  constructor(client: BracketClient) {
-    super(client, { event: Events.InteractionCreate, once: false });
-  }
+export default class CommandAutocomplete extends Event<"interactionCreate"> {
+  public event = "interactionCreate" as const;
 
   public async execute(interaction: any) {
     if (!interaction.isAutocomplete()) return;

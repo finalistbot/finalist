@@ -2,14 +2,13 @@ import path from "path";
 import { client } from "./client";
 import { Event } from "./base/classes/event";
 import config from "./config";
-import fs from "fs";
 import logger from "./lib/logger";
 import { getHandlerFiles } from "./lib/fs";
 
 function registerEvent(filePath: string) {
   import(path.resolve(filePath)).then(({ default: Handler }) => {
     try {
-      const event: Event = new Handler(client);
+      const event: Event<any> = new Handler(client);
       client.on(event.event.toString(), (...args) => event.execute(...args));
       logger.info(`Loaded event ${event.constructor.name}`);
     } catch (error) {

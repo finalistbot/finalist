@@ -1,17 +1,15 @@
-import { Events } from "discord.js";
+import { ClientEvents } from "discord.js";
 import { BracketClient } from "./client";
 
-export abstract class Event {
-  public event: Events;
-  public once: boolean;
-  protected client: BracketClient;
-  abstract execute(...args: any[]): Promise<void>;
-  constructor(
-    client: BracketClient,
-    { event, once }: { event: Events; once: boolean },
-  ) {
-    this.client = client;
-    this.event = event;
-    this.once = once;
-  }
+interface CustomEvents {
+  scrimCreate: [scrimId: number, hostId: string];
+  scrimEnd: [scrimId: number];
+}
+type BracketClientEvents = ClientEvents & CustomEvents;
+
+export abstract class Event<K extends keyof BracketClientEvents> {
+  public abstract event: K;
+  public once: boolean = false;
+  constructor(protected client: BracketClient) {}
+  abstract execute(...args: BracketClientEvents[K]): Promise<void>;
 }
