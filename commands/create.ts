@@ -9,10 +9,10 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
-import { Command } from "../base/classes/command";
-import { prisma } from "../lib/prisma";
+import { Command } from "@/base/classes/command";
+import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
-import { BracketClient } from "../base/classes/client";
+import { BracketClient } from "@/base/classes/client";
 import * as dateFns from "date-fns";
 import { discordTimestamp } from "@/lib/utils";
 
