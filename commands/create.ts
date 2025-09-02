@@ -78,7 +78,6 @@ function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
     .setFooter({
       text: `Scrim ID: ${scrim.id}\nYou can't edit after atleast one team has registered.`,
     })
-    .setTimestamp(scrim.updatedAt)
     .setThumbnail("https://i.ibb.co/G4v0D8Zj/image.png")
     .setAuthor({
       name: client.user?.username || "Scrim Bot",
