@@ -1,11 +1,8 @@
-import { Events, Interaction } from "discord.js";
+import { Interaction } from "discord.js";
 import { Event } from "../base/classes/event";
-import { BracketClient } from "../base/classes/client";
 
-export default class CommandHandler extends Event {
-  constructor(client: BracketClient) {
-    super(client, { event: Events.InteractionCreate, once: false });
-  }
+export default class CommandHandler extends Event<"interactionCreate"> {
+  public event = "interactionCreate" as const;
   public async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) return;
 

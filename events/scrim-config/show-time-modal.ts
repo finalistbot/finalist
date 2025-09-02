@@ -1,11 +1,9 @@
 import {
   ActionRowBuilder,
-  Events,
   Interaction,
   ModalBuilder,
   TextInputBuilder,
 } from "discord.js";
-import { BracketClient } from "@/base/classes/client";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
@@ -34,10 +32,8 @@ function timingConfigModal(scrim: Scrim) {
     );
 }
 
-export default class ScrimTimingConfig extends Event {
-  constructor(client: BracketClient) {
-    super(client, { event: Events.InteractionCreate, once: false });
-  }
+export default class ScrimTimingConfig extends Event<"interactionCreate"> {
+  public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("show_scrim_timing_config_modal"))

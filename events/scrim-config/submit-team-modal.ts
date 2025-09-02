@@ -1,6 +1,5 @@
-import { Events, Interaction } from "discord.js";
+import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
-import { BracketClient } from "@/base/classes/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
@@ -12,10 +11,8 @@ const TeamConfigSchema = z.object({
   maxSubstitutePerTeam: z.coerce.number().min(0).max(99).default(0),
 });
 
-export default class TeamConfigSubmit extends Event {
-  constructor(client: BracketClient) {
-    super(client, { event: Events.InteractionCreate, once: false });
-  }
+export default class TeamConfigSubmit extends Event<"interactionCreate"> {
+  public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isModalSubmit()) return;
     if (!interaction.customId.startsWith("team_config_submit")) return;

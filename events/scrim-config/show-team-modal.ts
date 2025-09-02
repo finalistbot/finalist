@@ -8,7 +8,6 @@ import {
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
-import { BracketClient } from "@/base/classes/client";
 
 function teamConfigModal(scrim: Scrim) {
   return new ModalBuilder()
@@ -62,10 +61,8 @@ function teamConfigModal(scrim: Scrim) {
     );
 }
 
-export default class ScrimTeamConfig extends Event {
-  constructor(client: BracketClient) {
-    super(client, { event: Events.InteractionCreate, once: false });
-  }
+export default class ScrimTeamConfig extends Event<"interactionCreate"> {
+  public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("show_team_config_modal")) return;
