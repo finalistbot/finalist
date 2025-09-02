@@ -1,21 +1,12 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ChannelType,
   ChatInputCommandInteraction,
-  EmbedBuilder,
-  Message,
   SlashCommandBuilder,
-  TextChannel,
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { Scrim } from "@prisma/client";
-import { BracketClient } from "@/base/classes/client";
 import * as dateFns from "date-fns";
-import { discordTimestamp } from "@/lib/utils";
-import { createSlotListEmbed } from "./registerteam";
+import { sendConfigMessage } from "@/ui/messages/scrim-config";
 
 const templates = [
   {
@@ -45,86 +36,8 @@ const templates = [
 ] as const;
 
 const templateMap = new Map(
-  templates.map((template) => [template.value, template])
+  templates.map((template) => [template.value, template]),
 );
-
-function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
-  return new EmbedBuilder()
-    .setTitle("Scrim Configuration")
-    .setColor("Green")
-    .addFields(
-      { name: "Scrim Name", value: scrim.name, inline: false },
-      { name: "Max Teams", value: scrim.maxTeams.toString(), inline: false },
-      {
-        name: "Players per Team",
-        value:
-          scrim.minPlayersPerTeam && scrim.maxPlayersPerTeam
-            ? scrim.minPlayersPerTeam === scrim.maxPlayersPerTeam
-              ? `${scrim.minPlayersPerTeam} players`
-              : `${scrim.minPlayersPerTeam}–${scrim.maxPlayersPerTeam} players`
-            : "Not set",
-        inline: false,
-      },
-      {
-        name: "Substitutes per Team",
-        value: scrim.maxSubstitutePerTeam.toString(),
-        inline: false,
-      },
-      {
-        name: "Registration Start Time",
-        value: discordTimestamp(scrim.registrationStartTime),
-        inline: false,
-      }
-    )
-    .setFooter({
-      text: `Scrim ID: ${scrim.id}\nYou can't edit after atleast one team has registered.`,
-    })
-    .setThumbnail("https://i.ibb.co/G4v0D8Zj/image.png")
-    .setAuthor({
-      name: client.user?.username || "Scrim Bot",
-    })
-    .setImage("https://i.ibb.co/XxXCWznH/image.png");
-}
-
-async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {
-  const scrimTeamConfig = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`show_team_config_modal:${scrim.id}`)
-      .setLabel("Set Teams")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
-      .setLabel("Set Timing")
-      .setStyle(ButtonStyle.Primary)
-  );
-
-  const embed = createScrimConfigEmbed(scrim, channel.client as BracketClient);
-
-  return await channel.send({
-    embeds: [embed],
-    components: [scrimTeamConfig],
-  });
-}
-
-export async function editScrimConfigEmbed(
-  client: BracketClient,
-  scrim: Scrim
-) {
-  const guild = client.guilds.cache.get(scrim.guildId);
-  if (!guild) return; // TODO: Might need to handle this case
-  const adminChannel = guild.channels.cache.get(
-    scrim.adminChannelId
-  ) as TextChannel;
-  if (!adminChannel) return;
-  let message: Message;
-  if (!scrim.adminConfigMessageId) {
-    message = await sendConfigMessage(adminChannel, scrim);
-  } else {
-    message = await adminChannel.messages.fetch(scrim.adminConfigMessageId);
-    const embed = createScrimConfigEmbed(scrim, client);
-    await message.edit({ embeds: [embed] });
-  }
-}
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -134,7 +47,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
@@ -145,8 +58,8 @@ export default class CreateScrim extends Command {
           ...templates.map((template) => ({
             name: template.name,
             value: template.value,
-          }))
-        )
+          })),
+        ),
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -240,7 +153,7 @@ export default class CreateScrim extends Command {
           deny: ["ViewChannel"],
         },
         {
-          id: guildConfig.adminRoleId, // TODO: Change to a role that can view team channels
+          id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
         },
       ],
@@ -262,7 +175,7 @@ export default class CreateScrim extends Command {
         registrationStartTime: dateFns.addDays(new Date(), 1),
       },
     });
-    const message = await sendConfigMessage(adminChannel, scrim);
+    const message = await sendConfigMessage(adminChannel, scrim, this.client);
     await prisma.scrim.update({
       where: { id: scrim.id },
       data: { adminConfigMessageId: message.id },

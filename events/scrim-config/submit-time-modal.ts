@@ -5,8 +5,8 @@ import { Events, Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { ZodIssueCode } from "zod/v3";
-import { editScrimConfigEmbed } from "@/commands/create";
 import { queue } from "@/lib/bullmq";
+import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -74,7 +74,7 @@ export default class TimingConfigSubmit extends Event {
       content: "Scrim timing configuration updated successfully.",
       flags: ["Ephemeral"],
     });
-    await editScrimConfigEmbed(this.client, scrim);
+    await editScrimConfigEmbed(scrim, this.client);
     const job = await queue.getJob(`scrim_registration_start:${scrim.id}`);
     if (job) {
       await job.remove();

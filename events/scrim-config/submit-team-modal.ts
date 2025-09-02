@@ -3,7 +3,7 @@ import { Event } from "@/base/classes/event";
 import { BracketClient } from "@/base/classes/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/commands/create";
+import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 
 const TeamConfigSchema = z.object({
   maxTeams: z.coerce.number().min(1).max(999),
@@ -65,6 +65,6 @@ export default class TeamConfigSubmit extends Event {
       content: `Team configuration updated successfully!`,
       flags: ["Ephemeral"],
     });
-    await editScrimConfigEmbed(this.client, scrim);
+    await editScrimConfigEmbed(scrim, this.client);
   }
 }
