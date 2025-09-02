@@ -25,10 +25,10 @@ model GuildConfig {
 }
 
 model Scrim {
-  id                    Int       @id @default(autoincrement())
+  id                    Int      @id @default(autoincrement())
   guildId               String
   name                  String
-  registrationStartTime DateTime?
+  registrationStartTime DateTime
   maxTeams              Int
   minPlayersPerTeam     Int
   maxPlayersPerTeam     Int

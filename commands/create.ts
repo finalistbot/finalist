@@ -13,6 +13,7 @@ import { Command } from "../base/classes/command";
 import { prisma } from "../lib/prisma";
 import { Scrim } from "@prisma/client";
 import { BracketClient } from "../base/classes/client";
+import * as dateFns from "date-fns";
 
 const templates = [
   {
@@ -246,6 +247,7 @@ export default class CreateScrim extends Command {
         logsChannelId: logsChannel.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
+        registrationStartTime: dateFns.addDays(new Date(), 1),
       },
     });
     const message = await sendConfigMessage(adminChannel, scrim);
