@@ -45,4 +45,30 @@ model Scrim {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  Team      Team[]
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  scrimId   Int
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scrim      Scrim        @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+  TeamMember TeamMember[]
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  teamId    Int
+  userId    String
+  isCaptain Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
 }
