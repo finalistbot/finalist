@@ -77,15 +77,11 @@ function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
     )
     .setFooter({ text: `Scrim ID: ${scrim.id}` })
     .setTimestamp(scrim.updatedAt)
-    .setThumbnail(
-      "https://media.discordapp.net/attachments/1412052318077325363/1412054104447909979/AJfQ9KTCEbSAM_ffB7GPypSvgXclkk-YpGh59OkYphUOCSzsdBvoh-TzSQ5_nny5eyTSosWpqPnTPOt7Ruw01kNodBZr-c_hzWJH_lHJ4s9dL-M_ryrHgGuvxoi3WzrDkRkkdz82YURDr75JVrA0gn9n4wkWb2uZPE_M5IN_WIQVjrMdWUqHEws1024.png?ex=68b6e55d&is=68b593dd&hm=dfb2a3a7dc7665432029c5be0f61fde482d28226ba60aa0ed7886aa63193f3e6&=&format=webp&quality=lossless&width=923&height=923",
-    )
+    .setThumbnail("https://i.ibb.co/G4v0D8Zj/image.png")
     .setAuthor({
       name: client.user?.username || "Scrim Bot",
     })
-    .setImage(
-      "https://media.discordapp.net/attachments/1412052318077325363/1412056963923054652/bracketlogocropped.png?ex=68b6e806&is=68b59686&hm=e764a3e0c028960e9f4cc27c84566d844665deb99250c53df66dc7f3f2e3ecb7&=&format=webp&quality=lossless&width=614&height=276",
-    );
+    .setImage("https://i.ibb.co/XxXCWznH/image.png");
 }
 
 async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {

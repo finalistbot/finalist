@@ -20,6 +20,23 @@ function registerHandlers(dir = "./events") {
   }
 }
 
+function registerCommands(dir = "./commands") {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      registerCommands(filePath);
+    } else if (file.endsWith(".ts")) {
+      import(path.resolve(filePath)).then(({ default: Command }) => {
+        const command = new Command(client);
+        client.commands.set(command.data.name, command);
+      });
+    }
+  }
+}
+
 registerHandlers();
+registerCommands();
 
 client.login(config.BOT_TOKEN);
