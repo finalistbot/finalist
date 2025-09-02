@@ -2,7 +2,7 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-export class TeamKick extends Command {
+export default class TeamKick extends Command {
   data = new SlashCommandBuilder()
     .setName("teamkick")
     .setDescription("Kick a player from your team")

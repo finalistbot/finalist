@@ -1,7 +1,7 @@
+import { Command } from "@/base/classes/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Command } from "../base/classes/command";
 
-export default class PingCommand implements Command {
+export default class PingCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("ping")
     .setDescription("Replies with Pong!");

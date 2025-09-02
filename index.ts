@@ -29,8 +29,13 @@ function registerCommands(dir = "./commands") {
       registerCommands(filePath);
     } else if (file.endsWith(".ts")) {
       import(path.resolve(filePath)).then(({ default: Command }) => {
-        const command = new Command(client);
-        client.commands.set(command.data.name, command);
+        try {
+          const command = new Command(client);
+          client.commands.set(command.data.name, command);
+        } catch (error) {
+          console.error(`Error loading command at ${filePath}:`, error);
+          return;
+        }
       });
     }
   }
