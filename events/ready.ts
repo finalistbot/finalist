@@ -1,10 +1,9 @@
 import { Events } from "discord.js";
-import { BracketClient } from "../base/classes/client";
-import { Event } from "../base/classes/event";
-import { REST, Routes } from "discord.js";
-
-import config from "../config";
-const rest = new REST({ version: "10" }).setToken(config.BOT_TOKEN);
+import { BracketClient } from "@/base/classes/client";
+import { Event } from "@/base/classes/event";
+import config from "@/config";
+import { Routes } from "discord.js";
+import { rest } from "@/lib/discord-rest";
 
 export default class Ready extends Event {
   constructor(client: BracketClient) {
@@ -13,6 +12,7 @@ export default class Ready extends Event {
 
   public async execute() {
     console.log(`Ready! Logged in as ${this.client.user!.tag}`);
+    return;
     const globalCommands = this.client.commands.filter(
       (cmd) => !cmd.developerOnly,
     );
