@@ -15,6 +15,7 @@ import { Scrim } from "@prisma/client";
 import { BracketClient } from "@/base/classes/client";
 import * as dateFns from "date-fns";
 import { discordTimestamp } from "@/lib/utils";
+import { createSlotListEmbed } from "./registerteam";
 
 const templates = [
   {
@@ -44,7 +45,7 @@ const templates = [
 ] as const;
 
 const templateMap = new Map(
-  templates.map((template) => [template.value, template]),
+  templates.map((template) => [template.value, template])
 );
 
 function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
@@ -73,7 +74,7 @@ function createScrimConfigEmbed(scrim: Scrim, client: BracketClient) {
         name: "Registration Start Time",
         value: discordTimestamp(scrim.registrationStartTime),
         inline: false,
-      },
+      }
     )
     .setFooter({
       text: `Scrim ID: ${scrim.id}\nYou can't edit after atleast one team has registered.`,
@@ -94,7 +95,7 @@ async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {
     new ButtonBuilder()
       .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
       .setLabel("Set Timing")
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Primary)
   );
 
   const embed = createScrimConfigEmbed(scrim, channel.client as BracketClient);
@@ -107,12 +108,12 @@ async function sendConfigMessage(channel: TextChannel, scrim: Scrim) {
 
 export async function editScrimConfigEmbed(
   client: BracketClient,
-  scrim: Scrim,
+  scrim: Scrim
 ) {
   const guild = client.guilds.cache.get(scrim.guildId);
   if (!guild) return; // TODO: Might need to handle this case
   const adminChannel = guild.channels.cache.get(
-    scrim.adminChannelId,
+    scrim.adminChannelId
   ) as TextChannel;
   if (!adminChannel) return;
   let message: Message;
@@ -133,7 +134,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addStringOption((option) =>
       option
@@ -144,8 +145,8 @@ export default class CreateScrim extends Command {
           ...templates.map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -230,6 +231,20 @@ export default class CreateScrim extends Command {
         },
       ],
     });
+    const teamChannel = await category.children.create({
+      name: "teams",
+      type: ChannelType.GuildText,
+      permissionOverwrites: [
+        {
+          id: guild.roles.everyone,
+          deny: ["ViewChannel"],
+        },
+        {
+          id: guildConfig.adminRoleId, // TODO: Change to a role that can view team channels
+          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+        },
+      ],
+    });
     const scrim = await prisma.scrim.create({
       data: {
         name,
@@ -241,6 +256,7 @@ export default class CreateScrim extends Command {
         discordCategoryId: category.id,
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
+        teamChannelId: teamChannel.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),

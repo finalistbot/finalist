@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { createTeamEmbed } from "./registerteam";
 
 export default class JoinTeam extends Command {
   data = new SlashCommandBuilder()
@@ -10,7 +11,7 @@ export default class JoinTeam extends Command {
       option
         .setName("teamcode")
         .setDescription("The code of the team to join")
-        .setRequired(true),
+        .setRequired(true)
     );
   async execute(interaction: ChatInputCommandInteraction) {
     const teamCode = interaction.options.getString("teamcode", true);
@@ -76,6 +77,23 @@ export default class JoinTeam extends Command {
     await interaction.reply({
       content: `You have joined the team **${team.name}**!`,
       flags: ["Ephemeral"],
+    });
+    const teamChannel = interaction.guild?.channels.cache.get(
+      team.scrim.teamChannelId
+    );
+    if (!teamChannel || !teamChannel.isTextBased()) {
+      return;
+    }
+    if (!team.teamDetailsMessageId) {
+      return;
+    }
+    const message = await teamChannel.messages.fetch(team.teamDetailsMessageId);
+    if (!message) {
+      return;
+    }
+
+    await message.edit({
+      embeds: [await createTeamEmbed(team, this.client)],
     });
   }
 }
