@@ -171,7 +171,7 @@ export default class CreateScrim extends Command {
       });
       return;
     }
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: ["Ephemeral"] });
     const templateValue = interaction.options.getString("template");
     const template = templateValue
       ? templateMap.get(templateValue as any)
