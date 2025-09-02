@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import logger from "@/lib/logger";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class CleanTestServer extends Command {
@@ -19,7 +20,7 @@ export default class CleanTestServer extends Command {
         try {
           await role.delete();
         } catch (e) {
-          console.log(`Failed to delete role ${role.name}: ${e}`);
+          logger.warn(`Failed to delete role ${role.name}: ${e}`);
         }
       }
     }

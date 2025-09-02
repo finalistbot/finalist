@@ -10,6 +10,7 @@ import {
 } from "@/lib/serializers";
 
 import SuperJSON from "superjson";
+import logger from "@/lib/logger";
 
 export default class CacheGuilds extends Event {
   constructor(client: BracketClient) {
@@ -46,6 +47,6 @@ export default class CacheGuilds extends Event {
         ),
       );
     }
-    console.log(`Cached all guilds, channels, and roles to Redis`);
+    logger.info("Cached guilds, channels, and roles to Redis.");
   }
 }

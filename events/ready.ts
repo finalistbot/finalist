@@ -4,6 +4,7 @@ import { Event } from "@/base/classes/event";
 import config from "@/config";
 import { Routes } from "discord.js";
 import { rest } from "@/lib/discord-rest";
+import logger from "@/lib/logger";
 
 export default class Ready extends Event {
   constructor(client: BracketClient) {
@@ -11,8 +12,7 @@ export default class Ready extends Event {
   }
 
   public async execute() {
-    console.log(`Ready! Logged in as ${this.client.user!.tag}`);
-    return;
+    logger.info(`Logged in as ${this.client.user?.tag}!`);
     const globalCommands = this.client.commands.filter(
       (cmd) => !cmd.developerOnly,
     );
@@ -29,6 +29,8 @@ export default class Ready extends Event {
         { body: devCommands.map((command) => command.data.toJSON()) },
       );
     }
-    console.log("Successfully registered application commands.");
+    logger.info(
+      `Registered ${globalCommands.size} global commands and ${devCommands.size} developer commands.`,
+    );
   }
 }
