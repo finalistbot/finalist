@@ -43,9 +43,10 @@ model Scrim {
   adminConfigMessageId  String
   // ########
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Team      Team[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Team       Team[]
+  TeamMember TeamMember[]
 }
 
 model Team {
@@ -64,11 +65,14 @@ model TeamMember {
   id        Int      @id @default(autoincrement())
   teamId    Int
   userId    String
+  scrimId   Int
   isCaptain Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+  @@unique([scrimId, userId])
 }

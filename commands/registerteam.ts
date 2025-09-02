@@ -65,6 +65,7 @@ export default class RegisterTeam extends Command {
           teamId: team.id,
           userId: interaction.user.id,
           isCaptain: true,
+          scrimId: scrim.id,
         },
       });
 
