@@ -62,13 +62,14 @@ model Team {
 }
 
 model TeamMember {
-  id        Int      @id @default(autoincrement())
-  teamId    Int
-  userId    String
-  scrimId   Int
-  isCaptain Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  teamId       Int
+  userId       String
+  scrimId      Int
+  isSubstitute Boolean  @default(false)
+  isCaptain    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
