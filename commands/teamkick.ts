@@ -20,9 +20,15 @@ export default class TeamKick extends Command {
       },
     });
     if (!scrim) {
-      return interaction.reply({
+      return await interaction.reply({
         content:
           "This command can only be used in a scrim registration channel.",
+        flags: ["Ephemeral"],
+      });
+    }
+    if (!scrim.registrationOpen) {
+      return await interaction.reply({
+        content: "You cannot kick players when registration is closed.",
         flags: ["Ephemeral"],
       });
     }
