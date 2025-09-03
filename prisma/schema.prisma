@@ -89,3 +89,13 @@ model TeamMember {
   @@unique([teamId, userId])
   @@unique([scrimId, userId])
 }
+
+model BannedUser {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  userId    String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, userId])
+}
