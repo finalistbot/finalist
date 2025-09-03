@@ -11,3 +11,7 @@ export function randomString(length: number): string {
 export function discordTimestamp(date: Date, format: string = "f"): string {
   return `<t:${Math.floor(date.getTime() / 1000)}:${format}>`;
 }
+
+export function mentionUser(userId: string): string {
+  return `<@${userId}>`;
+}

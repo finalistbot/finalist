@@ -59,6 +59,19 @@ export default class RegisterTeam extends Command {
         teamId: teamMember.teamId,
       },
     });
+    // TODO: refactor this
+    for (const member of teamMembers) {
+      const bannedUser = await prisma.bannedUser.findFirst({
+        where: { userId: member.userId, guildId: interaction.guildId! },
+      });
+      if (bannedUser) {
+        await interaction.reply({
+          content: `Your team cannot be registered as one of the members (${member.userId}) is banned from participating in this server. Reason: ${bannedUser.reason}`,
+          flags: ["Ephemeral"],
+        });
+        return;
+      }
+    }
 
     const mainPlayers = teamMembers.filter((member) => !member.isSubstitute);
 
@@ -86,7 +99,7 @@ export default class RegisterTeam extends Command {
     if (scrim.teamsChannelId) {
       const embed = await teamDetailsEmbed(team);
       const teamChannel = this.client.channels.cache.get(
-        scrim.teamsChannelId,
+        scrim.teamsChannelId
       ) as GuildTextBasedChannel;
       if (!teamChannel) return;
       await teamChannel.send({ embeds: [embed] });

@@ -87,6 +87,16 @@ export default class TeamCommand extends Command {
   }
 
   async createTeam(interaction: ChatInputCommandInteraction) {
+    const bannedUser = await prisma.bannedUser.findFirst({
+      where: { userId: interaction.user.id, guildId: interaction.guildId! },
+    });
+    if (bannedUser) {
+      await interaction.reply({
+        content: `You are banned from participating in this server. Reason: ${bannedUser.reason}`,
+        flags: "Ephemeral",
+      });
+      return;
+    }
     const teamName = interaction.options.getString("name", true);
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
@@ -275,6 +285,16 @@ export default class TeamCommand extends Command {
   }
 
   async joinTeam(interaction: ChatInputCommandInteraction) {
+    const bannedUser = await prisma.bannedUser.findFirst({
+      where: { userId: interaction.user.id, guildId: interaction.guildId! },
+    });
+    if (bannedUser) {
+      await interaction.reply({
+        content: `You are banned from participating in this server. Reason: ${bannedUser.reason}`,
+        flags: "Ephemeral",
+      });
+      return;
+    }
     const teamCode = interaction.options.getString("teamcode", true);
     const isSubstitute = interaction.options.getBoolean("substitute") ?? false;
     const scrim = await prisma.scrim.findFirst({
@@ -445,7 +465,7 @@ export default class TeamCommand extends Command {
     if (teamMember.isCaptain) {
       await interaction.reply({
         content:
-          "You cannot leave the team as you are the captain. Please disband the team",
+          "You cannot leave the team as you are the captain. Please disband the team!!",
         flags: "Ephemeral",
       });
       return;
