@@ -13,27 +13,49 @@ export async function teamDetailsEmbed(team: Team) {
     where: { teamId: team.id },
   });
 
-  const memberList =
-    members.length > 0
-      ? members.map((member) => `<@${member.userId}>`).join("\n")
-      : "No members";
+  const mainMembers =
+    members
+      .filter((m) => !m.isSubstitute)
+      .map((m) => `<@${m.userId}>(${m.userId})`)
+      .join("\n") || "None";
+
+  const substitutes =
+    members
+      .filter((m) => m.isSubstitute)
+      .map((m) => `<@${m.userId}>`)
+      .join("\n") || "None";
+
+  const registeredAt = team.registeredAt
+    ? `<t:${Math.floor(new Date(team.registeredAt).getTime() / 1000)}:F>`
+    : "Not registered";
 
   const embed = new EmbedBuilder()
+    .setColor("#0052cc") // nice blue
     .setTitle(`🏆 Team: ${team.name}`)
-    .setColor("Blue")
+    .setAuthor({
+      name: "Scrim Team Details",
+      iconURL: "https://i.imgur.com/AfFp7pu.png",
+    })
+    .setThumbnail("https://i.imgur.com/AfFp7pu.png")
+    .setDescription(
+      `**Scrim:** ${
+        team.scrimId || "Not assigned"
+      }\n**Registered:** ${registeredAt}`
+    )
     .addFields(
       {
         name: "👑 Captain",
-        value: captainUser ? captainUser.username : "No captain assigned",
-        inline: false,
+        value: captainUser ? captainUser.tag : "No captain assigned",
+        inline: true,
       },
-      {
-        name: "👥 Members",
-        value: memberList,
-        inline: false,
-      },
+      { name: "👤 Members", value: mainMembers, inline: true },
+      { name: "🟡 Substitutes", value: substitutes, inline: true }
     )
-    .setTimestamp();
+    .setTimestamp(new Date(team.updatedAt))
+    .setFooter({
+      text: "Last updated",
+      iconURL: "https://i.imgur.com/AfFp7pu.png",
+    });
 
   return embed;
 }
