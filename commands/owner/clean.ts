@@ -8,6 +8,12 @@ export default class CleanTestServer extends Command {
     .setName("cleantestserver")
     .setDescription("Clean up the test server");
   async execute(interaction: ChatInputCommandInteraction) {
+    if (!this.client.isOwner(interaction.user.id)) {
+      return interaction.reply({
+        content: "You do not have permission to use this command.",
+        flags: ["Ephemeral"],
+      });
+    }
     await interaction.reply("Cleaning up...");
     for (const channel of interaction.guild!.channels.cache.values()) {
       await channel.delete();
