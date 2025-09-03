@@ -9,10 +9,11 @@ import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 
+// TODO: Automatically create a team for solo players and register them
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
-    .setName("registerteam")
-    .setDescription("Register your team for the scrim");
+    .setName("register")
+    .setDescription("Register for the scrim");
 
   async execute(interaction: ChatInputCommandInteraction) {
     const scrim = await prisma.scrim.findFirst({
