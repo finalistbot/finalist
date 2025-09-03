@@ -6,6 +6,9 @@ import {
   Routes,
   RESTPatchAPIChannelJSONBody,
   PermissionFlagsBits,
+  RESTPostAPIChannelMessageJSONBody,
+  MessageFlags,
+  PermissionsBitField,
 } from "discord.js";
 
 export async function openRegistration(scrimId: number) {
@@ -45,7 +48,7 @@ export async function shouldCloseRegistration(scrimId: number) {
     where: { id: scrimId },
     include: {
       Team: {
-        include: { TeamMember: true },
+        where: { registeredAt: { not: null } },
       },
     },
   });
@@ -55,10 +58,7 @@ export async function shouldCloseRegistration(scrimId: number) {
     );
     return false;
   }
-  const totalValidTeams = scrim.Team.filter(
-    (team) => team.TeamMember.length >= scrim.minPlayersPerTeam,
-  ).length;
-  return totalValidTeams >= scrim.maxTeams;
+  return scrim.Team.length >= scrim.maxTeams;
 }
 
 export async function closeRegistration(scrimId: number) {
@@ -76,8 +76,8 @@ export async function closeRegistration(scrimId: number) {
       {
         id: scrim.guildId,
         deny: (
-          PermissionFlagsBits.ViewChannel |
           PermissionFlagsBits.SendMessages |
+          PermissionFlagsBits.ViewChannel |
           PermissionFlagsBits.ReadMessageHistory
         ).toString(),
         type: 0,
@@ -90,5 +90,12 @@ export async function closeRegistration(scrimId: number) {
   await prisma.scrim.update({
     where: { id: scrimId },
     data: { stage: Stage.CHECKIN, registrationEndedTime: new Date() },
+  });
+
+  const newMessageBody: RESTPostAPIChannelMessageJSONBody = {
+    content: `Team registration is now closed. Check-in is now open.`,
+  };
+  await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
+    body: newMessageBody,
   });
 }

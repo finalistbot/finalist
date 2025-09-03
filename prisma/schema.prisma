@@ -46,7 +46,7 @@ model Scrim {
 
   registrationChannelId String
   logsChannelId         String
-  teamChannelId         String
+  teamsChannelId        String
   discordCategoryId     String
   adminChannelId        String
   adminConfigMessageId  String

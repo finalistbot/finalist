@@ -1,7 +1,13 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  GuildTextBasedChannel,
+  SlashCommandBuilder,
+} from "discord.js";
 import { Stage } from "@prisma/client";
+import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
+import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -63,7 +69,7 @@ export default class RegisterTeam extends Command {
       return;
     }
 
-    await prisma.team.update({
+    const team = await prisma.team.update({
       where: { id: teamMember.teamId },
       data: { registeredAt: new Date() },
     });
@@ -71,5 +77,18 @@ export default class RegisterTeam extends Command {
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
       flags: ["Ephemeral"],
     });
+
+    const needClosing = await shouldCloseRegistration(scrim.id);
+    if (needClosing) {
+      await closeRegistration(scrim.id);
+    }
+    if (scrim.teamsChannelId) {
+      const embed = await teamDetailsEmbed(team);
+      const teamChannel = this.client.channels.cache.get(
+        scrim.teamsChannelId,
+      ) as GuildTextBasedChannel;
+      if (!teamChannel) return;
+      await teamChannel.send({ embeds: [embed] });
+    }
   }
 }

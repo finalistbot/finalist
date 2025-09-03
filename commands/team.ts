@@ -293,7 +293,7 @@ export default class TeamCommand extends Command {
     }
 
     const team = await prisma.team.findUnique({
-      where: { code: teamCode.toLowerCase(), scrimId: scrim.id },
+      where: { code: teamCode, scrimId: scrim.id },
       include: { scrim: true, TeamMember: true },
     });
 
