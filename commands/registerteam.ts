@@ -1,23 +1,14 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { randomString } from "@/lib/utils";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 import { Stage } from "@prisma/client";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
     .setName("registerteam")
-    .setDescription("Register a new team")
-    .addStringOption((option) =>
-      option
-        .setName("teamname")
-        .setDescription("The name of the team to register")
-        .setRequired(true),
-    );
+    .setDescription("Register your team for the scrim");
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const teamName = interaction.options.getString("teamname", true);
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,
@@ -40,55 +31,45 @@ export default class RegisterTeam extends Command {
       return;
     }
 
-    const team = await prisma.$transaction(async (tx) => {
-      const exists = (code: string) =>
-        tx.team.findUnique({
-          where: { code },
-        });
-      let code = randomString(6).toLowerCase();
-
-      while (await exists(code)) {
-        code = randomString(6).toLowerCase();
-      }
-
-      const team = await tx.team.create({
-        data: {
-          name: teamName,
-          code,
-          scrimId: scrim.id,
-        },
-      });
-
-      await tx.teamMember.create({
-        data: {
-          teamId: team.id,
-          userId: interaction.user.id,
-          isCaptain: true,
-          scrimId: scrim.id,
-        },
-      });
-
-      return team;
+    const teamMember = await prisma.teamMember.findFirst({
+      where: {
+        scrimId: scrim.id,
+        isCaptain: true,
+        userId: interaction.user.id,
+      },
     });
 
+    if (!teamMember) {
+      await interaction.reply({
+        content:
+          "You are not a captain of any team in this scrim. Please contact your team captain to register the team.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+    const teamMembers = await prisma.teamMember.findMany({
+      where: {
+        teamId: teamMember.teamId,
+      },
+    });
+
+    const mainPlayers = teamMembers.filter((member) => !member.isSubstitute);
+
+    if (mainPlayers.length < scrim.minPlayersPerTeam) {
+      await interaction.reply({
+        content: `Your team does not have enough main players. Minimum required is ${scrim.minPlayersPerTeam}.`,
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
+    await prisma.team.update({
+      where: { id: teamMember.teamId },
+      data: { registeredAt: new Date() },
+    });
     await interaction.reply({
-      content: `Team **${team.name}** registered successfully!\n
-      Use the code \`${team.code}\` to invite your teammates to join your team using the \`/jointeam\` command.`,
+      content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
       flags: ["Ephemeral"],
     });
-
-    const teamChannel = interaction.guild?.channels.cache.get(
-      scrim.teamChannelId,
-    );
-    if (teamChannel?.isTextBased()) {
-      const message = await teamChannel?.send({
-        content: `New team registered: **${team.name}**`,
-        embeds: [await teamDetailsEmbed(team)],
-      });
-      await prisma.team.update({
-        where: { id: team.id },
-        data: { teamDetailsMessageId: message?.id },
-      });
-    }
   }
 }

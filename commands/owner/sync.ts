@@ -7,13 +7,18 @@ export default class SyncSlashCommands extends Command {
     .setName("sync")
     .setDescription("Sync slash commands");
   async execute(interaction: ChatInputCommandInteraction) {
+    if (!this.client.isOwner(interaction.user.id)) {
+      return interaction.reply({
+        content: "You do not have permission to use this command.",
+        flags: ["Ephemeral"],
+      });
+    }
     await interaction.deferReply({ flags: "Ephemeral" });
     const { globalCommands, devCommands } = await registerSlashCommands(
       this.client,
     );
-    await interaction.reply({
+    await interaction.editReply({
       content: `Registered ${globalCommands.size} global commands and ${devCommands.size} developer commands.`,
-      flags: "Ephemeral",
     });
   }
 }

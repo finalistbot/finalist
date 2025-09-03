@@ -5,7 +5,9 @@ import { Message } from "discord.js";
 export default class SyncCommandMessageHandler extends Event<"messageCreate"> {
   public event = "messageCreate" as const;
   async execute(message: Message) {
-    if (message.author.id !== this.client.application?.owner?.id) return;
+    if (!this.client.isOwner(message.author.id)) {
+      return;
+    }
     let command = message.content.trim().toLowerCase();
     command = command.replace(`<@${this.client.user?.id}>`, "").trim();
     switch (command) {

@@ -59,13 +59,14 @@ model Scrim {
 }
 
 model Team {
-  id                   Int      @id @default(autoincrement())
+  id                   Int       @id @default(autoincrement())
   scrimId              Int
   name                 String
-  code                 String   @unique
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  code                 String    @unique
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
   teamDetailsMessageId String?
+  registeredAt         DateTime?
 
   scrim      Scrim        @relation(fields: [scrimId], references: [id], onDelete: Cascade)
   TeamMember TeamMember[]
@@ -76,6 +77,7 @@ model TeamMember {
   teamId       Int
   userId       String
   scrimId      Int
+  displayName  String
   isSubstitute Boolean  @default(false)
   isCaptain    Boolean  @default(false)
   createdAt    DateTime @default(now())
