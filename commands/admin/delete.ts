@@ -3,7 +3,7 @@ import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
 import { supress } from "@/lib/utils";
-import { Scrim } from "@prisma/client";
+import { Scrim, Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -52,6 +52,12 @@ export default class ScrimDelete extends Command {
           flags: "Ephemeral",
         });
       }
+    }
+    if (scrim.stage != Stage.CONFIGURATION) {
+      return await interaction.reply({
+        content: `Cannot delete scrim with ID ${scrim.id} because it is already started.`,
+        flags: "Ephemeral",
+      });
     }
     await interaction.deferReply({ flags: "Ephemeral" });
     const deletableChannels = [
