@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   InteractionContextType,
   ChannelType,
+  PermissionFlagsBits,
 } from "discord.js";
 import { Command } from "../base/classes/command";
 import { prisma } from "../lib/prisma";
@@ -11,6 +12,7 @@ export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("setup")
     .setDescription("Sets up the bot for the server.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild);
 
   async execute(interaction: ChatInputCommandInteraction) {
