@@ -347,7 +347,7 @@ export default class TeamCommand extends Command {
       flags: ["Ephemeral"],
     });
     const teamChannel = interaction.guild?.channels.cache.get(
-      team.scrim.teamChannelId,
+      team.scrim.teamsChannelId,
     );
     if (!teamChannel || !teamChannel.isTextBased()) {
       return;

@@ -139,7 +139,7 @@ export default class CreateScrim extends Command {
         discordCategoryId: category.id,
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
-        teamChannelId: teamChannel.id,
+        teamsChannelId: teamChannel.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),
