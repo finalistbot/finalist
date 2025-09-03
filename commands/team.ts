@@ -21,11 +21,11 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team"),
+      subcommand.setName("disband").setDescription("Disband your team")
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -36,8 +36,8 @@ export default class TeamCommand extends Command {
             .setName("memberid")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -47,14 +47,17 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setName("leave").setDescription("Leave your current team")
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -72,6 +75,8 @@ export default class TeamCommand extends Command {
       case "join":
         await this.joinTeam(interaction);
         break;
+      case "leave":
+        await this.leaveTeam(interaction);
       default:
         await interaction.reply({
           content: "Unknown subcommand.",
@@ -347,7 +352,7 @@ export default class TeamCommand extends Command {
       flags: ["Ephemeral"],
     });
     const teamChannel = interaction.guild?.channels.cache.get(
-      team.scrim.teamsChannelId,
+      team.scrim.teamsChannelId
     );
     if (!teamChannel || !teamChannel.isTextBased()) {
       return;
@@ -400,9 +405,68 @@ export default class TeamCommand extends Command {
     }));
 
     const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase())
     );
 
     await interaction.respond(filtered.slice(0, 25));
+  }
+  async leaveTeam(interaction: ChatInputCommandInteraction) {
+    const scrim = await prisma.scrim.findFirst({
+      where: { registrationChannelId: interaction.channelId },
+    });
+    if (!scrim) {
+      await interaction.reply({
+        content: "This channel is not associated with any scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    if (scrim.stage != Stage.REGISTRATION) {
+      await interaction.reply({
+        content: "You can only leave a team during the registration stage.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    const teamMember = await prisma.teamMember.findFirst({
+      where: { scrimId: scrim.id, userId: interaction.user.id },
+      include: { team: true },
+    });
+
+    if (!teamMember) {
+      await interaction.reply({
+        content: "You are not part of any team in this scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    if (teamMember.isCaptain) {
+      await interaction.reply({
+        content:
+          "You cannot leave the team as you are the captain. Please disband the team",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    if (teamMember.team.registeredAt) {
+      await interaction.reply({
+        content:
+          "You cannot leave a team that has already been registered for the scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    await prisma.teamMember.delete({
+      where: { id: teamMember.id },
+    });
+
+    await interaction.reply({
+      content: `You have left the team "${teamMember.team.name}".`,
+      flags: "Ephemeral",
+    });
   }
 }
