@@ -25,6 +25,7 @@ export default class SetupCommand extends Command {
       });
       return;
     }
+    await interaction.deferReply({ flags: "Ephemeral" });
     const adminRole = await guild.roles.create({
       name: "Admin",
       reason: "Admin role for the bot",
@@ -51,9 +52,8 @@ export default class SetupCommand extends Command {
         timezone: "UTC",
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: "The bot has been set up for this server.",
-      flags: ["Ephemeral"],
     });
   }
 }

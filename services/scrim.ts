@@ -41,6 +41,12 @@ export async function openRegistration(scrimId: number) {
     where: { id: scrimId },
     data: { stage: Stage.REGISTRATION },
   });
+  const messageBody: RESTPostAPIChannelMessageJSONBody = {
+    content: `Team registration is now open! Use the /team command to create your team and /registerteam to register your team.`,
+  };
+  await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
+    body: messageBody,
+  });
 }
 
 export async function shouldCloseRegistration(scrimId: number) {
