@@ -7,7 +7,6 @@ import { Scrim } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
-  GuildTextBasedChannel,
   Routes,
   SlashCommandBuilder,
 } from "discord.js";
@@ -69,9 +68,11 @@ export default class ScrimDelete extends Command {
     );
 
     await prisma.scrim.delete({ where: { id: scrim.id } });
-    await interaction.editReply({
-      content: `Scrim with ID ${scrim.id} has been deleted.`,
-    });
+    await supress(
+      interaction.editReply({
+        content: `Scrim with ID ${scrim.id} has been deleted.`,
+      }),
+    );
   }
 
   async autocomplete(interaction: AutocompleteInteraction<"cached">) {
