@@ -15,3 +15,11 @@ export function discordTimestamp(date: Date, format: string = "f"): string {
 export function mentionUser(userId: string): string {
   return `<@${userId}>`;
 }
+
+export async function supress<T>(promise: Promise<T>): Promise<T | null> {
+  try {
+    return await promise;
+  } catch (e) {
+    return null;
+  }
+}
