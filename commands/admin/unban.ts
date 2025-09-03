@@ -1,10 +1,13 @@
 import { Command } from "@/base/classes/command";
+import { checkIsBanned } from "@/checks/is-banned";
+import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { mentionUser } from "@/lib/utils";
 import {
   ChatInputCommandInteraction,
   GuildMemberRoleManager,
+  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -16,39 +19,21 @@ export default class UnbanUser extends Command {
       option
         .setName("user")
         .setDescription("User ID of the player to unban")
-        .setRequired(true)
-    );
-  async execute(interaction: ChatInputCommandInteraction) {
+        .setRequired(true),
+    )
+    .setContexts(InteractionContextType.Guild);
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const user = interaction.options.getUser("user", true);
-    const guild = interaction.guild!;
-    const memberRoles = interaction.member!.roles as GuildMemberRoleManager;
-    const guildConfig = await prisma.guildConfig.findUnique({
-      where: { guildId: guild.id },
-    });
-    if (!guildConfig) {
-      logger.info(`Guild ${guild.id} is not configured`, {
-        guildId: guild.id,
-        command: "create",
-      });
-      await interaction.reply({
-        content:
-          "Guild is not configured. Please run /setup to configure the guild.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-    if (
-      !interaction.memberPermissions!.has("ManageGuild") &&
-      (!guildConfig.adminRoleId ||
-        !memberRoles.cache.has(guildConfig.adminRoleId))
-    ) {
+    const guild = { id: interaction.guildId };
+    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
+    if (!isScrimAdmin) {
       logger.info(
         `User ${interaction.user.tag} does not have permission to use create command in guild ${guild.id}`,
         {
           guildId: guild.id,
           userId: interaction.user.id,
           command: "create",
-        }
+        },
       );
       await interaction.reply({
         content: "You do not have permission to use this command.",
@@ -57,12 +42,7 @@ export default class UnbanUser extends Command {
 
       return;
     }
-    const isBanned = await prisma.bannedUser.findFirst({
-      where: {
-        userId: user.id,
-        guildId: interaction.guild!.id,
-      },
-    });
+    const isBanned = await checkIsBanned(guild.id, user.id);
     if (!isBanned) {
       await interaction.reply({
         content: `User ${mentionUser(user.id)} is not banned.`,

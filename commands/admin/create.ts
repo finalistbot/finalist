@@ -1,7 +1,9 @@
 import {
   ChannelType,
   ChatInputCommandInteraction,
+  CommandInteraction,
   GuildMemberRoleManager,
+  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 import { Command } from "@/base/classes/command";
@@ -10,11 +12,14 @@ import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
 import logger from "@/lib/logger";
+import { checkIsGuildSetup } from "@/checks/is-guild-setup";
+import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
     .setName("create")
     .setDescription("Create a new scrim")
+    .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
       option
         .setName("name")
@@ -34,48 +39,19 @@ export default class CreateScrim extends Command {
         ),
     );
 
-  async execute(interaction: ChatInputCommandInteraction) {
-    const guild = interaction.guild!;
-    const memberRoles = interaction.member!.roles as GuildMemberRoleManager;
-    const guildConfig = await prisma.guildConfig.findUnique({
-      where: { guildId: guild.id },
-    });
-    if (!guildConfig) {
-      logger.info(`Guild ${guild.id} is not configured`, {
-        guildId: guild.id,
-        command: "create",
-      });
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    const guild = interaction.guild;
+    const result = await checkIsGuildSetup(guild);
+    if (!result.valid) {
       await interaction.reply({
-        content:
-          "Guild is not configured. Please run /setup to configure the guild.",
+        content: result.message,
         flags: ["Ephemeral"],
       });
       return;
     }
-    if (
-      !interaction.memberPermissions!.has("ManageGuild") &&
-      (!guildConfig.adminRoleId ||
-        !memberRoles.cache.has(guildConfig.adminRoleId))
-    ) {
-      logger.info(
-        `User ${interaction.user.tag} does not have permission to use create command in guild ${guild.id}`,
-        {
-          guildId: guild.id,
-          userId: interaction.user.id,
-          command: "create",
-        },
-      );
-      await interaction.reply({
-        content: "You do not have permission to use this command.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-    logger.debug(`CreateScrim command invoked by ${interaction.user.tag}`);
-    if (
-      !guildConfig.adminRoleId ||
-      !guild.roles.cache.has(guildConfig.adminRoleId)
-    ) {
+    const guildConfig = result.config;
+    const isAdmin = await checkIsScrimAdminInteraction(interaction);
+    if (!isAdmin) {
       await interaction.reply({
         content:
           "Admin role is not set. Please run /setup to configure the guild.",

@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
+import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -15,43 +16,64 @@ export default class SetupCommand extends Command {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild);
 
-  async execute(interaction: ChatInputCommandInteraction) {
-    const guild = interaction.guild!;
-    const guildConfig = await prisma.guildConfig.findFirst({
-      where: { guildId: guild.id },
-    });
-    if (guildConfig) {
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
+    if (!isScrimAdmin) {
       await interaction.reply({
-        content: "The bot is already set up for this server.",
-        flags: ["Ephemeral"],
+        content: "You do not have permission to use this command.",
+        flags: "Ephemeral",
       });
       return;
     }
     await interaction.deferReply({ flags: "Ephemeral" });
-    const adminRole = await guild.roles.create({
-      name: "Admin",
-      reason: "Admin role for the bot",
+    const guild = interaction.guild;
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { guildId: interaction.guildId },
     });
-    const updatesChannel = await guild.channels.create({
-      name: "updates",
-      type: ChannelType.GuildText,
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone,
-          deny: ["ViewChannel"],
-        },
-        {
-          id: adminRole.id,
-          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
-        },
-      ],
-    });
-    await prisma.guildConfig.create({
-      data: {
+    let adminRole = null;
+    let updatesChannel = null;
+    if (guildConfig) {
+      if (guildConfig.adminRoleId) {
+        adminRole = await interaction.guild.roles.fetch(
+          guildConfig.adminRoleId,
+        );
+      }
+      if (guildConfig.updatesChannelId) {
+        updatesChannel = await interaction.guild.channels.fetch(
+          guildConfig.updatesChannelId,
+        );
+      }
+    }
+    if (!adminRole) {
+      adminRole = await guild.roles.create({
+        name: "Admin",
+        reason: "Admin role for the bot",
+      });
+    }
+    if (!updatesChannel) {
+      updatesChannel = await guild.channels.create({
+        name: "updates",
+        type: ChannelType.GuildText,
+        permissionOverwrites: [
+          { id: guild.roles.everyone, deny: ["ViewChannel"] },
+          {
+            id: adminRole.id,
+            allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+          },
+        ],
+      });
+    }
+    await prisma.guildConfig.upsert({
+      where: { guildId: guild.id },
+      create: {
         guildId: guild.id,
         adminRoleId: adminRole.id,
         updatesChannelId: updatesChannel.id,
         timezone: "UTC",
+      },
+      update: {
+        adminRoleId: adminRole.id,
+        updatesChannelId: updatesChannel.id,
       },
     });
     await interaction.editReply({

@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import { checkIsBanned } from "@/checks/is-banned";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
@@ -6,6 +7,7 @@ import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -13,6 +15,7 @@ export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("team")
     .setDescription("Manage your team")
+    .setContexts(InteractionContextType.Guild)
     .addSubcommand((subcommand) =>
       subcommand
         .setName("create")
@@ -21,11 +24,11 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team")
+      subcommand.setName("disband").setDescription("Disband your team"),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -36,8 +39,8 @@ export default class TeamCommand extends Command {
             .setName("memberid")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true)
-        )
+            .setAutocomplete(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -47,20 +50,20 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true)
+            .setRequired(true),
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false)
-        )
+            .setRequired(false),
+        ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("leave").setDescription("Leave your current team")
+      subcommand.setName("leave").setDescription("Leave your current team"),
     );
 
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
     switch (subcommand) {
       case "create":
@@ -86,13 +89,14 @@ export default class TeamCommand extends Command {
     }
   }
 
-  async createTeam(interaction: ChatInputCommandInteraction) {
-    const bannedUser = await prisma.bannedUser.findFirst({
-      where: { userId: interaction.user.id, guildId: interaction.guildId! },
-    });
-    if (bannedUser) {
+  async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
+    const isBanned = await checkIsBanned(
+      interaction.guildId,
+      interaction.user.id,
+    );
+    if (isBanned) {
       await interaction.reply({
-        content: `You are banned from participating in this server. Reason: ${bannedUser.reason}`,
+        content: `You are banned from participating in this server`,
         flags: "Ephemeral",
       });
       return;
@@ -372,7 +376,7 @@ export default class TeamCommand extends Command {
       flags: ["Ephemeral"],
     });
     const teamChannel = interaction.guild?.channels.cache.get(
-      team.scrim.teamsChannelId
+      team.scrim.teamsChannelId,
     );
     if (!teamChannel || !teamChannel.isTextBased()) {
       return;
@@ -425,7 +429,7 @@ export default class TeamCommand extends Command {
     }));
 
     const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase())
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
     );
 
     await interaction.respond(filtered.slice(0, 25));
