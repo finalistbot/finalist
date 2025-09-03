@@ -1,8 +1,9 @@
 import { Event } from "@/base/classes/event";
+import { Interaction } from "discord.js";
 export default class CommandAutocomplete extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
 
-  public async execute(interaction: any) {
+  public async execute(interaction: Interaction) {
     if (!interaction.isAutocomplete()) return;
 
     const command = this.client.commands.get(interaction.commandName);
