@@ -5,8 +5,8 @@ import {
   ChannelType,
   PermissionFlagsBits,
 } from "discord.js";
-import { Command } from "../base/classes/command";
-import { prisma } from "../lib/prisma";
+import { Command } from "@/base/classes/command";
+import { prisma } from "@/lib/prisma";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
