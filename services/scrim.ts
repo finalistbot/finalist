@@ -1,15 +1,15 @@
 import { rest } from "@/lib/discord-rest";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { Stage } from "@prisma/client";
 import {
   Routes,
   RESTPatchAPIChannelJSONBody,
   PermissionFlagsBits,
   RESTPostAPIChannelMessageJSONBody,
-  MessageFlags,
-  PermissionsBitField,
 } from "discord.js";
+import { client } from "@/client";
 
 export async function openRegistration(scrimId: number) {
   const scrim = await prisma.scrim.findUnique({
@@ -21,6 +21,11 @@ export async function openRegistration(scrimId: number) {
     );
     return;
   }
+  const updatedScrim = await prisma.scrim.update({
+    where: { id: scrimId },
+    data: { stage: Stage.REGISTRATION },
+  });
+  await editScrimConfigEmbed(updatedScrim, client);
   const body: RESTPatchAPIChannelJSONBody = {
     permission_overwrites: [
       {
@@ -36,10 +41,6 @@ export async function openRegistration(scrimId: number) {
   };
   await rest.patch(Routes.channel(scrim.registrationChannelId), {
     body,
-  });
-  await prisma.scrim.update({
-    where: { id: scrimId },
-    data: { stage: Stage.REGISTRATION },
   });
   const messageBody: RESTPostAPIChannelMessageJSONBody = {
     content: `Team registration is now open! Use the /team command to create your team and /registerteam to register your team.`,
@@ -58,7 +59,16 @@ export async function shouldCloseRegistration(scrimId: number) {
       },
     },
   });
-  if (!scrim || scrim.stage !== Stage.REGISTRATION) {
+  if (!scrim) {
+    logger.warn(
+      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist.`,
+    );
+    return false;
+  }
+  if (!scrim.autoCloseRegistration) {
+    return false;
+  }
+  if (scrim.stage !== Stage.REGISTRATION) {
     logger.warn(
       `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist or is not open.`,
     );

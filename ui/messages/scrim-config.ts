@@ -1,35 +1,20 @@
 import { Scrim } from "@prisma/client";
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  Message,
-  TextChannel,
-} from "discord.js";
+import { Message, TextChannel } from "discord.js";
 import { scrimConfigEmbed } from "../embeds/scrim-config";
 import { BracketClient } from "@/base/classes/client";
+import { prepareScrimConfigActionRow } from "../buttons/scrim-config-action-row";
 
 export async function sendConfigMessage(
   channel: TextChannel,
   scrim: Scrim,
   client: BracketClient,
 ) {
-  const scrimTeamConfig = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`show_team_config_modal:${scrim.id}`)
-      .setLabel("Set Teams")
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
-      .setLabel("Set Timing")
-      .setStyle(ButtonStyle.Primary),
-  );
-
+  const scrimActionRow = prepareScrimConfigActionRow(scrim);
   const embed = scrimConfigEmbed(scrim, client);
 
   return await channel.send({
     embeds: [embed],
-    components: [scrimTeamConfig],
+    components: [scrimActionRow],
   });
 }
 
@@ -49,6 +34,7 @@ export async function editScrimConfigEmbed(
   } else {
     message = await adminChannel.messages.fetch(scrim.adminConfigMessageId);
     const embed = scrimConfigEmbed(scrim, client);
-    await message.edit({ embeds: [embed] });
+    const scrimActionRow = prepareScrimConfigActionRow(scrim);
+    await message.edit({ embeds: [embed], components: [scrimActionRow] });
   }
 }

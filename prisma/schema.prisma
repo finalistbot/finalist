@@ -50,7 +50,8 @@ model Scrim {
   discordCategoryId     String
   adminChannelId        String
   adminConfigMessageId  String
-  stage                 Stage  @default(CONFIGURATION)
+  stage                 Stage   @default(CONFIGURATION)
+  autoCloseRegistration Boolean @default(true)
 
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
