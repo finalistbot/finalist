@@ -8,6 +8,7 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
+import { parseScrimId } from "@/lib/utils";
 
 function timingConfigModal(scrim: Scrim) {
   const input = new TextInputBuilder()
@@ -38,14 +39,8 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("show_scrim_timing_config_modal"))
       return;
-    const [_, _scrimId] = interaction.customId.split(":");
-    if (!_scrimId) {
-      return;
-    }
-    const scrimId = parseInt(_scrimId);
-    if (isNaN(scrimId)) {
-      return;
-    }
+    const scrimId = parseScrimId(interaction.customId);
+    if (!scrimId) return;
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
     });

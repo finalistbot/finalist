@@ -7,6 +7,7 @@ import {
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
+import { parseScrimId } from "@/lib/utils";
 
 function teamConfigModal(scrim: Scrim) {
   return new ModalBuilder()
@@ -22,7 +23,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(3)
           .setValue(scrim.maxTeams.toString())
           .setPlaceholder("e.g., 25")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -33,7 +34,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.minPlayersPerTeam.toString())
           .setPlaceholder("e.g., 4")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -44,7 +45,7 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.maxPlayersPerTeam.toString())
           .setPlaceholder("e.g., 4")
-          .setRequired(true)
+          .setRequired(true),
       ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
@@ -55,8 +56,8 @@ function teamConfigModal(scrim: Scrim) {
           .setMaxLength(2)
           .setValue(scrim.maxSubstitutePerTeam.toString())
           .setPlaceholder("e.g., 1")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
     );
 }
 
@@ -65,12 +66,8 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("show_team_config_modal")) return;
-    const [_, _scrimId] = interaction.customId.split(":");
-    if (!_scrimId) {
-      return;
-    }
-    const scrimId = parseInt(_scrimId);
-    if (isNaN(scrimId)) {
+    const scrimId = parseScrimId(interaction.customId);
+    if (!scrimId) {
       return;
     }
     const scrim = await prisma.scrim.findUnique({

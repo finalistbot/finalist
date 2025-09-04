@@ -23,3 +23,11 @@ export async function suppress<T>(promise: Promise<T>): Promise<T | null> {
     return null;
   }
 }
+
+export function parseScrimId(event: string): number | undefined {
+  const split = event.split(":");
+  if (split.length < 2) return undefined;
+  const id = parseInt(split[1]!);
+  if (isNaN(id)) return undefined;
+  return id;
+}

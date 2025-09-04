@@ -1,12 +1,12 @@
 import { z } from "zod";
 import * as dateFns from "date-fns";
-import { BracketClient } from "@/base/classes/client";
-import { Events, Interaction } from "discord.js";
+import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { ZodIssueCode } from "zod/v3";
 import { queue } from "@/lib/bullmq";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
+import { parseScrimId } from "@/lib/utils";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -28,12 +28,8 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
   async execute(interaction: Interaction) {
     if (!interaction.isModalSubmit()) return;
     if (!interaction.customId.startsWith("scrim_timing_config_submit")) return;
-    const [_, _scrimId] = interaction.customId.split(":");
-    if (!_scrimId) {
-      return;
-    }
-    const scrimId = parseInt(_scrimId);
-    if (isNaN(scrimId)) {
+    const scrimId = parseScrimId(interaction.customId);
+    if (!scrimId) {
       return;
     }
     const rawBody = {
