@@ -45,6 +45,7 @@ model Scrim {
   maxPlayersPerTeam     Int
   maxSubstitutePerTeam  Int
   slotListMessageId     String?
+  autoSlotList          Boolean   @default(true)
 
   registrationChannelId String
   logsChannelId         String
@@ -59,6 +60,7 @@ model Scrim {
   updatedAt  DateTime     @updatedAt
   Team       Team[]
   TeamMember TeamMember[]
+  SlotEntry  SlotEntry[]
 }
 
 model Team {
@@ -101,4 +103,17 @@ model BannedUser {
   createdAt DateTime @default(now())
 
   @@unique([guildId, userId])
+}
+
+model SlotEntry {
+  id         Int      @id @default(autoincrement())
+  scrimId    Int
+  teamId     String
+  slotNumber Int
+  createdAt  DateTime @default(now())
+
+  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@unique([scrimId, teamId])
+  @@unique([scrimId, slotNumber])
 }
