@@ -16,7 +16,7 @@ export function mentionUser(userId: string): string {
   return `<@${userId}>`;
 }
 
-export async function supress<T>(promise: Promise<T>): Promise<T | null> {
+export async function suppress<T>(promise: Promise<T>): Promise<T | null> {
   try {
     return await promise;
   } catch (e) {

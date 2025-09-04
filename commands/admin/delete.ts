@@ -2,7 +2,7 @@ import { Command } from "@/base/classes/command";
 import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
-import { supress } from "@/lib/utils";
+import { suppress } from "@/lib/utils";
 import { Scrim, Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
@@ -19,7 +19,7 @@ export default class ScrimDelete extends Command {
       option
         .setName("id")
         .setDescription("The ID of the scrim to delete")
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
@@ -69,15 +69,15 @@ export default class ScrimDelete extends Command {
     ];
     await Promise.allSettled(
       deletableChannels.map((channelId) =>
-        rest.delete(Routes.channel(channelId)),
-      ),
+        rest.delete(Routes.channel(channelId))
+      )
     );
 
     await prisma.scrim.delete({ where: { id: scrim.id } });
-    await supress(
+    await suppress(
       interaction.editReply({
         content: `Scrim with ID ${scrim.id} has been deleted.`,
-      }),
+      })
     );
   }
 
@@ -109,7 +109,7 @@ export default class ScrimDelete extends Command {
       scrims.map((scrim) => ({
         name: `${scrim.id}: ${scrim.name}`,
         value: scrim.id,
-      })),
+      }))
     );
   }
 }

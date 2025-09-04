@@ -8,6 +8,7 @@ import {
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
+import { suppress } from "@/lib/utils";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -34,13 +35,13 @@ export default class SetupCommand extends Command {
     let updatesChannel = null;
     if (guildConfig) {
       if (guildConfig.adminRoleId) {
-        adminRole = await interaction.guild.roles.fetch(
-          guildConfig.adminRoleId,
+        adminRole = await suppress(
+          interaction.guild.roles.fetch(guildConfig.adminRoleId)
         );
       }
       if (guildConfig.updatesChannelId) {
-        updatesChannel = await interaction.guild.channels.fetch(
-          guildConfig.updatesChannelId,
+        updatesChannel = await suppress(
+          interaction.guild.channels.fetch(guildConfig.updatesChannelId)
         );
       }
     }

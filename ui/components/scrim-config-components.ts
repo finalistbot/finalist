@@ -16,14 +16,21 @@ export function prepareScrimConfigComponents(scrim: Scrim) {
     new ButtonBuilder()
       .setCustomId(`toggle_scrim_registration_auto_close:${scrim.id}`)
       .setLabel(
-        scrim.autoCloseRegistration
-          ? "Disable Auto-Close"
-          : "Enable Auto-Close",
+        scrim.autoCloseRegistration ? "Disable Auto-Close" : "Enable Auto-Close"
       )
       .setStyle(
-        scrim.autoCloseRegistration ? ButtonStyle.Danger : ButtonStyle.Success,
+        scrim.autoCloseRegistration ? ButtonStyle.Danger : ButtonStyle.Success
       )
       .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+    new ButtonBuilder()
+      .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
+      .setLabel(
+        scrim.autoSlotList
+          ? "Switch to Manual Slotlist"
+          : "Switch to Auto Slotlist"
+      )
+      .setStyle(scrim.autoSlotList ? ButtonStyle.Danger : ButtonStyle.Success)
+      .setDisabled(scrim.stage !== Stage.CONFIGURATION)
   );
 
   return [row];
