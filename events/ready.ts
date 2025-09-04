@@ -1,9 +1,4 @@
-import { Events } from "discord.js";
-import { BracketClient } from "@/base/classes/client";
 import { Event } from "@/base/classes/event";
-import config from "@/config";
-import { Routes } from "discord.js";
-import { rest } from "@/lib/discord-rest";
 import logger from "@/lib/logger";
 
 export default class Ready extends Event<"clientReady"> {
