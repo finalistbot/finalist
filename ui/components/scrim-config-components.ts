@@ -1,8 +1,8 @@
 import { Scrim, Stage } from "@prisma/client";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
-export function prepareScrimConfigActionRow(scrim: Scrim) {
-  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+export function prepareScrimConfigComponents(scrim: Scrim) {
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`show_team_config_modal:${scrim.id}`)
       .setLabel("Set Teams")
@@ -25,4 +25,6 @@ export function prepareScrimConfigActionRow(scrim: Scrim) {
       )
       .setDisabled(scrim.stage !== Stage.CONFIGURATION),
   );
+
+  return [row];
 }

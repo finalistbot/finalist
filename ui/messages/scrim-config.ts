@@ -2,19 +2,19 @@ import { Scrim } from "@prisma/client";
 import { Message, TextChannel } from "discord.js";
 import { scrimConfigEmbed } from "../embeds/scrim-config";
 import { BracketClient } from "@/base/classes/client";
-import { prepareScrimConfigActionRow } from "../buttons/scrim-config-action-row";
+import { prepareScrimConfigComponents } from "../components/scrim-config-components";
 
 export async function sendConfigMessage(
   channel: TextChannel,
   scrim: Scrim,
   client: BracketClient,
 ) {
-  const scrimActionRow = prepareScrimConfigActionRow(scrim);
+  const components = prepareScrimConfigComponents(scrim);
   const embed = scrimConfigEmbed(scrim, client);
 
   return await channel.send({
     embeds: [embed],
-    components: [scrimActionRow],
+    components,
   });
 }
 
@@ -34,7 +34,7 @@ export async function editScrimConfigEmbed(
   } else {
     message = await adminChannel.messages.fetch(scrim.adminConfigMessageId);
     const embed = scrimConfigEmbed(scrim, client);
-    const scrimActionRow = prepareScrimConfigActionRow(scrim);
-    await message.edit({ embeds: [embed], components: [scrimActionRow] });
+    const components = prepareScrimConfigComponents(scrim);
+    await message.edit({ embeds: [embed], components });
   }
 }
