@@ -2,7 +2,7 @@ import { rest } from "@/lib/discord-rest";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
-import { Stage } from "@prisma/client";
+import { Scrim, Stage } from "@prisma/client";
 import {
   Routes,
   RESTPatchAPIChannelJSONBody,
@@ -10,6 +10,7 @@ import {
   RESTPostAPIChannelMessageJSONBody,
 } from "discord.js";
 import { client } from "@/client";
+import { queue } from "@/lib/bullmq";
 
 export async function openRegistration(scrimId: number) {
   const scrim = await prisma.scrim.findUnique({
@@ -114,4 +115,27 @@ export async function closeRegistration(scrimId: number) {
   await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
     body: newMessageBody,
   });
+}
+
+export async function queueRegistrationStart(scrim: Scrim) {
+  const jobName = "scrim_registration_start";
+  const jobKey = `${jobName}:${scrim.id}`;
+  const job = await queue.getJob(jobKey);
+  if (job) {
+    console.log("Canceling existing job" + job.id);
+    await job.remove();
+  }
+  const delay = scrim.registrationStartTime
+    ? Math.max(0, scrim.registrationStartTime.getTime() - new Date().getTime())
+    : 0;
+  await queue.add(
+    jobName,
+    { scrimId: scrim.id },
+    {
+      delay: delay > 0 ? delay : 0,
+      jobId: jobKey,
+      removeOnComplete: true,
+      removeOnFail: false,
+    },
+  );
 }

@@ -1,8 +1,6 @@
 import {
   ChannelType,
   ChatInputCommandInteraction,
-  CommandInteraction,
-  GuildMemberRoleManager,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
@@ -11,9 +9,9 @@ import { prisma } from "@/lib/prisma";
 import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
-import logger from "@/lib/logger";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
+import { queueRegistrationStart } from "@/services/scrim";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -131,7 +129,7 @@ export default class CreateScrim extends Command {
         },
       ],
     });
-    const scrim = await prisma.scrim.create({
+    let scrim = await prisma.scrim.create({
       data: {
         name,
         guildId: guild.id,
@@ -149,10 +147,12 @@ export default class CreateScrim extends Command {
       },
     });
     const message = await sendConfigMessage(adminChannel, scrim, this.client);
-    await prisma.scrim.update({
+    scrim = await prisma.scrim.update({
       where: { id: scrim.id },
       data: { adminConfigMessageId: message.id },
     });
+
+    await queueRegistrationStart(scrim);
 
     await interaction.editReply({
       content: `Scrim created successfully!`,

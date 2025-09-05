@@ -7,6 +7,7 @@ import { ZodIssueCode } from "zod/v3";
 import { queue } from "@/lib/bullmq";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseScrimId } from "@/lib/utils";
+import { queueRegistrationStart } from "@/services/scrim";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -69,20 +70,6 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       flags: ["Ephemeral"],
     });
     await editScrimConfigEmbed(scrim, this.client);
-    const job = await queue.getJob(`scrim_registration_start:${scrim.id}`);
-    if (job) {
-      await job.remove();
-    }
-    const delay = dateFns.differenceInMilliseconds(
-      scrim.registrationStartTime!,
-      new Date(),
-    );
-    await queue.add(
-      `scrim_registration_start:${scrim.id}`,
-      { scrimId: scrim.id },
-      {
-        delay: delay > 0 ? delay : 0,
-      },
-    );
+    await queueRegistrationStart(scrim);
   }
 }
