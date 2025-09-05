@@ -56,11 +56,11 @@ model Scrim {
   stage                 Stage   @default(CONFIGURATION)
   autoCloseRegistration Boolean @default(true)
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  Team       Team[]
-  TeamMember TeamMember[]
-  SlotEntry  SlotEntry[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Team         Team[]
+  TeamMember   TeamMember[]
+  AssignedSlot AssignedSlot[]
 }
 
 model Team {
@@ -105,7 +105,7 @@ model BannedUser {
   @@unique([guildId, userId])
 }
 
-model SlotEntry {
+model AssignedSlot {
   id         Int      @id @default(autoincrement())
   scrimId    Int
   teamId     String

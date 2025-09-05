@@ -1,5 +1,6 @@
 import { Interaction } from "discord.js";
 import { Event } from "../base/classes/event";
+import { CheckFailure } from "@/base/classes/error";
 
 export default class CommandHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -14,9 +15,19 @@ export default class CommandHandler extends Event<"interactionCreate"> {
       );
       return;
     }
-
     try {
-      await command.executeWithChecks(interaction);
+      if (command.checks) {
+        for (const check of command.checks) {
+          let result = check(interaction);
+          if (result instanceof Promise) {
+            result = await result;
+          }
+          if (!result) {
+            throw new CheckFailure("A check failed for this command.");
+          }
+        }
+      }
+      await command.execute(interaction);
     } catch (error) {
       this.client.emit("commandError", interaction, error, command.data.name);
     }
