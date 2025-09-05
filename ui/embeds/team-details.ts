@@ -9,6 +9,9 @@ export async function teamDetailsEmbed(team: Team) {
   });
   const captainUser = captain ? await client.users.fetch(captain.userId) : null;
 
+  const isApprove = await prisma.assignedSlot.findFirst({
+    where: { teamId: team.id },
+  });
   const members = await prisma.teamMember.findMany({
     where: { teamId: team.id },
   });
@@ -30,8 +33,8 @@ export async function teamDetailsEmbed(team: Team) {
     : "Not registered";
 
   const embed = new EmbedBuilder()
-    .setColor("#0052cc") // nice blue
-    .setTitle(`🏆 Team: ${team.name}`)
+    .setColor("#0052cc") 
+    .setTitle(`${isApprove ? "✅ " : ""}Team: ${team.name}`)
     .setAuthor({
       name: "Scrim Team Details",
       iconURL: "https://i.imgur.com/AfFp7pu.png",

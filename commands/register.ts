@@ -9,6 +9,8 @@ import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
+import { get } from "http";
+import { prepareApproveTeamButton } from "@/ui/components/approve-team-components";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -96,13 +98,20 @@ export default class RegisterTeam extends Command {
     if (needClosing) {
       await closeRegistration(scrim.id);
     }
-    if (scrim.teamsChannelId) {
-      const embed = await teamDetailsEmbed(team);
+    const embed = await teamDetailsEmbed(team);
+    if (scrim.registrationChannelId) {
+      const registerChannel = this.client.channels.cache.get(
+        scrim.registrationChannelId,
+      ) as GuildTextBasedChannel;
+      if (!registerChannel) return;
+      await registerChannel.send({ embeds: [embed] });
+    }
+    if (scrim.teamsChannelId){
       const teamChannel = this.client.channels.cache.get(
         scrim.teamsChannelId,
       ) as GuildTextBasedChannel;
       if (!teamChannel) return;
-      await teamChannel.send({ embeds: [embed] });
+      await teamChannel.send({embeds: [embed], components: await prepareApproveTeamButton(team)});
     }
   }
 }

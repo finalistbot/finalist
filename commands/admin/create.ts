@@ -114,7 +114,7 @@ export default class CreateScrim extends Command {
       permissionOverwrites: [
         {
           id: guild.roles.everyone,
-          deny: ["SendMessages"],
+          deny: ["ViewChannel"],
         },
         {
           id: guildConfig.adminRoleId,
