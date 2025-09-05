@@ -12,7 +12,7 @@ export class CommandError extends Error {
   }
 }
 
-export class CommandCheckError extends Error {
+export class CheckFailure extends CommandError {
   constructor(message: string) {
     super(message);
     this.name = "CommandCheckError";
