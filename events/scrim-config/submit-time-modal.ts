@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { ZodIssueCode } from "zod/v3";
 import { queue } from "@/lib/bullmq";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
-import { parseScrimId } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 import { queueRegistrationStart } from "@/services/scrim";
 
 const TimingConfigSchema = z.object({
@@ -29,7 +29,7 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
   async execute(interaction: Interaction) {
     if (!interaction.isModalSubmit()) return;
     if (!interaction.customId.startsWith("scrim_timing_config_submit")) return;
-    const scrimId = parseScrimId(interaction.customId);
+    const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
       return;
     }

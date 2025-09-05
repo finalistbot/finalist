@@ -13,7 +13,6 @@ import { client } from "@/client";
 import { queue } from "@/lib/bullmq";
 import { slotListEmbed } from "@/ui/embeds/slotlist";
 
-
 export async function openRegistration(scrimId: number) {
   const scrim = await prisma.scrim.findUnique({
     where: { id: scrimId },
@@ -116,11 +115,6 @@ export async function closeRegistration(scrimId: number) {
   };
   await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
     body: newMessageBody,
-  });
-  await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
-    body: {
-      embeds: [slotListEmbed(scrim)],
-    },
   });
 }
 

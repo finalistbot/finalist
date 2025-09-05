@@ -1,7 +1,7 @@
-import { Scrim } from "@prisma/client";
-import {  Message, TextChannel } from "discord.js";
+import { AssignedSlot, Scrim } from "@prisma/client";
+import { Message, TextChannel } from "discord.js";
 import { Team } from "@prisma/client";
-import { prepareApproveTeamButton } from "../components/approve-team-components";
+import { prepareManageParticipantsComponent } from "../components/manage-participants-components";
 import { teamDetailsEmbed } from "../embeds/team-details";
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
@@ -9,11 +9,13 @@ import { prisma } from "@/lib/prisma";
 export async function sendTeamDetails(
   channel: TextChannel,
   team: Team,
+  assignedSlot: AssignedSlot | null = null,
 ) {
-
-  const components = await prepareApproveTeamButton(team);
-  const embed = teamDetailsEmbed(team)
-  
+  const components = await prepareManageParticipantsComponent(
+    team,
+    assignedSlot,
+  );
+  const embed = teamDetailsEmbed(team, assignedSlot);
 
   const teamMessage = await channel.send({
     embeds: [await embed],
@@ -21,32 +23,36 @@ export async function sendTeamDetails(
   });
   await prisma.team.update({
     where: { id: team.id },
-    data: { teamDetailsMessageId: teamMessage.id },
+    data: { messageId: teamMessage.id },
   });
   return teamMessage;
-  }
-
+}
 
 export async function editTeamDetails(
   scrim: Scrim,
   team: Team,
-  client: BracketClient
+  client: BracketClient,
 ) {
-  
   const guild = client.guilds.cache.get(scrim.guildId);
   if (!guild) return;
-  const teamChannel = guild.channels.cache.get(
-    scrim.teamsChannelId,
+  const participantsChannel = guild.channels.cache.get(
+    scrim.participantsChannelId,
   ) as TextChannel;
-  if (!teamChannel) return;
-  let message:Message
-  if (!team.teamDetailsMessageId) {
-    message = await sendTeamDetails(teamChannel,  team);
-  } else{
-    message = await teamChannel.messages.fetch(team.teamDetailsMessageId);
+  if (!participantsChannel) return;
+  let message: Message;
+  const assignedSlot = await prisma.assignedSlot.findFirst({
+    where: { teamId: team.id },
+  });
+  if (!team.messageId) {
+    message = await sendTeamDetails(participantsChannel, team, assignedSlot);
+  } else {
+    message = await participantsChannel.messages.fetch(team.messageId);
 
-    const embed = await teamDetailsEmbed(team);
-    const components = await prepareApproveTeamButton(team);
+    const embed = await teamDetailsEmbed(team, assignedSlot);
+    const components = await prepareManageParticipantsComponent(
+      team,
+      assignedSlot || undefined,
+    );
     await message.edit({ embeds: [embed], components });
   }
 }
