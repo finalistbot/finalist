@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { checkIsBanned } from "@/checks/banned";
+import { isUserBanned } from "@/checks/banned";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
@@ -27,7 +27,7 @@ export default class UnbanUser extends Command {
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const user = interaction.options.getUser("user", true);
     const guild = { id: interaction.guildId };
-    const isBanned = await checkIsBanned(guild.id, user.id);
+    const isBanned = await isUserBanned(guild.id, user.id);
     if (!isBanned) {
       await interaction.reply({
         content: `User ${mentionUser(user.id)} is not banned.`,

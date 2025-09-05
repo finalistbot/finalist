@@ -2,10 +2,10 @@ import { CommandCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
 import { prisma } from "@/lib/prisma";
 
-export const isNotBanned: CommandCheck = async (interaction) => {
+export const checkIsNotBanned: CommandCheck = async (interaction) => {
   const { guildId, user } = interaction;
   if (!guildId) return true;
-  const bannedUser = await checkIsBanned(guildId, user.id);
+  const bannedUser = await isUserBanned(guildId, user.id);
   if (bannedUser) {
     throw new CheckFailure(
       "You are banned from using this bot in this server.",
@@ -14,7 +14,7 @@ export const isNotBanned: CommandCheck = async (interaction) => {
   return true;
 };
 
-export const checkIsBanned = async (guildId: string, userId: string) => {
+export const isUserBanned = async (guildId: string, userId: string) => {
   const bannedUser = await prisma.bannedUser.findFirst({
     where: { guildId, userId },
   });

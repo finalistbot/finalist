@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { checkIsBanned, isNotBanned } from "@/checks/banned";
+import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
@@ -63,7 +63,7 @@ export default class TeamCommand extends Command {
       subcommand.setName("leave").setDescription("Leave your current team"),
     );
 
-  checks = [isNotBanned];
+  checks = [checkIsNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
@@ -92,7 +92,7 @@ export default class TeamCommand extends Command {
   }
 
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
-    const isBanned = await checkIsBanned(
+    const isBanned = await isUserBanned(
       interaction.guildId,
       interaction.user.id,
     );

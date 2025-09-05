@@ -8,15 +8,14 @@ import {
 import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
-import { checkIsBanned, isNotBanned } from "@/checks/banned";
+import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 
-// TODO: Automatically create a team for solo players and register them
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
     .setName("register")
     .setDescription("Register for the scrim");
 
-  checks = [isNotBanned];
+  checks = [checkIsNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction) {
     const scrim = await prisma.scrim.findFirst({
@@ -64,7 +63,7 @@ export default class RegisterTeam extends Command {
     });
     // TODO: refactor this
     for (const member of teamMembers) {
-      const isBanned = await checkIsBanned(scrim.guildId, member.userId);
+      const isBanned = await isUserBanned(scrim.guildId, member.userId);
       if (isBanned) {
         await interaction.reply({
           content: `Your team cannot be registered as one of the members (${member.userId}) is banned from participating in this server`,
