@@ -4,12 +4,15 @@ import {
   ChatInputCommandInteraction,
   GuildTextBasedChannel,
   SlashCommandBuilder,
+  TextChannel,
 } from "discord.js";
 import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { prepareManageParticipantsComponent } from "@/ui/components/manage-participants-components";
+import { sendTeamDetails } from "@/ui/messages/teams";
+import logger from "@/lib/logger";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -97,17 +100,13 @@ export default class RegisterTeam extends Command {
     if (needClosing) {
       await closeRegistration(scrim.id);
     }
-    const embed = await teamDetailsEmbed(team);
-    const components = await prepareManageParticipantsComponent(team);
-    if (scrim.participantsChannelId) {
-      const participantsChannel = this.client.channels.cache.get(
-        scrim.participantsChannelId,
-      ) as GuildTextBasedChannel;
-      if (!participantsChannel) return;
-      await participantsChannel.send({
-        embeds: [embed],
-        components,
-      });
+    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
+    if (!channel) {
+      logger.error(
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+      );
+      return;
     }
+    await sendTeamDetails(channel as TextChannel, team);
   }
 }
