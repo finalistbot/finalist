@@ -17,7 +17,7 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     if (isNaN(slot) || slot <= 0) {
       await interaction.reply({
         content: "Please enter a valid positive integer for slot number.",
-        ephemeral: true,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -28,7 +28,7 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     if (!team) {
       await interaction.reply({
         content: "Team not found.",
-        ephemeral: true,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -40,7 +40,7 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     });
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}. (This is a placeholder response.)`,
-      ephemeral: true,
+      flags: ["Ephemeral"],
     });
     await editTeamDetails(team.scrim, team, this.client);
   }

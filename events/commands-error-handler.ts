@@ -16,12 +16,12 @@ export default class CommandErrorHandler extends Event<"commandError"> {
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({
         content: error.message,
-        ephemeral: true,
+        flags: ["Ephemeral"],
       });
     } else {
       await interaction.reply({
         content: error.message,
-        ephemeral: true,
+        flags: ["Ephemeral"],
       });
     }
     console.error(`Error executing command ${commandName}:`, error);
