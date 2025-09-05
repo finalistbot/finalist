@@ -110,6 +110,7 @@ model AssignedSlot {
   scrimId    Int
   teamId     String
   slotNumber Int
+  messageId  String?
   createdAt  DateTime @default(now())
 
   scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)

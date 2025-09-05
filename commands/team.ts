@@ -2,7 +2,6 @@ import { Command } from "@/base/classes/command";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
-import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
@@ -376,23 +375,6 @@ export default class TeamCommand extends Command {
     await interaction.reply({
       content: `You have joined the team **${team.name}**!`,
       flags: ["Ephemeral"],
-    });
-    const teamChannel = interaction.guild?.channels.cache.get(
-      team.scrim.teamsChannelId,
-    );
-    if (!teamChannel || !teamChannel.isTextBased()) {
-      return;
-    }
-    if (!team.teamDetailsMessageId) {
-      return;
-    }
-    const message = await teamChannel.messages.fetch(team.teamDetailsMessageId);
-    if (!message) {
-      return;
-    }
-
-    await message.edit({
-      embeds: [await teamDetailsEmbed(team)],
     });
   }
 
