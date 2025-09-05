@@ -108,13 +108,13 @@ export default class CreateScrim extends Command {
         },
       ],
     });
-    const teamChannel = await category.children.create({
-      name: "teams",
+    const participantsChannel = await category.children.create({
+      name: "participants",
       type: ChannelType.GuildText,
       permissionOverwrites: [
         {
           id: guild.roles.everyone,
-          deny: ["SendMessages"],
+          deny: ["ViewChannel"],
         },
         {
           id: guildConfig.adminRoleId,
@@ -133,7 +133,7 @@ export default class CreateScrim extends Command {
         discordCategoryId: category.id,
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
-        teamsChannelId: teamChannel.id,
+        participantsChannelId: participantsChannel.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),

@@ -7,7 +7,7 @@ import {
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
-import { parseScrimId } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 
 function teamConfigModal(scrim: Scrim) {
   return new ModalBuilder()
@@ -66,7 +66,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("show_team_config_modal")) return;
-    const scrimId = parseScrimId(interaction.customId);
+    const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
       return;
     }

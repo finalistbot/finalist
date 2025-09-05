@@ -11,6 +11,7 @@ import {
 } from "discord.js";
 import { client } from "@/client";
 import { queue } from "@/lib/bullmq";
+import { slotListEmbed } from "@/ui/embeds/slotlist";
 
 export async function openRegistration(scrimId: number) {
   const scrim = await prisma.scrim.findUnique({

@@ -27,10 +27,13 @@ export async function suppress<T>(
   }
 }
 
-export function parseScrimId(event: string): number | undefined {
+export function parseIdFromString(
+  event: string,
+  pos: number = 1,
+): number | undefined {
   const split = event.split(":");
-  if (split.length < 2) return undefined;
-  const id = parseInt(split[1]!);
+  if (split.length < pos + 1) return undefined;
+  const id = parseInt(split[pos]!);
   if (isNaN(id)) return undefined;
   return id;
 }

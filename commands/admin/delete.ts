@@ -58,7 +58,7 @@ export default class ScrimDelete extends Command {
       scrim.adminChannelId,
       scrim.registrationChannelId,
       scrim.logsChannelId,
-      scrim.teamsChannelId,
+      scrim.participantsChannelId,
       scrim.discordCategoryId,
     ];
     await Promise.allSettled(
@@ -91,7 +91,7 @@ export default class ScrimDelete extends Command {
       });
     } else {
       scrims = await prisma.$queryRaw<{ id: number; name: string }[]>`
-        SELECT id, name FROM "Scrim" WHERE "guildId" = ${interaction.guildId} 
+        SELECT id, name FROM scrim WHERE guild_id = ${interaction.guildId} 
           AND SIMILARITY(name, ${search}) > 0.1
             ORDER BY SIMILARITY(name, ${search}) DESC LIMIT 25;`;
     }

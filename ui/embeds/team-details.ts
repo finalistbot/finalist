@@ -1,9 +1,12 @@
-import { Team } from "@prisma/client";
+import { AssignedSlot, Team } from "@prisma/client";
 import { client } from "@/client";
 import { prisma } from "@/lib/prisma";
 import { EmbedBuilder } from "discord.js";
 
-export async function teamDetailsEmbed(team: Team) {
+export async function teamDetailsEmbed(
+  team: Team,
+  assignedSlot: AssignedSlot | null = null,
+) {
   const captain = await prisma.teamMember.findFirst({
     where: { teamId: team.id, isCaptain: true },
   });
@@ -16,7 +19,7 @@ export async function teamDetailsEmbed(team: Team) {
   const mainMembers =
     members
       .filter((m) => !m.isSubstitute)
-      .map((m) => `<@${m.userId}>(${m.userId})`)
+      .map((m) => `<@${m.userId}>`)
       .join("\n") || "None";
 
   const substitutes =
@@ -30,8 +33,8 @@ export async function teamDetailsEmbed(team: Team) {
     : "Not registered";
 
   const embed = new EmbedBuilder()
-    .setColor("#0052cc") // nice blue
-    .setTitle(`🏆 Team: ${team.name}`)
+    .setColor("#0052cc")
+    .setTitle(`🛡️ Team: ${team.name} (ID: ${team.id})`)
     .setAuthor({
       name: "Scrim Team Details",
       iconURL: "https://i.imgur.com/AfFp7pu.png",
@@ -50,6 +53,13 @@ export async function teamDetailsEmbed(team: Team) {
       },
       { name: "👤 Members", value: mainMembers, inline: true },
       { name: "🟡 Substitutes", value: substitutes, inline: true },
+      {
+        name: "🎟️ Assigned Slot",
+        value: assignedSlot
+          ? `Slot Number: ${assignedSlot.slotNumber}`
+          : "No slot assigned",
+        inline: false,
+      },
     )
     .setTimestamp(new Date(team.updatedAt))
     .setFooter({

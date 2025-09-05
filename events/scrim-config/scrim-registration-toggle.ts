@@ -2,7 +2,7 @@ import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
-import { parseScrimId } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 
 export default class ScrimTeamConfig extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -12,7 +12,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
       !interaction.customId.startsWith("toggle_scrim_registration_auto_close")
     )
       return;
-    const scrimId = parseScrimId(interaction.customId);
+    const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
       return;
     }

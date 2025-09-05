@@ -2,14 +2,14 @@ import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
-import { parseScrimId } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 
 export default class AutoSlotList extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("toggle_scrim_slotlist_mode")) return;
-    const scrimId = parseScrimId(interaction.customId);
+    const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
       return;
     }
