@@ -19,7 +19,7 @@ export default class ScrimDelete extends Command {
       option
         .setName("id")
         .setDescription("The ID of the scrim to delete")
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     );
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
@@ -69,15 +69,15 @@ export default class ScrimDelete extends Command {
     ];
     await Promise.allSettled(
       deletableChannels.map((channelId) =>
-        rest.delete(Routes.channel(channelId))
-      )
+        rest.delete(Routes.channel(channelId)),
+      ),
     );
 
     await prisma.scrim.delete({ where: { id: scrim.id } });
     await suppress(
       interaction.editReply({
         content: `Scrim with ID ${scrim.id} has been deleted.`,
-      })
+      }),
     );
   }
 
@@ -109,7 +109,7 @@ export default class ScrimDelete extends Command {
       scrims.map((scrim) => ({
         name: `${scrim.id}: ${scrim.name}`,
         value: scrim.id,
-      }))
+      })),
     );
   }
 }

@@ -48,7 +48,7 @@ export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
         name: "🎯 Slotlist Mode",
         value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
         inline: false,
-      }
+      },
     )
     .setFooter({
       text: "Configuration locks once the registration opens.",

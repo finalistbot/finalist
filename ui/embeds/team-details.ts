@@ -40,7 +40,7 @@ export async function teamDetailsEmbed(team: Team) {
     .setDescription(
       `**Scrim:** ${
         team.scrimId || "Not assigned"
-      }\n**Registered:** ${registeredAt}`
+      }\n**Registered:** ${registeredAt}`,
     )
     .addFields(
       {
@@ -49,7 +49,7 @@ export async function teamDetailsEmbed(team: Team) {
         inline: true,
       },
       { name: "👤 Members", value: mainMembers, inline: true },
-      { name: "🟡 Substitutes", value: substitutes, inline: true }
+      { name: "🟡 Substitutes", value: substitutes, inline: true },
     )
     .setTimestamp(new Date(team.updatedAt))
     .setFooter({

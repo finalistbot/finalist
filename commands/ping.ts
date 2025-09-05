@@ -7,6 +7,7 @@ export default class PingCommand extends Command {
     .setDescription("Replies with Pong!");
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.reply("Pong!");
+    const latency = Date.now() - interaction.createdTimestamp;
+    await interaction.reply(`Pong! Latency is ${latency}ms.`);
   }
 }

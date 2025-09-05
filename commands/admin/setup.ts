@@ -36,12 +36,12 @@ export default class SetupCommand extends Command {
     if (guildConfig) {
       if (guildConfig.adminRoleId) {
         adminRole = await suppress(
-          interaction.guild.roles.fetch(guildConfig.adminRoleId)
+          interaction.guild.roles.fetch(guildConfig.adminRoleId),
         );
       }
       if (guildConfig.updatesChannelId) {
         updatesChannel = await suppress(
-          interaction.guild.channels.fetch(guildConfig.updatesChannelId)
+          interaction.guild.channels.fetch(guildConfig.updatesChannelId),
         );
       }
     }
