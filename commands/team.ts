@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { checkIsBanned } from "@/checks/is-banned";
+import { checkIsBanned, isNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
@@ -62,6 +62,8 @@ export default class TeamCommand extends Command {
     .addSubcommand((subcommand) =>
       subcommand.setName("leave").setDescription("Leave your current team"),
     );
+
+  checks = [isNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();

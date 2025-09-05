@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
@@ -21,14 +21,8 @@ export default class ScrimDelete extends Command {
         .setDescription("The ID of the scrim to delete")
         .setAutocomplete(true),
     );
+  checks = [checkIsScrimAdmin];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
-    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
-    if (!isScrimAdmin) {
-      return await interaction.reply({
-        content: "You do not have permission to use this command.",
-        flags: "Ephemeral",
-      });
-    }
     const scrimId = interaction.options.getInteger("id");
     let scrim: Scrim | null = null;
     if (scrimId === null) {
@@ -101,10 +95,13 @@ export default class ScrimDelete extends Command {
           AND SIMILARITY(name, ${search}) > 0.1
             ORDER BY SIMILARITY(name, ${search}) DESC LIMIT 25;`;
     }
-    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
-    if (!isScrimAdmin) {
-      return await interaction.respond([]);
+    let isAdmin = await suppress(checkIsScrimAdmin(interaction), false);
+
+    if (!isAdmin) {
+      await interaction.respond([]);
+      return;
     }
+
     await interaction.respond(
       scrims.map((scrim) => ({
         name: `${scrim.id}: ${scrim.name}`,

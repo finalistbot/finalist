@@ -10,8 +10,8 @@ import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 import { queueRegistrationStart } from "@/services/scrim";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -37,6 +37,8 @@ export default class CreateScrim extends Command {
         ),
     );
 
+  checks = [checkIsScrimAdmin];
+
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const guild = interaction.guild;
     const result = await checkIsGuildSetup(guild);
@@ -48,15 +50,6 @@ export default class CreateScrim extends Command {
       return;
     }
     const guildConfig = result.config;
-    const isAdmin = await checkIsScrimAdminInteraction(interaction);
-    if (!isAdmin) {
-      await interaction.reply({
-        content:
-          "Admin role is not set. Please run /setup to configure the guild.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
     await interaction.deferReply({ flags: ["Ephemeral"] });
     const templateValue = interaction.options.getString("template");
     const template = templateValue

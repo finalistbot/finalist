@@ -7,8 +7,8 @@ import {
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
 import { suppress } from "@/lib/utils";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -17,15 +17,9 @@ export default class SetupCommand extends Command {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild);
 
+  checks = [checkIsScrimAdmin];
+
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
-    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
-    if (!isScrimAdmin) {
-      await interaction.reply({
-        content: "You do not have permission to use this command.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
     await interaction.deferReply({ flags: "Ephemeral" });
     const guild = interaction.guild;
     const guildConfig = await prisma.guildConfig.findUnique({

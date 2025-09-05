@@ -8,13 +8,15 @@ import {
 import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
-import { checkIsBanned } from "@/checks/is-banned";
+import { checkIsBanned, isNotBanned } from "@/checks/banned";
 
 // TODO: Automatically create a team for solo players and register them
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
     .setName("register")
     .setDescription("Register for the scrim");
+
+  checks = [isNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction) {
     const scrim = await prisma.scrim.findFirst({

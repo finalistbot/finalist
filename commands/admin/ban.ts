@@ -1,7 +1,7 @@
+import { CommandCheck } from "@/base/classes/check";
 import { Command } from "@/base/classes/command";
-import { checkIsBanned } from "@/checks/is-banned";
-import { checkIsScrimAdminInteraction } from "@/checks/is-scrim-admin";
-import logger from "@/lib/logger";
+import { checkIsBanned } from "@/checks/banned";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser } from "@/lib/utils";
 import {
@@ -19,26 +19,11 @@ export default class BanUser extends Command {
     )
     .setContexts(InteractionContextType.Guild);
 
+  checks = [checkIsScrimAdmin];
+
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const user = interaction.options.getUser("user", true);
-    const isScrimAdmin = await checkIsScrimAdminInteraction(interaction);
     const guildId = interaction.guildId;
-    if (!isScrimAdmin) {
-      logger.info(
-        `User ${interaction.user.tag} does not have permission to use create command in guild ${guildId}`,
-        {
-          guildId: guildId,
-          userId: interaction.user.id,
-          command: "create",
-        },
-      );
-      await interaction.reply({
-        content: "You do not have permission to use this command.",
-        flags: ["Ephemeral"],
-      });
-
-      return;
-    }
     const isBanned = await checkIsBanned(guildId, user.id);
     if (isBanned) {
       await interaction.reply({

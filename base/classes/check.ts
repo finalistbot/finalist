@@ -1,5 +1,5 @@
-import { ChatInputCommandInteraction } from "discord.js";
+import { Interaction } from "discord.js";
 
 export type CommandCheck = (
-  interaction: ChatInputCommandInteraction,
+  interaction: Interaction,
 ) => Promise<boolean> | boolean;

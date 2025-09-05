@@ -1,0 +1,14 @@
+import { CommandCheck } from "@/base/classes/check";
+import { BracketClient } from "@/base/classes/client";
+import { CheckFailure } from "@/base/classes/error";
+import { Interaction } from "discord.js";
+
+export const checkIsBotOwner: CommandCheck = async (
+  interaction: Interaction,
+) => {
+  const client = interaction.client as BracketClient;
+  const owners = client.ownerIds;
+  if (interaction.user.id === client.application?.owner?.id) return true;
+  if (owners.includes(interaction.user.id)) return true;
+  throw new CheckFailure("You must be the bot owner to use this command.");
+};
