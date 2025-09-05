@@ -18,8 +18,7 @@ export default class CommandHandler extends Event<"interactionCreate"> {
     try {
       await command.execute(interaction);
     } catch (error) {
-      console.error(`Error executing ${interaction.commandName}`);
-      console.error(error);
+      this.client.emit("commandError", interaction, error, command.data.name);
     }
   }
 }

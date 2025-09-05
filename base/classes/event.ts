@@ -1,11 +1,14 @@
-import { ClientEvents } from "discord.js";
+import { ChatInputCommandInteraction, ClientEvents } from "discord.js";
 import { BracketClient } from "./client";
 
-interface CustomEvents {
-  scrimCreate: [scrimId: number, hostId: string];
-  scrimEnd: [scrimId: number];
+interface BracketEvents {
+  commandError: [
+    interaction: ChatInputCommandInteraction,
+    error: Error,
+    commandName: string,
+  ];
 }
-type BracketClientEvents = ClientEvents & CustomEvents;
+type BracketClientEvents = ClientEvents & BracketEvents;
 
 export abstract class Event<K extends keyof BracketClientEvents> {
   public abstract event: K;
