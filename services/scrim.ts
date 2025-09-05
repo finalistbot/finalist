@@ -122,7 +122,6 @@ export async function queueRegistrationStart(scrim: Scrim) {
   const jobKey = `${jobName}:${scrim.id}`;
   const job = await queue.getJob(jobKey);
   if (job) {
-    console.log("Canceling existing job" + job.id);
     await job.remove();
   }
   const delay = scrim.registrationStartTime

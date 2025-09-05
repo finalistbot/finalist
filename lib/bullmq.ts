@@ -6,7 +6,6 @@ export const worker = new Worker(
   async (job) => {
     if (job.name == "scrim_registration_start") {
       const { scrimId } = job.data;
-      console.log(typeof scrimId, " is the type of scrimId");
       await openRegistration(scrimId);
     }
   },
