@@ -2,15 +2,12 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import {
   ChatInputCommandInteraction,
-  GuildTextBasedChannel,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
 import { Stage } from "@prisma/client";
 import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
-import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
-import { prepareManageParticipantsComponent } from "@/ui/components/manage-participants-components";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 
