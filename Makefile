@@ -1,2 +1,2 @@
 bot:
-	pnpm exec tsx index.ts
+	pnpm exec tsx src/index.ts

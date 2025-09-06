@@ -19,7 +19,8 @@ function registerEvent(filePath: string) {
 }
 
 function registerEvents() {
-  const handlerFiles = getHandlerFiles("./events");
+  const handlerFilesPath = path.join(__dirname, "events");
+  const handlerFiles = getHandlerFiles(handlerFilesPath);
   handlerFiles.forEach((file) => registerEvent(file));
 }
 
@@ -37,7 +38,8 @@ function registerCommand(filePath: string) {
 }
 
 function registerCommands() {
-  const handlerFiles = getHandlerFiles("./commands");
+  const handlerFilesPath = path.join(__dirname, "commands");
+  const handlerFiles = getHandlerFiles(handlerFilesPath);
   handlerFiles.forEach((file) => registerCommand(file));
 }
 
