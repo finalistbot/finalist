@@ -11,9 +11,11 @@ import {
 } from "discord.js";
 import { client } from "@/client";
 import { queue } from "@/lib/bullmq";
-import { slotListEmbed } from "@/ui/embeds/slotlist";
 
 export async function openRegistration(scrimId: number) {
+  await queue
+    .getJob(`scrim_registration_start:${scrimId}`)
+    ?.then((job) => job?.remove());
   const scrim = await prisma.scrim.findUnique({
     where: { id: scrimId },
   });
