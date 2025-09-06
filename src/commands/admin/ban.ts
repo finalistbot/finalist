@@ -1,4 +1,3 @@
-import { CommandCheck } from "@/base/classes/check";
 import { Command } from "@/base/classes/command";
 import { isUserBanned } from "@/checks/banned";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { GuildMember, Interaction } from "discord.js";
-import { type CommandCheck } from "../base/classes/check";
+import { type CommandCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
 
 export const checkIsScrimAdmin: CommandCheck = async (

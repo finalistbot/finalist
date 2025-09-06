@@ -3,8 +3,6 @@ import * as dateFns from "date-fns";
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { ZodIssueCode } from "zod/v3";
-import { queue } from "@/lib/bullmq";
 import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
 import { queueRegistrationStart } from "@/services/scrim";
@@ -15,7 +13,10 @@ const TimingConfigSchema = z.object({
     const isValid = dateFns.isValid(parsed);
     if (!isValid) {
       ctx.addIssue({
-        code: ZodIssueCode.custom,
+        code: "invalid_value",
+        expected: "valid date string",
+        received: "invalid date string",
+        values: [val],
         message: "Invalid date format. Please use YYYY-MM-DD HH:MM (24-hour)",
       });
       return z.NEVER;

@@ -1,5 +1,5 @@
 import { Interaction } from "discord.js";
-import { Event } from "../base/classes/event";
+import { Event } from "@/base/classes/event";
 import { CheckFailure } from "@/base/classes/error";
 
 export default class CommandHandler extends Event<"interactionCreate"> {
