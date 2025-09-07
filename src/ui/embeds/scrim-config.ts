@@ -53,5 +53,5 @@ export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
     .setFooter({
       text: "Configuration locks once the registration opens.",
     })
-    .setImage("https://i.ibb.co/XxXCWznH/image.png");
+    .setImage("https/i.postimg.cc/VvyvzgPF/Scrim-Manager.png");
 }

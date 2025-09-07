@@ -37,9 +37,9 @@ export async function teamDetailsEmbed(
     .setTitle(`🛡️ Team: ${team.name} (ID: ${team.id})`)
     .setAuthor({
       name: "Scrim Team Details",
-      iconURL: "https://i.imgur.com/AfFp7pu.png",
+      iconURL: "https://i.postimg.cc/dVJBqmqv/Finalist.png",
     })
-    .setThumbnail("https://i.imgur.com/AfFp7pu.png")
+    .setThumbnail("https://i.postimg.cc/dVJBqmqv/Finalist.png")
     .setDescription(
       `**Scrim:** ${
         team.scrimId || "Not assigned"
@@ -64,7 +64,7 @@ export async function teamDetailsEmbed(
     .setTimestamp(new Date(team.updatedAt))
     .setFooter({
       text: "Last updated",
-      iconURL: "https://i.imgur.com/AfFp7pu.png",
+      iconURL: "https://i.postimg.cc/dVJBqmqv/Finalist.png",
     });
 
   return embed;
