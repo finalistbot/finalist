@@ -1,3 +1,4 @@
+import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import { EmbedBuilder } from "discord.js";
@@ -8,7 +9,7 @@ export async function slotListEmbed(scrim: Scrim) {
     orderBy: { slotNumber: "asc" },
   });
   const embed = new EmbedBuilder()
-    .setColor("Green")
+    .setColor(BRAND_COLOR)
     .setTitle(`Slot List for Scrim ${scrim.id}`)
     .setDescription("List of assigned slots for the scrim.")
     .addFields(

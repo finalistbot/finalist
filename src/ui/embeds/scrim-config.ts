@@ -1,4 +1,5 @@
 import { BracketClient } from "@/base/classes/client";
+import { BRAND_COLOR } from "@/lib/constants";
 import { discordTimestamp } from "@/lib/utils";
 import { Scrim } from "@prisma/client";
 import { EmbedBuilder } from "discord.js";
@@ -6,7 +7,7 @@ import { EmbedBuilder } from "discord.js";
 export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
   return new EmbedBuilder()
     .setTitle("⚙️ Scrim Configuration")
-    .setColor("Green")
+    .setColor(BRAND_COLOR)
     .setAuthor({
       name: client.user?.username || "Scrim Bot",
     })

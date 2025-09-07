@@ -2,6 +2,7 @@ import { AssignedSlot, Team } from "@prisma/client";
 import { client } from "@/client";
 import { prisma } from "@/lib/prisma";
 import { EmbedBuilder } from "discord.js";
+import { BRAND_COLOR } from "@/lib/constants";
 
 export async function teamDetailsEmbed(
   team: Team,
@@ -33,7 +34,7 @@ export async function teamDetailsEmbed(
     : "Not registered";
 
   const embed = new EmbedBuilder()
-    .setColor("#0052cc")
+    .setColor(BRAND_COLOR)
     .setTitle(`🛡️ Team: ${team.name} (ID: ${team.id})`)
     .setAuthor({
       name: "Scrim Team Details",
