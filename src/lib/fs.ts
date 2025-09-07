@@ -11,8 +11,13 @@ export function getHandlerFiles(dir: string): string[] {
       const stat = fs.statSync(filePath);
       if (stat && stat.isDirectory()) {
         traverseDirectory(filePath);
-      } else if (file.endsWith(".ts")) {
-        results.push(filePath);
+      } else {
+        if (
+          (file.endsWith(".ts") || file.endsWith(".js")) &&
+          !file.endsWith(".d.ts")
+        ) {
+          results.push(filePath);
+        }
       }
     });
   }

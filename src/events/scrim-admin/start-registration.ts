@@ -4,6 +4,7 @@ import { parseIdFromString } from "@/lib/utils";
 import { openRegistration } from "@/services/scrim";
 import { Stage } from "@prisma/client";
 import { CacheType, Interaction } from "discord.js";
+
 export default class StartRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
 

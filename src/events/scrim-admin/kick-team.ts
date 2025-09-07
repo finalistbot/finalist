@@ -2,6 +2,7 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, suppress } from "@/lib/utils";
 import { Interaction, CacheType } from "discord.js";
+
 export default class KickTeam extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction<CacheType>): Promise<void> {

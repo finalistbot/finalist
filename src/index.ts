@@ -6,8 +6,9 @@ import logger from "./lib/logger";
 import { getHandlerFiles } from "./lib/fs";
 
 function registerEvent(filePath: string) {
-  import(path.resolve(filePath)).then(({ default: Handler }) => {
+  import(path.resolve(filePath)).then((mod) => {
     try {
+      const Handler = mod.default?.default || mod.default;
       const event: Event<any> = new Handler(client);
       client.on(event.event.toString(), (...args) => event.execute(...args));
       logger.info(`Loaded event ${event.constructor.name}`);
@@ -25,8 +26,9 @@ function registerEvents() {
 }
 
 function registerCommand(filePath: string) {
-  import(path.resolve(filePath)).then(({ default: Command }) => {
+  import(path.resolve(filePath)).then((mod) => {
     try {
+      const Command = mod.default?.default || mod.default;
       const command = new Command(client);
       client.commands.set(command.data.name, command);
       logger.info(`Loaded command ${command.data.name}`);

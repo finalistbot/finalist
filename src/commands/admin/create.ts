@@ -30,7 +30,7 @@ export default class CreateScrim extends Command {
         .setDescription("Template for the scrim")
         .setRequired(false)
         .addChoices(
-          ...scrimTemplateMap.values().map((template) => ({
+          [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
           })),
