@@ -76,8 +76,9 @@ model Team {
   messageId    String?   @map("message_id")
   registeredAt DateTime? @map("registered_at")
 
-  scrim      Scrim        @relation(fields: [scrimId], references: [id], onDelete: Cascade)
-  TeamMember TeamMember[]
+  scrim        Scrim          @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+  TeamMember   TeamMember[]
+  AssignedSlot AssignedSlot[]
 
   @@map("team")
 }
@@ -122,6 +123,7 @@ model AssignedSlot {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([scrimId, teamId])
   @@unique([scrimId, slotNumber])
