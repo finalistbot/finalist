@@ -13,16 +13,20 @@ export default class CommandErrorHandler extends Event<"commandError"> {
       console.error(`Unexpected error in command ${commandName}:`, error);
       return;
     }
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: error.message,
-        flags: ["Ephemeral"],
-      });
-    } else {
-      await interaction.reply({
-        content: error.message,
-        flags: ["Ephemeral"],
-      });
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: error.message,
+          flags: ["Ephemeral"],
+        });
+      } else {
+        await interaction.reply({
+          content: error.message,
+          flags: ["Ephemeral"],
+        });
+      }
+    } catch (err) {
+      console.error("Failed to send error message to user:", err);
     }
     console.error(`Error executing command ${commandName}:`, error);
   }
