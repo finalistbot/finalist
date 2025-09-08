@@ -5,12 +5,8 @@
     "outDir": "./dist",
     "module": "nodenext",
     "target": "esnext",
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "esnext"
-    ],
+    "types": ["node"],
+    "lib": ["esnext"],
     "sourceMap": true,
     "declaration": false,
     "declarationMap": false,
@@ -24,14 +20,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": [
-        "*"
-      ]
-    },
+      "@/*": ["*"]
+    }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "tsup.config.ts",
-  ]
+  "exclude": ["node_modules", "dist", "tsup.config.ts"]
 }

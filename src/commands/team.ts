@@ -9,6 +9,7 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 
 export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
@@ -60,6 +61,9 @@ export default class TeamCommand extends Command {
     )
     .addSubcommand((subcommand) =>
       subcommand.setName("leave").setDescription("Leave your current team"),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setName("info").setDescription("Get info about your team"),
     );
 
   checks = [checkIsNotBanned];
@@ -81,6 +85,10 @@ export default class TeamCommand extends Command {
         break;
       case "leave":
         await this.leaveTeam(interaction);
+        break;
+      case "info":
+        await this.teamInfo(interaction);
+        break;
       default:
         await interaction.reply({
           content: "Unknown subcommand.",
@@ -474,6 +482,36 @@ export default class TeamCommand extends Command {
 
     await interaction.reply({
       content: `You have left the team "${teamMember.team.name}".`,
+      flags: "Ephemeral",
+    });
+  }
+  async teamInfo(interaction: ChatInputCommandInteraction) {
+    const scrim = await prisma.scrim.findFirst({
+      where: { registrationChannelId: interaction.channelId },
+    });
+    if (!scrim) {
+      await interaction.reply({
+        content: "This channel is not associated with any scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    const teamMember = await prisma.teamMember.findFirst({
+      where: { scrimId: scrim.id, userId: interaction.user.id },
+      include: { team: { include: { TeamMember: true } } },
+    });
+
+    if (!teamMember) {
+      await interaction.reply({
+        content: "You are not part of any team in this scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const embed = await teamDetailsEmbed(teamMember.team);
+    await interaction.reply({
+      embeds: [embed],
       flags: "Ephemeral",
     });
   }
