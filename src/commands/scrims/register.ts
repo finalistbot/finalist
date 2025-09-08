@@ -100,7 +100,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+        `Participants channel with ID ${scrim.participantsChannelId} not found`
       );
       return;
     }
