@@ -9,6 +9,7 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+import { teamDetailsEmbed } from "@/ui/embeds/team-details";
 
 export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
@@ -23,11 +24,11 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team"),
+      subcommand.setName("disband").setDescription("Disband your team")
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -38,8 +39,8 @@ export default class TeamCommand extends Command {
             .setName("memberid")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -49,17 +50,20 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("leave").setDescription("Leave your current team"),
+      subcommand.setName("leave").setDescription("Leave your current team")
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setName("info").setDescription("Get info about your team")
     );
 
   checks = [checkIsNotBanned];
@@ -81,6 +85,10 @@ export default class TeamCommand extends Command {
         break;
       case "leave":
         await this.leaveTeam(interaction);
+        break;
+      case "info":
+        await this.teamInfo(interaction);
+        break;
       default:
         await interaction.reply({
           content: "Unknown subcommand.",
@@ -93,7 +101,7 @@ export default class TeamCommand extends Command {
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
     const isBanned = await isUserBanned(
       interaction.guildId,
-      interaction.user.id,
+      interaction.user.id
     );
     if (isBanned) {
       await interaction.reply({
@@ -413,7 +421,7 @@ export default class TeamCommand extends Command {
     }));
 
     const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase())
     );
 
     await interaction.respond(filtered.slice(0, 25));
@@ -474,6 +482,36 @@ export default class TeamCommand extends Command {
 
     await interaction.reply({
       content: `You have left the team "${teamMember.team.name}".`,
+      flags: "Ephemeral",
+    });
+  }
+  async teamInfo(interaction: ChatInputCommandInteraction) {
+    const scrim = await prisma.scrim.findFirst({
+      where: { registrationChannelId: interaction.channelId },
+    });
+    if (!scrim) {
+      await interaction.reply({
+        content: "This channel is not associated with any scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    const teamMember = await prisma.teamMember.findFirst({
+      where: { scrimId: scrim.id, userId: interaction.user.id },
+      include: { team: { include: { TeamMember: true } } },
+    });
+
+    if (!teamMember) {
+      await interaction.reply({
+        content: "You are not part of any team in this scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const embed = await teamDetailsEmbed(teamMember.team);
+    await interaction.reply({
+      embeds: [embed],
       flags: "Ephemeral",
     });
   }
