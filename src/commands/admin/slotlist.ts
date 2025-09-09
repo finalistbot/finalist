@@ -3,6 +3,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { prisma } from "@/lib/prisma";
 import { stringify as csvStringify } from "csv-stringify/sync";
 import { table } from "table";
+import { CommandError } from "@/base/classes/error";
 
 type SlotDetails = {
   slotNumber: number;
@@ -88,14 +89,15 @@ function slotsToTable(slots: SlotDetails[]) {
 
 export default class SlotlistExport extends Command {
   data = new SlashCommandBuilder()
-    .setName("slotlist-export")
-    .setDescription("Export the slotlist")
+    .setName("slotlist")
+    .setDescription("Send slotlist in current channel in specified format")
     .addStringOption((option) =>
       option
         .setName("format")
         .setDescription("The format to export the slotlist in")
         .setRequired(false)
         .addChoices(
+          { name: "Embedded", value: "embed" },
           { name: "CSV", value: "csv" },
           { name: "Table", value: "table" },
           { name: "HTML", value: "html" },
@@ -103,7 +105,7 @@ export default class SlotlistExport extends Command {
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const format = interaction.options.getString("format") || "table";
+    const format = interaction.options.getString("format") || "embed";
     await interaction.deferReply({ flags: "Ephemeral" });
 
     const scrim = await prisma.scrim.findFirst({
@@ -157,6 +159,10 @@ export default class SlotlistExport extends Command {
         attachmentData = slotsToHTML(slotDetails);
         message = "Here is the slotlist, you can view it in a web browser.";
         break;
+      case "embed":
+        throw new CommandError(
+          "Embed format is not supported for file export. Please choose CSV, HTML, or Table.",
+        );
       case "table":
       default:
         attachmentName = "slotlist.txt";
