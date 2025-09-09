@@ -21,7 +21,7 @@ export async function openRegistration(scrimId: number) {
   });
   if (!scrim || scrim.stage === Stage.REGISTRATION) {
     logger.warn(
-      `Tried to open registration for scrim ${scrimId}, but it does not exist or is already open.`,
+      `Tried to open registration for scrim ${scrimId}, but it does not exist or is already open.`
     );
     return;
   }
@@ -65,7 +65,7 @@ export async function shouldCloseRegistration(scrimId: number) {
   });
   if (!scrim) {
     logger.warn(
-      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist.`,
+      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist.`
     );
     return false;
   }
@@ -74,7 +74,7 @@ export async function shouldCloseRegistration(scrimId: number) {
   }
   if (scrim.stage !== Stage.REGISTRATION) {
     logger.warn(
-      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist or is not open.`,
+      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist or is not open.`
     );
     return false;
   }
@@ -87,7 +87,7 @@ export async function closeRegistration(scrimId: number) {
   });
   if (!scrim || scrim.stage !== Stage.REGISTRATION) {
     logger.warn(
-      `Tried to close registration for scrim ${scrimId}, but it does not exist or is not open.`,
+      `Tried to close registration for scrim ${scrimId}, but it does not exist or is not open.`
     );
     return;
   }
@@ -113,7 +113,7 @@ export async function closeRegistration(scrimId: number) {
   });
 
   const newMessageBody: RESTPostAPIChannelMessageJSONBody = {
-    content: `Team registration is now closed. Check-in is now open.`,
+    content: `Team registration is now closed. Slotlist and check-in will begin shortly.`,
   };
   await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
     body: newMessageBody,
@@ -138,6 +138,6 @@ export async function queueRegistrationStart(scrim: Scrim) {
       jobId: jobKey,
       removeOnComplete: true,
       removeOnFail: false,
-    },
+    }
   );
 }
