@@ -2,9 +2,10 @@ import { CacheType, Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { parse } from "path";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, suppress } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import { closeRegistration } from "@/services/scrim";
+import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 
 export default class CloseRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -39,7 +40,11 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
       });
       return;
     }
+
     await closeRegistration(scrimId);
+
+    scrim.stage = Stage.CHECKIN;
+    await suppress(editScrimConfigEmbed(scrim, this.client));
     await interaction.reply({
       content: `Registration for scrim with ID ${scrimId} has been closed.`,
       flags: "Ephemeral",
