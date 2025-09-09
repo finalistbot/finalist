@@ -11,11 +11,11 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
   async execute(interaction: Interaction<CacheType>): Promise<void> {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("start_registration:")) return;
+    await interaction.deferReply({ flags: "Ephemeral" });
     const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Invalid scrim ID.",
-        flags: "Ephemeral",
       });
       return;
     }
@@ -24,24 +24,21 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
       where: { id: scrimId },
     });
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Scrim with ID ${scrimId} does not exist.`,
-        flags: "Ephemeral",
       });
       return;
     }
 
     if (scrim.stage != Stage.CONFIGURATION) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Scrim with ID ${scrimId} is not in the configuration stage.`,
-        flags: "Ephemeral",
       });
       return;
     }
     await openRegistration(scrimId);
-    await interaction.reply({
+    await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been started.`,
-      flags: "Ephemeral",
     });
   }
 }
