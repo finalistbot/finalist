@@ -75,6 +75,8 @@ model Team {
   updatedAt    DateTime  @updatedAt @map("updated_at")
   messageId    String?   @map("message_id")
   registeredAt DateTime? @map("registered_at")
+  banned       Boolean   @default(false) @map("banned")
+  banReason    String?   @map("ban_reason")
 
   scrim        Scrim          @relation(fields: [scrimId], references: [id], onDelete: Cascade)
   TeamMember   TeamMember[]
