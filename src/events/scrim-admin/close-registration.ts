@@ -13,11 +13,11 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
   async execute(interaction: Interaction<CacheType>): Promise<void> {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("close_registration:")) return;
+    await interaction.deferReply({ flags: "Ephemeral" });
     const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Invalid scrim ID.",
-        flags: "Ephemeral",
       });
       return;
     }
@@ -26,17 +26,15 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
       where: { id: scrimId },
     });
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Scrim with ID ${scrimId} does not exist.`,
-        flags: "Ephemeral",
       });
       return;
     }
 
     if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Scrim with ID ${scrimId} is not in the registration stage.`,
-        flags: "Ephemeral",
       });
       return;
     }
@@ -45,9 +43,8 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
 
     scrim.stage = Stage.CHECKIN;
     await suppress(editScrimConfigEmbed(scrim, this.client));
-    await interaction.reply({
+    await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been closed.`,
-      flags: "Ephemeral",
     });
   }
 }
