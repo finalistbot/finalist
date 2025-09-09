@@ -33,7 +33,7 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
       data: { banned: true, banReason: banReason || null },
     });
     await interaction.reply({
-      content: `Team **${team.name}** has been banned.${banReason ? ` Reason: ${banReason}` : ""}`,
+      content: `Team **${team.name}** has been banned.${banReason ? ` Reason: ${banReason}` : ""}\n\nThis ban is only for this scrim. To permanently ban a team, please use \`/ban\`.`,
       flags: "Ephemeral",
     });
 
