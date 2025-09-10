@@ -10,7 +10,15 @@ function registerEvent(filePath: string) {
     try {
       const Handler = mod.default?.default || mod.default;
       const event: Event<any> = new Handler(client);
-      client.on(event.event.toString(), (...args) => event.execute(...args));
+      client.on(event.event.toString(), async (...args) => {
+        try {
+          await event.execute(...args);
+        } catch (err) {
+          logger.error(
+            `Error executing event ${event.event.toString()}: ${err}`,
+          );
+        }
+      });
       logger.info(`Loaded event ${event.constructor.name}`);
     } catch (error) {
       logger.error(`Error loading event at ${filePath}: ${error}`);
