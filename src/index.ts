@@ -56,4 +56,8 @@ function registerCommands() {
 registerEvents();
 registerCommands();
 
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+});
+
 client.login(config.BOT_TOKEN);
