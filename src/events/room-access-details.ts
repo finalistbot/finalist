@@ -1,4 +1,5 @@
 import { Event } from "@/base/classes/event";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
@@ -21,7 +22,38 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
       });
       return;
     }
-    // FIXME: Only show room details to participants of the scrim
+
+    const teamCaption = await prisma.teamMember.findFirst({
+      where: {
+        isCaptain: true,
+        userId: interaction.user.id,
+        team: { scrimId: scrim.id },
+      },
+      include: {
+        team: {
+          include: {
+            AssignedSlot: true,
+          },
+        },
+      },
+    });
+
+    try {
+      await checkIsScrimAdmin(interaction);
+    } catch {
+      if (!teamCaption) {
+        await interaction.editReply({
+          content: "You must be a team captain to view room details.",
+        });
+        return;
+      }
+      if (teamCaption.team.AssignedSlot.length == 0) {
+        await interaction.editReply({
+          content: "Your team has not been assigned a slot yet.",
+        });
+        return;
+      }
+    }
     const roomDetail = scrim.RoomDetail;
     const fields = roomDetail?.fields as Record<string, string>;
     if (!roomDetail || Object.keys(fields).length === 0) {
@@ -42,7 +74,7 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
           name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), // format keys
           value: `\`${value}\``, // put in code block for clarity
           inline: true,
-        })),
+        }))
       )
       .setFooter({
         text: `Requested by ${interaction.user.tag}`,

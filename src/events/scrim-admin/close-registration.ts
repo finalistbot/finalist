@@ -39,10 +39,9 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
       return;
     }
 
-    await closeRegistration(scrimId);
+    const updatedScrim = await closeRegistration(scrimId);
 
-    scrim.stage = Stage.CHECKIN;
-    await suppress(editScrimConfigEmbed(scrim, this.client));
+    await suppress(editScrimConfigEmbed(updatedScrim || scrim, this.client));
     await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been closed.`,
     });
