@@ -2,6 +2,7 @@ services:
   bot:
     build: .
     container_name: bracket-bot
+    restart: unless-stopped
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -20,6 +21,7 @@ services:
   db:
     image: postgres:latest
     container_name: postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -30,10 +32,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   redis:
     image: redis:latest
     container_name: redis
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
