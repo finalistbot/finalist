@@ -22,8 +22,8 @@ function createAssignSlotModal(team: Team, defaultSlot: number) {
           .setStyle(TextInputStyle.Short)
           .setPlaceholder("Enter slot number")
           .setRequired(true)
-          .setValue(defaultSlot.toString()),
-      ),
+          .setValue(defaultSlot.toString())
+      )
     );
 
   return modal;

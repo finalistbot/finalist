@@ -10,6 +10,7 @@ import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
+import { number } from "zod";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -88,6 +89,28 @@ export default class RegisterTeam extends Command {
       where: { id: teamMember.teamId },
       data: { registeredAt: new Date() },
     });
+    let assignedSlot = null;
+    if (scrim.autoSlotList) {
+      const result = await prisma.$queryRaw<{ slot: number }[]>`
+    SELECT MIN(s.slot_number) AS slot
+    FROM generate_series(1, ${scrim.maxTeams}) AS s(slot_number)
+    WHERE s.slot_number NOT IN (
+      SELECT slot_number 
+      FROM assigned_slot 
+      WHERE scrim_id = ${team.scrimId}
+  );`;
+      const slot = result[0]?.slot;
+
+      if (slot)
+        assignedSlot = await prisma.assignedSlot.create({
+          data: {
+            scrimId: scrim.id,
+            teamId: team.id,
+            slotNumber: Number(slot),
+          },
+        });
+    }
+
     await interaction.reply({
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
       flags: ["Ephemeral"],
@@ -100,10 +123,10 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+        `Participants channel with ID ${scrim.participantsChannelId} not found`
       );
       return;
     }
-    await sendTeamDetails(channel as TextChannel, team);
+    await sendTeamDetails(channel as TextChannel, team, assignedSlot);
   }
 }

@@ -41,6 +41,9 @@ export default class KickTeam extends Event<"interactionCreate"> {
         messageId: null,
       },
     });
+    await prisma.assignedSlot.deleteMany({
+      where: { teamId: teamId, scrimId: team.scrimId },
+    });
 
     await interaction.reply({
       content: `Team with ID ${teamId} has been kicked.`,
