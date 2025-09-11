@@ -1,7 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
-import { randomString } from "@/lib/utils";
+import { ConvertToTitleCase, randomString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
@@ -110,7 +110,9 @@ export default class TeamCommand extends Command {
       });
       return;
     }
-    const teamName = interaction.options.getString("name", true);
+    const teamName = ConvertToTitleCase(
+      interaction.options.getString("name", true)
+    );
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });

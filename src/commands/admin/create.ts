@@ -12,6 +12,7 @@ import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { queueRegistrationStart } from "@/services/scrim";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { ConvertToTitleCase } from "@/lib/utils";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -22,7 +23,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addStringOption((option) =>
       option
@@ -33,8 +34,8 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     );
 
   checks = [checkIsScrimAdmin];
@@ -54,7 +55,9 @@ export default class CreateScrim extends Command {
     const template = templateValue
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
-    const name = interaction.options.getString("name", true);
+    const name = ConvertToTitleCase(
+      interaction.options.getString("name", true)
+    );
     const category = await guild.channels.create({
       name: `${name} - Scrim`,
       type: ChannelType.GuildCategory,

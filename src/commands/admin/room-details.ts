@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { ConvertToTitleCase } from "@/lib/utils";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -92,7 +93,9 @@ export default class RoomDetailCommand extends Command {
         },
       });
     }
-    const name = interaction.options.getString("name", true);
+    const name = ConvertToTitleCase(
+      interaction.options.getString("name", true)
+    );
     const value = interaction.options.getString("value", true);
     const fields = roomDetail.fields as Record<string, string>;
 
