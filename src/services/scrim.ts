@@ -107,7 +107,7 @@ export async function closeRegistration(scrimId: number) {
   await rest.patch(Routes.channel(scrim.registrationChannelId), {
     body,
   });
-  await prisma.scrim.update({
+  const updatedScrim = await prisma.scrim.update({
     where: { id: scrimId },
     data: { stage: Stage.CHECKIN, registrationEndedTime: new Date() },
   });
@@ -118,6 +118,7 @@ export async function closeRegistration(scrimId: number) {
   await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
     body: newMessageBody,
   });
+  return updatedScrim;
 }
 
 export async function queueRegistrationStart(scrim: Scrim) {

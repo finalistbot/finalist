@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { ConvertToTitleCase } from "@/lib/utils";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -21,14 +22,14 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field.")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
             .setName("value")
             .setDescription("The value of the field.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -38,8 +39,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("channel")
             .setDescription("The channel to post the details in.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -49,8 +50,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field to clear.")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     );
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
@@ -92,7 +93,9 @@ export default class RoomDetailCommand extends Command {
         },
       });
     }
-    const name = interaction.options.getString("name", true);
+    const name = ConvertToTitleCase(
+      interaction.options.getString("name", true)
+    );
     const value = interaction.options.getString("value", true);
     const fields = roomDetail.fields as Record<string, string>;
 
@@ -135,6 +138,7 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
+
     const roomDetail = scrim.RoomDetail;
     if (!roomDetail) {
       await interaction.editReply({
@@ -154,7 +158,7 @@ export default class RoomDetailCommand extends Command {
         .setLabel("View Room Details")
         .setStyle(ButtonStyle.Secondary)
         .setEmoji("🔑")
-        .setCustomId("view_room_details:" + scrim.id),
+        .setCustomId("view_room_details:" + scrim.id)
     );
 
     const embed = new EmbedBuilder()
