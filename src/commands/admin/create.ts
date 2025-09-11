@@ -41,16 +41,15 @@ export default class CreateScrim extends Command {
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const guild = interaction.guild;
+    await interaction.deferReply({ flags: ["Ephemeral"] });
     const result = await checkIsGuildSetup(guild);
     if (!result.valid) {
-      await interaction.reply({
+      await interaction.editReply({
         content: result.message,
-        flags: ["Ephemeral"],
       });
       return;
     }
     const guildConfig = result.config;
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const templateValue = interaction.options.getString("template");
     const template = templateValue
       ? scrimTemplateMap.get(templateValue as any)

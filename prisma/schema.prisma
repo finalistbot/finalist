@@ -62,6 +62,8 @@ model Scrim {
   Team         Team[]
   TeamMember   TeamMember[]
   AssignedSlot AssignedSlot[]
+  RoomDetail   RoomDetail?
+  roomDetailId Int?
 
   @@map("scrim")
 }
@@ -130,4 +132,13 @@ model AssignedSlot {
   @@unique([scrimId, teamId])
   @@unique([scrimId, slotNumber])
   @@map("assigned_slot")
+}
+
+model RoomDetail {
+  id        Int      @id @default(autoincrement()) @map("id")
+  scrimId   Int      @unique @map("scrim_id")
+  fields    Json     @default("{}") @map("fields") @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  Scrim     Scrim    @relation(fields: [scrimId], references: [id], onDelete: Cascade)
 }
