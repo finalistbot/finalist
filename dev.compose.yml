@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:latest
-    container_name: postgres
+    container_name: finalist-db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -11,6 +11,6 @@ services:
 
   redis:
     image: redis:latest
-    container_name: redis
+    container_name: finalist-redis
     ports:
       - "6379:6379"
