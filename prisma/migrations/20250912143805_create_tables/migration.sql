@@ -40,6 +40,7 @@ CREATE TABLE "public"."scrim" (
     "auto_close_registration" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "roomDetailId" INTEGER,
 
     CONSTRAINT "scrim_pkey" PRIMARY KEY ("id")
 );
@@ -54,6 +55,8 @@ CREATE TABLE "public"."team" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "message_id" TEXT,
     "registered_at" TIMESTAMP(3),
+    "banned" BOOLEAN NOT NULL DEFAULT false,
+    "ban_reason" TEXT,
 
     CONSTRAINT "team_pkey" PRIMARY KEY ("id")
 );
@@ -97,6 +100,17 @@ CREATE TABLE "public"."assigned_slot" (
     CONSTRAINT "assigned_slot_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."room_detail" (
+    "id" SERIAL NOT NULL,
+    "scrim_id" INTEGER NOT NULL,
+    "fields" JSONB NOT NULL DEFAULT '{}',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "room_detail_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "guild_config_guildId_key" ON "public"."guild_config"("guildId");
 
@@ -118,6 +132,9 @@ CREATE UNIQUE INDEX "assigned_slot_scrim_id_team_id_key" ON "public"."assigned_s
 -- CreateIndex
 CREATE UNIQUE INDEX "assigned_slot_scrim_id_slot_number_key" ON "public"."assigned_slot"("scrim_id", "slot_number");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "room_detail_scrim_id_key" ON "public"."room_detail"("scrim_id");
+
 -- AddForeignKey
 ALTER TABLE "public"."team" ADD CONSTRAINT "team_scrim_id_fkey" FOREIGN KEY ("scrim_id") REFERENCES "public"."scrim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -129,3 +146,9 @@ ALTER TABLE "public"."team_member" ADD CONSTRAINT "team_member_scrim_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "public"."assigned_slot" ADD CONSTRAINT "assigned_slot_scrim_id_fkey" FOREIGN KEY ("scrim_id") REFERENCES "public"."scrim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."assigned_slot" ADD CONSTRAINT "assigned_slot_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."room_detail" ADD CONSTRAINT "room_detail_scrim_id_fkey" FOREIGN KEY ("scrim_id") REFERENCES "public"."scrim"("id") ON DELETE CASCADE ON UPDATE CASCADE;

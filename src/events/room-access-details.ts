@@ -3,6 +3,7 @@ import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
+import { RoomDetailsField } from "@/types";
 import { EmbedBuilder, Interaction } from "discord.js";
 export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -55,8 +56,14 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
       }
     }
     const roomDetail = scrim.RoomDetail;
-    const fields = roomDetail?.fields as Record<string, string>;
-    if (!roomDetail || Object.keys(fields).length === 0) {
+    if (!roomDetail) {
+      await interaction.editReply({
+        content: "No room details have been set for this scrim.",
+      });
+      return;
+    }
+    const fields = roomDetail.fields as RoomDetailsField[];
+    if (fields.length === 0) {
       await interaction.editReply({
         content: "No room details have been set for this scrim.",
       });
@@ -70,11 +77,11 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
       .setTitle("🔑 Room Access Details")
       .setDescription("Below are the credentials to join this scrim match.")
       .addFields(
-        ...Object.entries(fields).map(([key, value]) => ({
-          name: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), // format keys
-          value: `\`${value}\``, // put in code block for clarity
-          inline: true,
-        }))
+        fields.map((field) => ({
+          name: field.name,
+          value: field.value,
+          inline: false,
+        })),
       )
       .setFooter({
         text: `Requested by ${interaction.user.tag}`,

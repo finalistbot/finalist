@@ -18,7 +18,7 @@ export function mentionUser(userId: string): string {
 
 export async function suppress<T>(
   promise: Promise<T> | T,
-  defaultValue: T | null = null
+  defaultValue: T | null = null,
 ): Promise<T | null> {
   try {
     return await promise;
@@ -29,7 +29,7 @@ export async function suppress<T>(
 
 export function parseIdFromString(
   event: string,
-  pos: number = 1
+  pos: number = 1,
 ): number | undefined {
   const split = event.split(":");
   if (split.length < pos + 1) return undefined;
@@ -38,10 +38,17 @@ export function parseIdFromString(
   return id;
 }
 
-export function ConvertToTitleCase(str: string): string {
+export function convertToTitleCase(str: string): string {
   return str
     .toLowerCase()
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+export function convertToSlug(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "");
 }
