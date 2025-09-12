@@ -92,6 +92,7 @@ export default class RoomDetailCommand extends Command {
       roomDetail = await prisma.roomDetail.create({
         data: {
           scrimId: scrim.id,
+          fields: [],
         },
       });
     }

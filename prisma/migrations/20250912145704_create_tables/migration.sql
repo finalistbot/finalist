@@ -104,7 +104,7 @@ CREATE TABLE "public"."assigned_slot" (
 CREATE TABLE "public"."room_detail" (
     "id" SERIAL NOT NULL,
     "scrim_id" INTEGER NOT NULL,
-    "fields" JSONB NOT NULL DEFAULT '{}',
+    "fields" JSONB NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
