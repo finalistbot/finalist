@@ -1,7 +1,8 @@
 import { Command } from "@/base/classes/command";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { ConvertToTitleCase } from "@/lib/utils";
+import { convertToSlug, convertToTitleCase } from "@/lib/utils";
+import { RoomDetailsField } from "@/types";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -10,6 +11,7 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
+
 export default class RoomDetailCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("rd")
@@ -22,14 +24,14 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field.")
-            .setRequired(true)
+            .setRequired(true),
         )
         .addStringOption((option) =>
           option
             .setName("value")
             .setDescription("The value of the field.")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -39,8 +41,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("channel")
             .setDescription("The channel to post the details in.")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -50,8 +52,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field to clear.")
-            .setRequired(false)
-        )
+            .setRequired(false),
+        ),
     );
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
@@ -93,13 +95,17 @@ export default class RoomDetailCommand extends Command {
         },
       });
     }
-    const name = ConvertToTitleCase(
-      interaction.options.getString("name", true)
-    );
+    let name = interaction.options.getString("name", true);
+    name = convertToTitleCase(name);
+    const slug = convertToSlug(name);
     const value = interaction.options.getString("value", true);
-    const fields = roomDetail.fields as Record<string, string>;
-
-    fields[name] = value;
+    const fields = roomDetail.fields as RoomDetailsField[];
+    const existingFieldIndex = fields.findIndex((f) => f.slug === slug);
+    if (existingFieldIndex !== -1) {
+      fields[existingFieldIndex] = { name, value, slug };
+    } else {
+      fields.push({ name, value, slug });
+    }
     roomDetail = await prisma.roomDetail.update({
       where: {
         id: roomDetail.id,
@@ -146,8 +152,8 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
-    const fields = roomDetail.fields as Record<string, string>;
-    if (Object.keys(fields).length === 0) {
+    const fields = roomDetail.fields as RoomDetailsField[];
+    if (fields.length === 0) {
       await interaction.editReply({
         content: "No room details have been set for this scrim.",
       });
@@ -158,7 +164,7 @@ export default class RoomDetailCommand extends Command {
         .setLabel("View Room Details")
         .setStyle(ButtonStyle.Secondary)
         .setEmoji("🔑")
-        .setCustomId("view_room_details:" + scrim.id)
+        .setCustomId("view_room_details:" + scrim.id),
     );
 
     const embed = new EmbedBuilder()
@@ -202,7 +208,7 @@ export default class RoomDetailCommand extends Command {
           id: roomDetail.id,
         },
         data: {
-          fields: {},
+          fields: [],
         },
       });
       await interaction.editReply({
@@ -210,14 +216,16 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
-    const fields = roomDetail.fields as Record<string, string>;
-    if (!(name in fields)) {
+    const fields = roomDetail.fields as RoomDetailsField[];
+    const slug = convertToSlug(name);
+    const fieldIdx = fields.findIndex((f) => f.slug === slug);
+    if (fieldIdx === -1) {
       await interaction.editReply({
         content: `Field \`${name}\` does not exist.`,
       });
       return;
     }
-    delete fields[name];
+    fields.splice(fieldIdx, 1);
     await prisma.roomDetail.update({
       where: {
         id: roomDetail.id,

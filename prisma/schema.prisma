@@ -141,4 +141,6 @@ model RoomDetail {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   Scrim     Scrim    @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@map("room_detail")
 }
