@@ -6,6 +6,7 @@ export default class SyncSlashCommands extends Command {
   data = new SlashCommandBuilder()
     .setName("sync")
     .setDescription("Sync slash commands");
+  developerOnly: boolean = true;
   async execute(interaction: ChatInputCommandInteraction) {
     if (!this.client.isOwner(interaction.user.id)) {
       return interaction.reply({
@@ -15,7 +16,7 @@ export default class SyncSlashCommands extends Command {
     }
     await interaction.deferReply({ flags: "Ephemeral" });
     const { globalCommands, devCommands } = await registerSlashCommands(
-      this.client,
+      this.client
     );
     await interaction.editReply({
       content: `Registered ${globalCommands.size} global commands and ${devCommands.size} developer commands.`,

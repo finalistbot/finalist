@@ -64,6 +64,7 @@ model Scrim {
   AssignedSlot AssignedSlot[]
   RoomDetail   RoomDetail?
   roomDetailId Int?
+  ReservedSlot ReservedSlot[]
 
   @@map("scrim")
 }
@@ -132,6 +133,19 @@ model AssignedSlot {
   @@unique([scrimId, teamId])
   @@unique([scrimId, slotNumber])
   @@map("assigned_slot")
+}
+
+model ReservedSlot {
+  id         Int      @id @default(autoincrement()) @map("id")
+  userId     String   @map("user_id")
+  scrimId    Int      @map("scrim_id")
+  slotNumber Int      @map("slot_number")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@unique([scrimId, slotNumber])
+  @@map("reserved_slot")
 }
 
 model RoomDetail {
