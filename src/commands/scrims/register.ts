@@ -10,7 +10,7 @@ import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
-import { number } from "zod";
+import { getFirstAvailableSlot } from "@/database";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -89,19 +89,40 @@ export default class RegisterTeam extends Command {
       where: { id: teamMember.teamId },
       data: { registeredAt: new Date() },
     });
-    let assignedSlot = null;
-    if (scrim.autoSlotList) {
-      const result = await prisma.$queryRaw<{ slot: number }[]>`
-    SELECT MIN(s.slot_number) AS slot
-    FROM generate_series(1, ${scrim.maxTeams}) AS s(slot_number)
-    WHERE s.slot_number NOT IN (
-      SELECT slot_number 
-      FROM assigned_slot 
-      WHERE scrim_id = ${team.scrimId}
-  );`;
-      const slot = result[0]?.slot;
 
-      if (slot)
+    const teamCaptain = await prisma.teamMember.findFirst({
+      where: {
+        teamId: team.id,
+        isCaptain: true,
+      },
+    });
+
+    if (!teamCaptain) {
+      await interaction.reply({
+        content: "Your team does not have a captain. Please contact support.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
+    const reservedSlot = await prisma.reservedSlot.findFirst({
+      where: {
+        scrimId: scrim.id,
+        userId: teamCaptain.userId,
+      },
+    });
+
+    let assignedSlot = null;
+    let performAutoSlot = reservedSlot || scrim.autoSlotList;
+    if (performAutoSlot) {
+      let slot = -1;
+      if (reservedSlot) {
+        slot = reservedSlot.slotNumber;
+      } else {
+        slot = await getFirstAvailableSlot(scrim.id);
+      }
+
+      if (slot !== -1)
         assignedSlot = await prisma.assignedSlot.create({
           data: {
             scrimId: scrim.id,
@@ -123,7 +144,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
       );
       return;
     }
