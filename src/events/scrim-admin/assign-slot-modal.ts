@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { Team } from "@prisma/client";
+import { getFirstAvailableSlot } from "@/database";
 
 function createAssignSlotModal(team: Team, defaultSlot: number) {
   const modal = new ModalBuilder()
@@ -22,8 +23,8 @@ function createAssignSlotModal(team: Team, defaultSlot: number) {
           .setStyle(TextInputStyle.Short)
           .setPlaceholder("Enter slot number")
           .setRequired(true)
-          .setValue(defaultSlot.toString())
-      )
+          .setValue(defaultSlot.toString()),
+      ),
     );
 
   return modal;
@@ -46,16 +47,8 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
     if (!team) {
       return;
     }
-    const result = await prisma.$queryRaw<{ slot: number }[]>`
-  SELECT MIN(s.slot_number) AS slot
-    FROM generate_series(1, ${team.scrim.maxTeams}) AS s(slot_number)
-    WHERE s.slot_number NOT IN (
-      SELECT slot_number 
-      FROM assigned_slot 
-      WHERE scrim_id = ${team.scrimId}
-  );`;
-    const slot = result[0]?.slot ?? 1;
-    if (slot > team.scrim.maxTeams) {
+    const slot = await getFirstAvailableSlot(team.scrimId);
+    if (slot === -1) {
       await interaction.reply({
         content:
           "All slots are already assigned. Kindly use /assign-slot command.",
