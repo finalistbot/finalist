@@ -2,36 +2,46 @@ import { Command } from "@/base/classes/command";
 import { BRAND_COLOR } from "@/lib/constants";
 import {
   ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } from "discord.js";
 
+const Categories = ["Admin", "Team", "Scrim"];
+
+const description = [
+  "## Bot Help",
+  "Invite finalist to your server and join our community server! You can vote every 12 hours for finalist! ❤️",
+  "### Categories",
+  Categories.map((cat) => `• ${cat}`).join("\n"),
+].join("\n");
 export default class HelpCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("help")
     .setDescription("Get a list of available commands.");
   async execute(interaction: ChatInputCommandInteraction) {
-    const commands = this.client.commands
-      .filter((cmd) => !cmd.developerOnly)
-      .map((cmd) => `> \`/${cmd.data.name}\` • ${cmd.data.description}`)
-      .join("\n");
     const embed = new EmbedBuilder()
-      .setTitle("Help")
-      .setDescription(commands)
+      .setDescription(description)
       .setColor(BRAND_COLOR);
-    // TODO: Add dropdown menu for categories
-    const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel("Support Server")
-        .setStyle(ButtonStyle.Link)
-        .setURL("https://discord.gg/yCdASUuQ")
+    // FIXME:  Error executing event interactionCreate: TypeError: component.toJSON is not a function
+
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId("help_category_select")
+      .setPlaceholder("Select a category")
+      .addOptions(
+        new StringSelectMenuOptionBuilder().setLabel("Admin").setValue("admin"),
+        new StringSelectMenuOptionBuilder().setLabel("Team").setValue("team"),
+        new StringSelectMenuOptionBuilder().setLabel("Scrim").setValue("scrim")
+      );
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      selectMenu
     );
+
     await interaction.reply({
       embeds: [embed],
-      components: [buttonRow],
+      components: [row],
     });
   }
 }
