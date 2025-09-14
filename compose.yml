@@ -1,7 +1,7 @@
 services:
   bot:
     build: .
-    container_name: bracket-bot
+    container_name: finalist-bot
     restart: unless-stopped
     environment:
       DB_HOST: db
@@ -10,9 +10,9 @@ services:
       REDIS_PORT: 6379
 
     depends_on:
-      redis:
-        condition: service_healthy
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
     command: >
@@ -20,24 +20,29 @@ services:
              pnpm start"
   db:
     image: postgres:latest
-    container_name: postgres
+    container_name: finalist-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - finalist_data:/var/lib/postgresql/data
+
   redis:
     image: redis:latest
-    container_name: redis
+    container_name: finalist-redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  finalist_data:
