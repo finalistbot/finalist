@@ -27,7 +27,7 @@ export default class HelpCommand extends Command {
       new ButtonBuilder()
         .setLabel("Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL("https://discord.gg/yCdASUuQ")
+        .setURL("https://discord.gg/yCdASUuQ"),
     );
     await interaction.reply({
       embeds: [embed],
