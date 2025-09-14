@@ -3,6 +3,7 @@ import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 import { Scrim, Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
@@ -21,6 +22,22 @@ export default class ScrimDelete extends Command {
         .setDescription("The ID of the scrim to delete")
         .setAutocomplete(true),
     );
+  info: CommandInfo = {
+    name: "delete",
+    description: "Delete a scrim.",
+    longDescription:
+      "Delete a scrim and all associated channels. Only scrims that have not yet started can be deleted.",
+    usageExamples: ["/delete id:12345", "/delete (in scrim admin channel)"],
+    category: "Esports",
+    options: [
+      {
+        name: "id",
+        description: "The ID of the scrim to delete",
+        type: "INTEGER",
+        required: false,
+      },
+    ],
+  };
   checks = [checkIsScrimAdmin];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrimId = interaction.options.getInteger("id");

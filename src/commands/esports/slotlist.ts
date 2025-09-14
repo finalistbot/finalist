@@ -7,9 +7,9 @@ import {
 import { prisma } from "@/lib/prisma";
 import { stringify as csvStringify } from "csv-stringify/sync";
 import { table } from "table";
-import { CommandError } from "@/base/classes/error";
 import { BRAND_COLOR } from "@/lib/constants";
 import { Scrim } from "@prisma/client";
+import { CommandInfo } from "@/types/command";
 
 type SlotDetails = {
   slotNumber: number;
@@ -35,7 +35,7 @@ function slotsToHTML(slots: SlotDetails[]) {
       <td>${slot.teamId}</td>
       <td><a target="_blank" href="${slot.jumpUrl}">Jump to Team</a></td>
     </tr>
-  `
+  `,
     )
     .join("\n");
   return `
@@ -134,9 +134,36 @@ export default class SlotlistExport extends Command {
           { name: "Embedded", value: "embed" },
           { name: "CSV", value: "csv" },
           { name: "Table", value: "table" },
-          { name: "HTML", value: "html" }
-        )
+          { name: "HTML", value: "html" },
+        ),
     );
+
+  info: CommandInfo = {
+    name: "slotlist",
+    description: "Send slotlist in current channel in specified format.",
+    category: "Esports",
+    longDescription:
+      "Send the slotlist for the scrim associated with the current admin channel. You can choose from several formats including embedded message, CSV, table, or HTML.",
+    usageExamples: [
+      "/slotlist format:embed",
+      "/slotlist format:csv",
+      "(in scrim admin channel) /slotlist format:table",
+    ],
+    options: [
+      {
+        name: "format",
+        description: "The format to export the slotlist in",
+        type: "STRING",
+        required: false,
+        choices: [
+          { name: "Embedded", value: "embed" },
+          { name: "CSV", value: "csv" },
+          { name: "Table", value: "table" },
+          { name: "HTML", value: "html" },
+        ],
+      },
+    ],
+  };
 
   async execute(interaction: ChatInputCommandInteraction) {
     const format = interaction.options.getString("format") || "embed";
@@ -164,7 +191,7 @@ export default class SlotlistExport extends Command {
 
     if (!scrim) {
       return interaction.editReply(
-        "This command can only be used in a scrim admin channel."
+        "This command can only be used in a scrim admin channel.",
       );
     }
     const slots = scrim.AssignedSlot;

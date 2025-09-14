@@ -4,6 +4,7 @@ import { Event } from "./base/classes/event";
 import config from "./config";
 import logger from "./lib/logger";
 import { getHandlerFiles } from "./lib/fs";
+import { CommandRegistory } from "./base/classes/command";
 
 function registerEvent(filePath: string) {
   import(path.resolve(filePath)).then((mod) => {
@@ -38,7 +39,7 @@ function registerCommand(filePath: string) {
     try {
       const Command = mod.default?.default || mod.default;
       const command = new Command(client);
-      client.commands.set(command.data.name, command);
+      CommandRegistory.registerCommand(command);
       logger.info(`Loaded command ${command.data.name}`);
     } catch (error) {
       logger.error(`Error loading command at ${filePath}: ${error}`);

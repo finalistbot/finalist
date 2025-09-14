@@ -3,6 +3,7 @@ import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { convertToSlug, convertToTitleCase } from "@/lib/utils";
 import { RoomDetailsField } from "@/types";
+import { CommandInfo } from "@/types/command";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -55,6 +56,66 @@ export default class RoomDetailCommand extends Command {
             .setRequired(false),
         ),
     );
+  info: CommandInfo = {
+    name: "rd",
+    description: "Manage room access details for the current match.",
+    category: "Esports",
+    longDescription:
+      "Manage room access details for the current match. You can set, post, and clear room access details.",
+    usageExamples: [
+      "/rd set game:CS:GO",
+      "/rd set id:123456",
+      "/rd set name:Password value:abc123",
+      "/rd post channel:#general",
+      "/rd clear name:Password",
+      "/rd clear",
+    ],
+    subcommands: [
+      {
+        name: "set",
+        description: "Set the room access details for the current match.",
+        options: [
+          {
+            name: "name",
+            description: "The name of the field.",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "value",
+            description: "The value of the field.",
+            type: "STRING",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "post",
+        description: "Post the room access details.",
+        options: [
+          {
+            name: "channel",
+            description: "The channel to post the details in.",
+            type: "CHANNEL",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "clear",
+        description: "Clear the room access details for the current match.",
+        options: [
+          {
+            name: "name",
+            description: "The name of the field to clear.",
+            type: "STRING",
+            required: false,
+          },
+        ],
+      },
+    ],
+  };
+
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === "set") {

@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
+import { CommandInfo } from "@/types/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class ReserveSlotCommand extends Command {
@@ -19,6 +20,32 @@ export default class ReserveSlotCommand extends Command {
         .setDescription("The slot number to reserve")
         .setRequired(true),
     );
+
+  info: CommandInfo = {
+    name: "reserve-slot",
+    description: "Reserve a slot for a scrim.",
+    category: "Esports",
+    longDescription:
+      "Reserve a slot for a scrim in the admin channel. This is useful for ensuring that certain teams have a guaranteed spot in the scrim.",
+    usageExamples: [
+      "/reserve-slot team-leader:@player slot-number:1",
+      "(in scrim admin channel) /reserve-slot team-leader:@player slot-number:1",
+    ],
+    options: [
+      {
+        name: "team-leader",
+        description: "The team leader of the team to reserve the slot for",
+        type: "USER",
+        required: true,
+      },
+      {
+        name: "slot-number",
+        description: "The slot number to reserve",
+        type: "INTEGER",
+        required: true,
+      },
+    ],
+  };
 
   checks = [checkIsScrimAdmin];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {

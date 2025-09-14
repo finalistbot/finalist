@@ -3,6 +3,7 @@ import { isUserBanned } from "@/checks/banned";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 import {
   ChatInputCommandInteraction,
   InteractionContextType,
@@ -21,6 +22,12 @@ export default class UnbanUser extends Command {
     )
     .setContexts(InteractionContextType.Guild);
 
+  info: CommandInfo = {
+    name: "unban",
+    description: "Unban a player from being banned in this server.",
+    category: "Esports",
+    usageExamples: ["/unban user:@player"],
+  };
   checks = [checkIsScrimAdmin];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
