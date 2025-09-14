@@ -16,10 +16,10 @@ export default class SyncSlashCommands extends Command {
     }
     await interaction.deferReply({ flags: "Ephemeral" });
     const { globalCommands, devCommands } = await registerSlashCommands(
-      this.client
+      this.client,
     );
     await interaction.editReply({
-      content: `Registered ${globalCommands.size} global commands and ${devCommands.size} developer commands.`,
+      content: `Registered ${globalCommands.length} global commands and ${devCommands.length} developer commands.`,
     });
   }
 }
