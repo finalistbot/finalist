@@ -3,16 +3,22 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
-  TextChannel,
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { BRAND_COLOR } from "@/lib/constants";
+import { CommandInfo } from "@/types/command";
 
 export default class InviteCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("invite")
     .setDescription("Get the bot invite link.");
+  info: CommandInfo = {
+    name: "invite",
+    category: "General",
+    description: "Get the bot invite link.",
+    usageExamples: ["/invite"],
+  };
 
   async execute(interaction: ChatInputCommandInteraction) {
     const botInviteUrl = `https://discord.com/oauth2/authorize?client_id=${this.client.user!.id}&scope=bot%20applications.commands&permissions=8`;
@@ -30,7 +36,7 @@ export default class InviteCommand extends Command {
       new ButtonBuilder()
         .setLabel("💬 Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL(discordInviteURL)
+        .setURL(discordInviteURL),
     );
     await interaction.reply({
       embeds: [embed],

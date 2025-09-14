@@ -1,13 +1,14 @@
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { CheckFailure } from "@/base/classes/error";
+import { CommandRegistory } from "@/base/classes/command";
 
 export default class CommandHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   public async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) return;
 
-    const command = this.client.commands.get(interaction.commandName);
+    const command = CommandRegistory.getCommand(interaction.commandName);
 
     if (!command) {
       console.error(

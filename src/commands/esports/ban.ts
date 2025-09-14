@@ -3,6 +3,7 @@ import { isUserBanned } from "@/checks/banned";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 import {
   ChatInputCommandInteraction,
   InteractionContextType,
@@ -12,11 +13,18 @@ import {
 export default class BanUser extends Command {
   data = new SlashCommandBuilder()
     .setName("ban")
-    .setDescription("Ban a player")
+    .setDescription("Ban a player from any event in this server.")
     .addUserOption((option) =>
       option.setName("user").setDescription("User to ban").setRequired(true),
     )
     .setContexts(InteractionContextType.Guild);
+
+  info: CommandInfo = {
+    name: "ban",
+    description: "Ban a player from any event in this server.",
+    usageExamples: ["/ban user:@player"],
+    category: "Esports",
+  };
 
   checks = [checkIsScrimAdmin];
 

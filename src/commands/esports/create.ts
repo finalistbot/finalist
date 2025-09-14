@@ -13,6 +13,7 @@ import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { queueRegistrationStart } from "@/services/scrim";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -38,6 +39,32 @@ export default class CreateScrim extends Command {
         ),
     );
 
+  info: CommandInfo = {
+    name: "create",
+    description: "Create a new scrim.",
+    longDescription:
+      "Create a new scrim with a specified name and optional template. The template pre-fills settings for common scrim types.",
+    usageExamples: ["/create name:My Scrim template:Pubg - Solo"],
+    category: "Esports",
+    options: [
+      {
+        name: "name",
+        description: "Name of the scrim",
+        type: "STRING",
+        required: true,
+      },
+      {
+        name: "template",
+        description: "Template for the scrim",
+        type: "STRING",
+        required: false,
+        choices: [...scrimTemplateMap.values()].map((template) => ({
+          name: template.name,
+          value: template.value,
+        })),
+      },
+    ],
+  };
   checks = [checkIsScrimAdmin];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {

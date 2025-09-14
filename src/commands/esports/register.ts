@@ -11,12 +11,21 @@ import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { getFirstAvailableSlot } from "@/database";
+import { CommandInfo } from "@/types/command";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
     .setName("register")
     .setDescription("Register for the scrim");
 
+  info: CommandInfo = {
+    name: "register",
+    description: "Register your team for the scrim in this channel.",
+    category: "Esports",
+    longDescription:
+      "Register your team for the scrim in this channel. You must be a team captain to use this command. Once registered, you can no longer make changes to your team.",
+    usageExamples: ["/register"],
+  };
   checks = [checkIsNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction) {

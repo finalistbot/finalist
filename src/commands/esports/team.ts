@@ -10,6 +10,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
+import { CommandInfo } from "@/types/command";
 
 export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
@@ -66,6 +67,77 @@ export default class TeamCommand extends Command {
       subcommand.setName("info").setDescription("Get info about your team"),
     );
 
+  info: CommandInfo = {
+    name: "team",
+    description: "Manage your team.",
+    category: "Esports",
+    longDescription:
+      "Manage your team for the scrim associated with the current channel. You can create, disband, join, leave teams, kick members (if you're a captain), and view team info.",
+    usageExamples: [
+      "/team create name:My Team",
+      "/team disband",
+      "/team kick memberid:123456789012345678",
+      "/team join teamcode:ABCDEFGH substitute:true",
+      "/team leave",
+      "/team info",
+    ],
+    subcommands: [
+      {
+        name: "create",
+        description: "Create a new team.",
+        options: [
+          {
+            name: "name",
+            description: "The name of the team",
+            type: "STRING",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "disband",
+        description: "Disband your team.",
+      },
+      {
+        name: "kick",
+        description: "Kick a member from your team.",
+        options: [
+          {
+            name: "memberid",
+            description: "The ID of the member to kick",
+            type: "STRING",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "join",
+        description: "Join a team using a team code.",
+        options: [
+          {
+            name: "teamcode",
+            description: "The code of the team to join",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "substitute",
+            description: "Join as a substitute",
+            type: "BOOLEAN",
+            required: false,
+          },
+        ],
+      },
+      {
+        name: "leave",
+        description: "Leave your current team.",
+      },
+      {
+        name: "info",
+        description: "Get info about your team.",
+      },
+    ],
+  };
   checks = [checkIsNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {

@@ -9,6 +9,7 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { CommandInfo } from "@/types/command";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -17,6 +18,14 @@ export default class SetupCommand extends Command {
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild);
 
+  info: CommandInfo = {
+    name: "setup",
+    description: "Sets up the bot for the server.",
+    category: "Esports",
+    longDescription:
+      "Sets up the bot for the server by creating an admin role and an updates channel if they do not already exist.",
+    usageExamples: ["/setup"],
+  };
   checks = [checkIsScrimAdmin];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
