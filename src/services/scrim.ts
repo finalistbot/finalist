@@ -1,6 +1,6 @@
 import { Service } from "@/base/classes/service";
 import { queue } from "@/lib/bullmq";
-import { BRAND_COLOR } from "@/lib/constants";
+import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp } from "@/lib/utils";
@@ -16,7 +16,7 @@ export class ScrimService extends Service {
   async scheduleRegistrationStart(scrim: Scrim) {
     // Cancel Existing Job if any
     const existingJob = await queue.getJob(
-      `scrim_registration_start:${scrim.id}`,
+      `${SCRIM_REGISTRATION_START}:${scrim.id}`,
     );
     if (existingJob) {
       await existingJob.remove();
@@ -25,6 +25,7 @@ export class ScrimService extends Service {
       );
     }
     const delay = scrim.registrationStartTime.getTime() - Date.now();
+    console.log(scrim.registrationStartTime, new Date(), delay);
     if (delay <= 0) {
       logger.info(
         `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`,
@@ -33,22 +34,17 @@ export class ScrimService extends Service {
       return;
     }
     await queue.add(
-      `scrim_registration_start:${scrim.id}`,
+      SCRIM_REGISTRATION_START,
       { scrimId: scrim.id },
-      { delay, attempts: 3, backoff: { type: "exponential", delay: 60000 } },
+      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` },
     );
     logger.info(
       `Registration open job for scrim ${scrim.id} queued to run in ${Math.round(
         delay / 1000,
       )} seconds`,
     );
-    await this.updateScrimConfigMessage(scrim);
   }
   async openRegistration(scrim: Scrim) {
-    // Cancel Existing Job if any
-    const job = await queue.getJob(`scrim_registration_start:${scrim.id}`);
-    if (job) await job.remove();
-
     if (scrim.stage == "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is already in registration stage`);
       return;
@@ -237,6 +233,16 @@ export class ScrimService extends Service {
       );
       return;
     }
+    const updatedScrim = await prisma.scrim.findUnique({
+      where: { id: scrim.id },
+    });
+    if (!updatedScrim) {
+      logger.error(`Scrim ${scrim.id} not found`);
+      return;
+    }
+
+    scrim = updatedScrim;
+
     if (!scrim.adminConfigMessageId) {
       logger.warn(`Scrim ${scrim.id} does not have an admin config message ID`);
       return;
