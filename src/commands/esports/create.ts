@@ -10,7 +10,6 @@ import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { queueRegistrationStart } from "@/services/scrim";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
@@ -174,7 +173,7 @@ export default class CreateScrim extends Command {
       data: { adminConfigMessageId: message.id },
     });
 
-    await queueRegistrationStart(scrim);
+    await this.client.scrimService.scheduleRegistrationStart(scrim);
 
     await interaction.editReply({
       content: `Scrim created successfully!`,
