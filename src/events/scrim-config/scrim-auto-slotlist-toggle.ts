@@ -26,7 +26,7 @@ export default class AutoSlotList extends Event<"interactionCreate"> {
     await editScrimConfigEmbed(updatedScrim, this.client);
     await interaction.reply({
       content: `Auto Slotlist is now ${
-        !scrim.autoSlotList ? "disabled" : "enabled"
+        !updatedScrim.autoSlotList ? "disabled" : "enabled"
       }.`,
       flags: "Ephemeral",
     });

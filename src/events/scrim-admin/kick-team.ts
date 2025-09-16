@@ -45,6 +45,35 @@ export default class KickTeam extends Event<"interactionCreate"> {
       where: { teamId: teamId, scrimId: team.scrimId },
     });
 
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: teamId },
+    });
+    const guild = interaction.guild;
+    const scrim = await prisma.scrim.findUnique({
+      where: { id: team.scrimId },
+      select: { participantRoleId: true },
+    });
+    const participantRoleId = scrim!.participantRoleId;
+    const participantRole = guild?.roles.cache.get(participantRoleId);
+    if (!participantRole) {
+      await interaction.reply({
+        content: `Participant role with ID ${participantRoleId} not found in guild ${interaction.guild?.id}. Please contact support.`,
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    for (const member of teamMembers) {
+      try {
+        const guildMember = guild?.members.cache.get(member.userId);
+        await guildMember?.roles.remove(participantRole!);
+      } catch (error) {
+        await interaction.followUp({
+          content: `Failed to remove participant role from <@${member.userId}>. They might have left the server.`,
+          flags: "Ephemeral",
+        });
+      }
+    }
+
     await interaction.reply({
       content: `Team with ID ${teamId} has been kicked.`,
       flags: "Ephemeral",

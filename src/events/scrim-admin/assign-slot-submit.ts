@@ -2,7 +2,7 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 import { editTeamDetails } from "@/ui/messages/teams";
-import { Interaction } from "discord.js";
+import { Interaction, TeamMember } from "discord.js";
 export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
 
@@ -57,6 +57,36 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       update: { slotNumber: slot },
       create: { teamId, scrimId, slotNumber: slot },
     });
+
+    const participantRole = interaction.guild?.roles.cache.get(
+      team.scrim.participantRoleId
+    );
+    if (!participantRole) {
+      await interaction.reply({
+        content: `Participant role not found. Please contact an admin.`,
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
+    const members = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+    });
+    const guild = interaction.guild;
+    if (guild) {
+      for (const member of members) {
+        try {
+          const guildMember = await guild.members.fetch(member.userId);
+          await guildMember.roles.add(participantRole);
+        } catch (error) {
+          await interaction.followUp({
+            content: `Failed to assign participant role to <@${member.userId}>. They might not be in the server.`,
+            flags: ["Ephemeral"],
+          });
+        }
+      }
+    }
+
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}.`,
       flags: ["Ephemeral"],

@@ -128,6 +128,32 @@ export default class RegisterTeam extends Command {
         slot = reservedSlot.slotNumber;
       } else {
         slot = await getFirstAvailableSlot(scrim.id);
+        const participantRoleId = scrim.participantRoleId;
+        const participantRole =
+          interaction.guild?.roles.cache.get(participantRoleId);
+        if (!participantRole) {
+          logger.error(
+            `Participant role with ID ${participantRoleId} not found in guild ${interaction.guild?.id}.`
+          );
+          return;
+        }
+        const members = await prisma.teamMember.findMany({
+          where: { teamId: team.id },
+        });
+        const guild = interaction.guild;
+        if (guild) {
+          for (const member of members) {
+            try {
+              const guildMember = await guild.members.fetch(member.userId);
+              await guildMember.roles.add(participantRole);
+            } catch (error) {
+              await interaction.followUp({
+                content: `Failed to assign participant role to <@${member.userId}>. They might not be in the server.`,
+                flags: ["Ephemeral"],
+              });
+            }
+          }
+        }
       }
 
       if (slot !== -1)
@@ -153,7 +179,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+        `Participants channel with ID ${scrim.participantsChannelId} not found`
       );
       return;
     }
