@@ -2,7 +2,6 @@ import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
 
 const TeamConfigSchema = z.object({
@@ -57,6 +56,6 @@ export default class TeamConfigSubmit extends Event<"interactionCreate"> {
       content: `Team configuration updated successfully!`,
       flags: ["Ephemeral"],
     });
-    await editScrimConfigEmbed(scrim, this.client);
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
   }
 }

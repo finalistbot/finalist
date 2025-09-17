@@ -9,33 +9,37 @@ import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import { parseIdFromString } from "@/lib/utils";
 
-function teamConfigModal(scrim: Scrim) {
-  return new ModalBuilder()
-    .setCustomId(`team_config_submit:${scrim.id}`)
-    .setTitle("Team Configuration")
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId("maxTeams")
-          .setLabel("Maximum Teams")
-          .setStyle(1)
-          .setMinLength(1)
-          .setMaxLength(3)
-          .setValue(scrim.maxTeams.toString())
-          .setPlaceholder("e.g., 25")
-          .setRequired(true),
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId("minPlayersPerTeam")
-          .setLabel("Minimum Players Per Team")
-          .setStyle(1)
-          .setMinLength(1)
-          .setMaxLength(2)
-          .setValue(scrim.minPlayersPerTeam.toString())
-          .setPlaceholder("e.g., 4")
-          .setRequired(true),
-      ),
+function teamConfigModal(scrim: Scrim & { _count: { Team: number } }) {
+  const canChangeMaxPlayersPerTeam = scrim._count.Team === 0;
+  const rows: ActionRowBuilder<TextInputBuilder>[] = [];
+  rows.push(
+    new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder()
+        .setCustomId("maxTeams")
+        .setLabel("Maximum Teams")
+        .setStyle(1)
+        .setMinLength(1)
+        .setMaxLength(3)
+        .setValue(scrim.maxTeams.toString())
+        .setPlaceholder("e.g., 25")
+        .setRequired(true),
+    ),
+  );
+  rows.push(
+    new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder()
+        .setCustomId("minPlayersPerTeam")
+        .setLabel("Minimum Players Per Team")
+        .setStyle(1)
+        .setMinLength(1)
+        .setMaxLength(2)
+        .setValue(scrim.minPlayersPerTeam.toString())
+        .setPlaceholder("e.g., 4")
+        .setRequired(true),
+    ),
+  );
+  if (canChangeMaxPlayersPerTeam) {
+    rows.push(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
           .setCustomId("maxPlayersPerTeam")
@@ -47,18 +51,25 @@ function teamConfigModal(scrim: Scrim) {
           .setPlaceholder("e.g., 4")
           .setRequired(true),
       ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId("maxSubstitutePerTeam")
-          .setLabel("Maximum Substitutes Per Team")
-          .setStyle(1)
-          .setMinLength(1)
-          .setMaxLength(2)
-          .setValue(scrim.maxSubstitutePerTeam.toString())
-          .setPlaceholder("e.g., 1")
-          .setRequired(true),
-      ),
     );
+  }
+  rows.push(
+    new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder()
+        .setCustomId("maxSubstitutePerTeam")
+        .setLabel("Maximum Substitutes Per Team")
+        .setStyle(1)
+        .setMinLength(1)
+        .setMaxLength(2)
+        .setValue(scrim.maxSubstitutePerTeam.toString())
+        .setPlaceholder("e.g., 1")
+        .setRequired(true),
+    ),
+  );
+  return new ModalBuilder()
+    .setCustomId(`team_config_submit:${scrim.id}`)
+    .setTitle("Team Configuration")
+    .addComponents(...rows);
 }
 
 export default class ScrimTeamConfig extends Event<"interactionCreate"> {
@@ -72,6 +83,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
     }
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
+      include: { _count: { select: { Team: true } } },
     });
     if (!scrim) {
       return;

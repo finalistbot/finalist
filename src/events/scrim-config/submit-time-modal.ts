@@ -3,7 +3,6 @@ import * as dateFns from "date-fns";
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
 
 const TimingConfigSchema = z.object({

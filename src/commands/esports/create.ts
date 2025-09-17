@@ -167,12 +167,7 @@ export default class CreateScrim extends Command {
         registrationStartTime: dateFns.addDays(new Date(), 1),
       },
     });
-    const message = await sendConfigMessage(adminChannel, scrim, this.client);
-    scrim = await prisma.scrim.update({
-      where: { id: scrim.id },
-      data: { adminConfigMessageId: message.id },
-    });
-
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
     await this.client.scrimService.scheduleRegistrationStart(scrim);
 
     await interaction.editReply({

@@ -24,6 +24,12 @@ export class ScrimService extends Service {
         `Existing registration open job for scrim ${scrim.id} removed`,
       );
     }
+    if (scrim.stage != "CONFIGURATION") {
+      logger.warn(
+        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`,
+      );
+      return;
+    }
     const delay = scrim.registrationStartTime.getTime() - Date.now();
     console.log(scrim.registrationStartTime, new Date(), delay);
     if (delay <= 0) {
@@ -119,20 +125,22 @@ export class ScrimService extends Service {
   }
 
   private getScrimConfigComponents(scrim: Scrim) {
+    const canConfigure =
+      scrim.stage === Stage.CONFIGURATION || scrim.stage === Stage.REGISTRATION;
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`show_team_config_modal:${scrim.id}`)
         .setLabel("Configure Teams")
         .setEmoji("👥")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+        .setDisabled(!canConfigure),
 
       new ButtonBuilder()
         .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
         .setLabel("Set Timings")
         .setEmoji("⏱️")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+        .setDisabled(!canConfigure),
 
       new ButtonBuilder()
         .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
@@ -141,7 +149,7 @@ export class ScrimService extends Service {
         )
         .setEmoji(scrim.autoSlotList ? "📝" : "⚡")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+        .setDisabled(!canConfigure),
 
       new ButtonBuilder()
         .setCustomId(`toggle_scrim_registration_auto_close:${scrim.id}`)
@@ -152,16 +160,20 @@ export class ScrimService extends Service {
         )
         .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+        .setDisabled(!canConfigure),
     );
 
+    const startRegistrationButton = new ButtonBuilder()
+      .setCustomId(`start_registration:${scrim.id}`)
+      .setLabel("Start Registration")
+      .setEmoji("▶️")
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(scrim.stage !== Stage.CONFIGURATION);
+
+    // TODO: Add Pause Registration Button, requires a new stage "PAUSED"
+
     const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`start_registration:${scrim.id}`)
-        .setLabel("Start Registration")
-        .setEmoji("▶️")
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(scrim.stage !== Stage.CONFIGURATION),
+      startRegistrationButton,
       new ButtonBuilder()
         .setCustomId(`close_registration:${scrim.id}`)
         .setLabel("Close Registration")
@@ -243,14 +255,15 @@ export class ScrimService extends Service {
 
     scrim = updatedScrim;
 
-    if (!scrim.adminConfigMessageId) {
-      logger.warn(`Scrim ${scrim.id} does not have an admin config message ID`);
-      return;
-    }
-    const message = await channel.messages.fetch(scrim.adminConfigMessageId);
     const components = this.getScrimConfigComponents(scrim);
     const embed = this.getScrimConfigEmbed(scrim);
-    await message.edit({ embeds: [embed], components });
+    let message = null;
+
+    if (!scrim.adminConfigMessageId) {
+      logger.warn(`Scrim ${scrim.id} does not have an admin config message ID`);
+    } else {
+      message = await channel.messages.fetch(scrim.adminConfigMessageId);
+    }
     if (!message) {
       logger.warn(
         `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`,

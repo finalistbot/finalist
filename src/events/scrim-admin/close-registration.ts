@@ -1,9 +1,8 @@
 import { CacheType, Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString, suppress } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 
 export default class CloseRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
