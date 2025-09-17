@@ -7,7 +7,6 @@ import {
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import * as dateFns from "date-fns";
-import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
