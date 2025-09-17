@@ -16,30 +16,34 @@ export default class CacheGuilds extends Event<"clientReady"> {
   async execute() {
     const guilds = this.client.guilds.cache.values();
     for (const guild of guilds) {
-      const channels = guild.channels.cache.values();
-      const roles = guild.roles.cache.values();
+      const channels = [...guild.channels.cache.values()];
+      const roles = [...guild.roles.cache.values()];
       redis.set(
         `guild:${guild.id}`,
         SuperJSON.stringify(serializeGuild(guild)),
       );
-      redis.hset(
-        `guild:${guild.id}:channels`,
-        Object.fromEntries(
-          [...channels].map((channel) => [
-            channel.id,
-            SuperJSON.stringify(serializeChannel(channel)),
-          ]),
-        ),
-      );
-      redis.hset(
-        `guild:${guild.id}:roles`,
-        Object.fromEntries(
-          [...roles].map((role) => [
-            role.id,
-            SuperJSON.stringify(serializeRole(role)),
-          ]),
-        ),
-      );
+      if (channels.length != 0) {
+        redis.hset(
+          `guild:${guild.id}:channels`,
+          Object.fromEntries(
+            channels.map((channel) => [
+              channel.id,
+              SuperJSON.stringify(serializeChannel(channel)),
+            ]),
+          ),
+        );
+      }
+      if (roles.length != 0) {
+        redis.hset(
+          `guild:${guild.id}:roles`,
+          Object.fromEntries(
+            [...roles].map((role) => [
+              role.id,
+              SuperJSON.stringify(serializeRole(role)),
+            ]),
+          ),
+        );
+      }
     }
 
     logger.info("Cached guilds, channels, and roles to Redis.");
