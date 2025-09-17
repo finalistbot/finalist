@@ -3,9 +3,7 @@ import * as dateFns from "date-fns";
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
-import { queueRegistrationStart } from "@/services/scrim";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -70,7 +68,6 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       content: "Scrim timing configuration updated successfully.",
       flags: ["Ephemeral"],
     });
-    await editScrimConfigEmbed(scrim, this.client);
-    await queueRegistrationStart(scrim);
+    await this.client.scrimService.scheduleRegistrationStart(scrim);
   }
 }

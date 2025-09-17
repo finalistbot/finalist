@@ -1,7 +1,6 @@
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
-import { openRegistration } from "@/services/scrim";
 import { Stage } from "@prisma/client";
 import { CacheType, Interaction } from "discord.js";
 
@@ -36,7 +35,7 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
       });
       return;
     }
-    await openRegistration(scrimId);
+    await this.client.scrimService.openRegistration(scrim);
     await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been started.`,
     });

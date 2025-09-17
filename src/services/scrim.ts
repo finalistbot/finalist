@@ -1,144 +1,311 @@
-import { rest } from "@/lib/discord-rest";
+import { Service } from "@/base/classes/service";
+import { queue } from "@/lib/bullmq";
+import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
+import { discordTimestamp } from "@/lib/utils";
 import { Scrim, Stage } from "@prisma/client";
 import {
-  Routes,
-  RESTPatchAPIChannelJSONBody,
-  PermissionFlagsBits,
-  RESTPostAPIChannelMessageJSONBody,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
 } from "discord.js";
-import { client } from "@/client";
-import { queue } from "@/lib/bullmq";
 
-export async function openRegistration(scrimId: number) {
-  await queue
-    .getJob(`scrim_registration_start:${scrimId}`)
-    ?.then((job) => job?.remove());
-  const scrim = await prisma.scrim.findUnique({
-    where: { id: scrimId },
-  });
-  if (!scrim || scrim.stage === Stage.REGISTRATION) {
-    logger.warn(
-      `Tried to open registration for scrim ${scrimId}, but it does not exist or is already open.`
+export class ScrimService extends Service {
+  async scheduleRegistrationStart(scrim: Scrim) {
+    // Cancel Existing Job if any
+    const existingJob = await queue.getJob(
+      `${SCRIM_REGISTRATION_START}:${scrim.id}`,
     );
-    return;
-  }
-  const updatedScrim = await prisma.scrim.update({
-    where: { id: scrimId },
-    data: { stage: Stage.REGISTRATION },
-  });
-  await editScrimConfigEmbed(updatedScrim, client);
-  const body: RESTPatchAPIChannelJSONBody = {
-    permission_overwrites: [
-      {
-        id: scrim.guildId,
-        allow: (
-          PermissionFlagsBits.ViewChannel |
-          PermissionFlagsBits.SendMessages |
-          PermissionFlagsBits.ReadMessageHistory
-        ).toString(),
-        type: 0,
-      },
-    ],
-  };
-  await rest.patch(Routes.channel(scrim.registrationChannelId), {
-    body,
-  });
-  const messageBody: RESTPostAPIChannelMessageJSONBody = {
-    content: `Team registration is now open! Use the /team command to create your team and /registerteam to register your team.`,
-  };
-  await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
-    body: messageBody,
-  });
-}
-
-export async function shouldCloseRegistration(scrimId: number) {
-  const scrim = await prisma.scrim.findUnique({
-    where: { id: scrimId },
-    include: {
-      Team: {
-        where: { registeredAt: { not: null } },
-      },
-    },
-  });
-  if (!scrim) {
-    logger.warn(
-      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist.`
-    );
-    return false;
-  }
-  if (!scrim.autoCloseRegistration) {
-    return false;
-  }
-  if (scrim.stage !== Stage.REGISTRATION) {
-    logger.warn(
-      `Tried to check if registration should be closed for scrim ${scrimId}, but it does not exist or is not open.`
-    );
-    return false;
-  }
-  return scrim.Team.length >= scrim.maxTeams;
-}
-
-export async function closeRegistration(scrimId: number) {
-  const scrim = await prisma.scrim.findUnique({
-    where: { id: scrimId },
-  });
-  if (!scrim || scrim.stage !== Stage.REGISTRATION) {
-    logger.warn(
-      `Tried to close registration for scrim ${scrimId}, but it does not exist or is not open.`
-    );
-    return;
-  }
-  const body: RESTPatchAPIChannelJSONBody = {
-    permission_overwrites: [
-      {
-        id: scrim.guildId,
-        deny: (
-          PermissionFlagsBits.SendMessages |
-          PermissionFlagsBits.ViewChannel |
-          PermissionFlagsBits.ReadMessageHistory
-        ).toString(),
-        type: 0,
-      },
-    ],
-  };
-  await rest.patch(Routes.channel(scrim.registrationChannelId), {
-    body,
-  });
-  const updatedScrim = await prisma.scrim.update({
-    where: { id: scrimId },
-    data: { stage: Stage.CHECKIN, registrationEndedTime: new Date() },
-  });
-
-  const newMessageBody: RESTPostAPIChannelMessageJSONBody = {
-    content: `Team registration is now closed. Slotlist and check-in will begin shortly.`,
-  };
-  await rest.post(Routes.channelMessages(scrim.registrationChannelId), {
-    body: newMessageBody,
-  });
-  return updatedScrim;
-}
-
-export async function queueRegistrationStart(scrim: Scrim) {
-  const jobName = "scrim_registration_start";
-  const jobKey = `${jobName}:${scrim.id}`;
-  const job = await queue.getJob(jobKey);
-  if (job) {
-    await job.remove();
-  }
-  const delay = scrim.registrationStartTime
-    ? Math.max(0, scrim.registrationStartTime.getTime() - new Date().getTime())
-    : 0;
-  await queue.add(
-    jobName,
-    { scrimId: scrim.id },
-    {
-      delay: delay > 0 ? delay : 0,
-      jobId: jobKey,
-      removeOnComplete: true,
-      removeOnFail: false,
+    if (existingJob) {
+      await existingJob.remove();
+      logger.info(
+        `Existing registration open job for scrim ${scrim.id} removed`,
+      );
     }
-  );
+    if (scrim.stage != "CONFIGURATION") {
+      logger.warn(
+        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`,
+      );
+      return;
+    }
+    const delay = scrim.registrationStartTime.getTime() - Date.now();
+    console.log(scrim.registrationStartTime, new Date(), delay);
+    if (delay <= 0) {
+      logger.info(
+        `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`,
+      );
+      await this.openRegistration(scrim);
+      return;
+    }
+    await queue.add(
+      SCRIM_REGISTRATION_START,
+      { scrimId: scrim.id },
+      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` },
+    );
+    logger.info(
+      `Registration open job for scrim ${scrim.id} queued to run in ${Math.round(
+        delay / 1000,
+      )} seconds`,
+    );
+  }
+  async openRegistration(scrim: Scrim) {
+    if (scrim.stage == "REGISTRATION") {
+      logger.warn(`Scrim ${scrim.id} is already in registration stage`);
+      return;
+    }
+
+    // Update Scrim Stage to Registration
+    await prisma.scrim.update({
+      where: { id: scrim.id },
+      data: { stage: "REGISTRATION" },
+    });
+    logger.info(`Scrim ${scrim.id} moved to registration stage`);
+    await this.updateScrimConfigMessage(scrim);
+
+    const channel = await this.client.channels.fetch(
+      scrim.registrationChannelId,
+    );
+    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+      logger.error(
+        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
+      );
+      return;
+    }
+    // Open Registration Channel For Everyone
+    await channel.edit({
+      permissionOverwrites: [
+        {
+          id: scrim.guildId,
+          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+        },
+      ],
+    });
+
+    await channel.send({
+      content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
+    });
+  }
+
+  async closeRegistration(scrim: Scrim) {
+    if (scrim.stage != "REGISTRATION") {
+      logger.warn(`Scrim ${scrim.id} is not in registration stage`);
+      return;
+    }
+    // Update Scrim Stage to Ongoing
+    await prisma.scrim.update({
+      where: { id: scrim.id },
+      data: { stage: "SLOT_ALLOCATION" },
+    });
+    logger.info(`Scrim ${scrim.id} moved to slot allocation stage`);
+    await this.updateScrimConfigMessage(scrim);
+    const channel = await this.client.channels.fetch(
+      scrim.registrationChannelId,
+    );
+    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+      logger.error(
+        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
+      );
+      return;
+    }
+    // Close Registration Channel For Everyone
+    await channel.edit({
+      permissionOverwrites: [
+        {
+          id: scrim.guildId,
+          deny: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+        },
+      ],
+    });
+
+    await channel.send({
+      content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
+    });
+  }
+
+  private getScrimConfigComponents(scrim: Scrim) {
+    const canConfigure =
+      scrim.stage === Stage.CONFIGURATION || scrim.stage === Stage.REGISTRATION;
+    const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`show_team_config_modal:${scrim.id}`)
+        .setLabel("Configure Teams")
+        .setEmoji("👥")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!canConfigure),
+
+      new ButtonBuilder()
+        .setCustomId(`show_scrim_timing_config_modal:${scrim.id}`)
+        .setLabel("Set Timings")
+        .setEmoji("⏱️")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!canConfigure),
+
+      new ButtonBuilder()
+        .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
+        .setLabel(
+          scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist",
+        )
+        .setEmoji(scrim.autoSlotList ? "📝" : "⚡")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!canConfigure),
+
+      new ButtonBuilder()
+        .setCustomId(`toggle_scrim_registration_auto_close:${scrim.id}`)
+        .setLabel(
+          scrim.autoCloseRegistration
+            ? "Disable Auto-Close"
+            : "Enable Auto-Close",
+        )
+        .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!canConfigure),
+    );
+
+    const startRegistrationButton = new ButtonBuilder()
+      .setCustomId(`start_registration:${scrim.id}`)
+      .setLabel("Start Registration")
+      .setEmoji("▶️")
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(scrim.stage !== Stage.CONFIGURATION);
+
+    // TODO: Add Pause Registration Button, requires a new stage "PAUSED"
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      startRegistrationButton,
+      new ButtonBuilder()
+        .setCustomId(`close_registration:${scrim.id}`)
+        .setLabel("Close Registration")
+        .setEmoji("⏹️")
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(scrim.stage !== Stage.REGISTRATION),
+    );
+    return [row1, row2];
+  }
+
+  private getScrimConfigEmbed(scrim: Scrim) {
+    return new EmbedBuilder()
+      .setTitle("⚙️ Scrim Configuration")
+      .setColor(BRAND_COLOR)
+      .setAuthor({
+        name: this.client.user?.username || "Scrim Bot",
+      })
+      .addFields(
+        {
+          name: "📋 General",
+          value: [
+            `**Name:** ${scrim.name}`,
+            `**Scrim ID:** \`${scrim.id}\``,
+          ].join("\n"),
+          inline: false,
+        },
+        {
+          name: "🧑‍🤝‍🧑 Teams",
+          value: [
+            `**Max Teams:** ${scrim.maxTeams}`,
+            `**Players/Team:** ${
+              scrim.minPlayersPerTeam && scrim.maxPlayersPerTeam
+                ? scrim.minPlayersPerTeam === scrim.maxPlayersPerTeam
+                  ? `${scrim.minPlayersPerTeam}`
+                  : `${scrim.minPlayersPerTeam}–${scrim.maxPlayersPerTeam}`
+                : "Not set"
+            }`,
+            `**Substitutes/Team:** ${scrim.maxSubstitutePerTeam}`,
+          ].join("\n"),
+          inline: false,
+        },
+        {
+          name: "📅 Registration",
+          value: [
+            `**Opens:** ${discordTimestamp(scrim.registrationStartTime)}`,
+            `**Auto-Close:** ${
+              scrim.autoCloseRegistration ? "✅ Enabled" : "❌ Disabled"
+            }`,
+          ].join("\n"),
+          inline: false,
+        },
+        {
+          name: "🎯 Slotlist Mode",
+          value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
+          inline: false,
+        },
+      )
+      .setFooter({
+        text: "Configuration locks once the registration opens.",
+      })
+      .setImage("https://i.postimg.cc/VvyvzgPF/Scrim-Manager.png");
+  }
+
+  async updateScrimConfigMessage(scrim: Scrim) {
+    const channel = await this.client.channels.fetch(scrim.adminChannelId);
+    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+      logger.error(
+        `Admin channel ${scrim.adminChannelId} not found or not text-based`,
+      );
+      return;
+    }
+    const updatedScrim = await prisma.scrim.findUnique({
+      where: { id: scrim.id },
+    });
+    if (!updatedScrim) {
+      logger.error(`Scrim ${scrim.id} not found`);
+      return;
+    }
+
+    scrim = updatedScrim;
+
+    const components = this.getScrimConfigComponents(scrim);
+    const embed = this.getScrimConfigEmbed(scrim);
+    let message = null;
+
+    if (!scrim.adminConfigMessageId) {
+      logger.warn(`Scrim ${scrim.id} does not have an admin config message ID`);
+    } else {
+      message = await channel.messages.fetch(scrim.adminConfigMessageId);
+    }
+    if (!message) {
+      logger.warn(
+        `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`,
+      );
+      const newMessage = await channel.send({ embeds: [embed], components });
+      await prisma.scrim.update({
+        where: { id: scrim.id },
+        data: { adminConfigMessageId: newMessage.id },
+      });
+    } else {
+      await message.edit({ embeds: [embed], components });
+    }
+    logger.info(`Scrim ${scrim.id} config message updated`);
+  }
+
+  async registrationNeedsClosing(scrim: Scrim) {
+    const scrimWithTeamLength = await prisma.scrim.findUnique({
+      where: { id: scrim.id },
+      include: { _count: { select: { Team: true } } },
+    });
+
+    if (!scrimWithTeamLength) {
+      logger.error(`Scrim ${scrim.id} not found`);
+      return false;
+    }
+
+    if (scrim.stage != "REGISTRATION") {
+      logger.warn(`Scrim ${scrim.id} is not in registration stage`);
+      return false;
+    }
+    if (!scrim.autoCloseRegistration) {
+      logger.info(
+        `Scrim ${scrim.id} does not have auto-close registration enabled`,
+      );
+      return false;
+    }
+    if (scrimWithTeamLength._count.Team >= scrim.maxTeams) {
+      logger.info(
+        `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`,
+      );
+      return true;
+    }
+    return false;
+  }
 }

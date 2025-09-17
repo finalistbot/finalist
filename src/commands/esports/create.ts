@@ -10,7 +10,6 @@ import * as dateFns from "date-fns";
 import { sendConfigMessage } from "@/ui/messages/scrim-config";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { queueRegistrationStart } from "@/services/scrim";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
@@ -168,13 +167,8 @@ export default class CreateScrim extends Command {
         registrationStartTime: dateFns.addDays(new Date(), 1),
       },
     });
-    const message = await sendConfigMessage(adminChannel, scrim, this.client);
-    scrim = await prisma.scrim.update({
-      where: { id: scrim.id },
-      data: { adminConfigMessageId: message.id },
-    });
-
-    await queueRegistrationStart(scrim);
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
+    await this.client.scrimService.scheduleRegistrationStart(scrim);
 
     await interaction.editReply({
       content: `Scrim created successfully!`,

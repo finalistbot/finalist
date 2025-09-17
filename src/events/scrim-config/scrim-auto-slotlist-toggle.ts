@@ -1,7 +1,6 @@
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
 
 export default class AutoSlotList extends Event<"interactionCreate"> {
@@ -23,7 +22,7 @@ export default class AutoSlotList extends Event<"interactionCreate"> {
       where: { id: scrimId },
       data: { autoSlotList: !scrim.autoSlotList },
     });
-    await editScrimConfigEmbed(updatedScrim, this.client);
+    await this.client.scrimService.updateScrimConfigMessage(updatedScrim);
     await interaction.reply({
       content: `Auto Slotlist is now ${
         !scrim.autoSlotList ? "disabled" : "enabled"

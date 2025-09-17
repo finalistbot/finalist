@@ -1,7 +1,6 @@
 import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { editScrimConfigEmbed } from "@/ui/messages/scrim-config";
 import { parseIdFromString } from "@/lib/utils";
 
 export default class ScrimTeamConfig extends Event<"interactionCreate"> {
@@ -26,7 +25,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
       where: { id: scrimId },
       data: { autoCloseRegistration: !scrim.autoCloseRegistration },
     });
-    await editScrimConfigEmbed(updatedScrim, this.client);
+    await this.client.scrimService.updateScrimConfigMessage(updatedScrim);
     await interaction.reply({
       content: `Auto-Close Registration is now ${!scrim.autoCloseRegistration ? "disabled" : "enabled"}.`,
       flags: "Ephemeral",

@@ -28,8 +28,6 @@ export class CommandRegistory {
 
   static registerCommand(command: Command) {
     this.commands.set(command.data.name, command);
-    console.log(`Registered command: ${command.data.name}`);
-    console.log(`Command Info (for ${command.info?.name}):`, command.info);
 
     if (command.info) {
       const category = command.info.category || "General";

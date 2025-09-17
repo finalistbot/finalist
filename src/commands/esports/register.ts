@@ -6,7 +6,6 @@ import {
   TextChannel,
 } from "discord.js";
 import { Stage } from "@prisma/client";
-import { closeRegistration, shouldCloseRegistration } from "@/services/scrim";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
@@ -146,9 +145,10 @@ export default class RegisterTeam extends Command {
       flags: ["Ephemeral"],
     });
 
-    const needClosing = await shouldCloseRegistration(scrim.id);
+    const needClosing =
+      await this.client.scrimService.registrationNeedsClosing(scrim);
     if (needClosing) {
-      await closeRegistration(scrim.id);
+      await this.client.scrimService.closeRegistration(scrim);
     }
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
