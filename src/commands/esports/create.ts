@@ -22,7 +22,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addStringOption((option) =>
       option
@@ -33,8 +33,8 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     );
 
   info: CommandInfo = {
@@ -81,7 +81,7 @@ export default class CreateScrim extends Command {
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
     const name = convertToTitleCase(
-      interaction.options.getString("name", true),
+      interaction.options.getString("name", true)
     );
     const category = await guild.channels.create({
       name: `${name} - Scrim`,
@@ -135,6 +135,11 @@ export default class CreateScrim extends Command {
         },
       ],
     });
+    const participantRole = await guild.roles.create({
+      name: `${name} - Participant`,
+      reason: `Role for participants of the ${name} scrim`,
+      color: "Random",
+    });
     const participantsChannel = await category.children.create({
       name: "participants",
       type: ChannelType.GuildText,
@@ -160,6 +165,7 @@ export default class CreateScrim extends Command {
         discordCategoryId: category.id,
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
+        participantsRoleId: participantRole.id,
         participantsChannelId: participantsChannel.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
