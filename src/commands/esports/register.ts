@@ -171,30 +171,38 @@ export default class RegisterTeam extends Command {
         userId: teamCaptain.userId,
       },
     });
-
+    const guild = this.client.guilds.cache.get(scrim.guildId);
+    if (!guild) {
+      return {
+        success: false,
+        reason: "Guild not found",
+      };
+    }
+    const participantRoleId = scrim.participantsRoleId;
+    const participantRole = guild?.roles.cache.get(participantRoleId);
+    if (!participantRole) {
+      return {
+        success: false,
+        reason: "Participant role not found",
+      };
+    }
     let assignedSlot = null;
     let performAutoSlot = reservedSlot || scrim.autoSlotList;
     if (performAutoSlot) {
       let slot = -1;
       if (reservedSlot) {
         slot = reservedSlot.slotNumber;
+        for (const member of teamMembers) {
+          const guildMember = await guild.members.fetch(member.userId);
+          if (!guildMember) continue;
+
+          if (guildMember && !guildMember.roles.cache.has(participantRoleId)) {
+            suppress(await guildMember.roles.add(participantRole));
+          }
+        }
       } else {
         slot = await getFirstAvailableSlot(scrim.id);
-        const guild = this.client.guilds.cache.get(scrim.guildId);
-        if (!guild) {
-          return {
-            success: false,
-            reason: "Guild not found",
-          };
-        }
-        const participantRoleId = scrim.participantsRoleId;
-        const participantRole = guild?.roles.cache.get(participantRoleId);
-        if (!participantRole) {
-          return {
-            success: false,
-            reason: "Participant role not found",
-          };
-        }
+
         for (const member of teamMembers) {
           const guildMember = await guild.members.fetch(member.userId);
           if (!guildMember) continue;
