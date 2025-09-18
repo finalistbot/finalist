@@ -51,6 +51,7 @@ model Scrim {
   captainAddMembers     Boolean   @default(true) @map("captain_add_members")
 
   registrationChannelId String  @map("registration_channel_id")
+  participantsRoleId    String  @map("participants_role_id")
   logsChannelId         String  @map("logs_channel_id")
   participantsChannelId String  @map("participants_channel_id")
   discordCategoryId     String  @map("discord_category_id")
