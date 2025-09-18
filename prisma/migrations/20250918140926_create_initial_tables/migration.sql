@@ -2,14 +2,13 @@
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- CreateEnum
-CREATE TYPE "public"."Stage" AS ENUM ('CONFIGURATION', 'REGISTRATION', 'CHECKIN', 'ONGOING', 'COMPLETED');
+CREATE TYPE "public"."Stage" AS ENUM ('CONFIGURATION', 'REGISTRATION', 'SLOT_ALLOCATION', 'ONGOING', 'COMPLETED', 'CANCELED');
 
 -- CreateTable
 CREATE TABLE "public"."guild_config" (
     "id" SERIAL NOT NULL,
     "guildId" TEXT NOT NULL,
     "adminRoleId" TEXT,
-    "updatesChannelId" TEXT,
     "timezone" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -30,6 +29,7 @@ CREATE TABLE "public"."scrim" (
     "max_substitute_per_team" INTEGER NOT NULL,
     "slot_list_message_id" TEXT,
     "auto_slot_list" BOOLEAN NOT NULL DEFAULT true,
+    "captain_add_members" BOOLEAN NOT NULL DEFAULT true,
     "registration_channel_id" TEXT NOT NULL,
     "logs_channel_id" TEXT NOT NULL,
     "participants_channel_id" TEXT NOT NULL,
@@ -101,6 +101,17 @@ CREATE TABLE "public"."assigned_slot" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."reserved_slot" (
+    "id" SERIAL NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "scrim_id" INTEGER NOT NULL,
+    "slot_number" INTEGER NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "reserved_slot_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."room_detail" (
     "id" SERIAL NOT NULL,
     "scrim_id" INTEGER NOT NULL,
@@ -133,6 +144,9 @@ CREATE UNIQUE INDEX "assigned_slot_scrim_id_team_id_key" ON "public"."assigned_s
 CREATE UNIQUE INDEX "assigned_slot_scrim_id_slot_number_key" ON "public"."assigned_slot"("scrim_id", "slot_number");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "reserved_slot_scrim_id_slot_number_key" ON "public"."reserved_slot"("scrim_id", "slot_number");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "room_detail_scrim_id_key" ON "public"."room_detail"("scrim_id");
 
 -- AddForeignKey
@@ -149,6 +163,9 @@ ALTER TABLE "public"."assigned_slot" ADD CONSTRAINT "assigned_slot_scrim_id_fkey
 
 -- AddForeignKey
 ALTER TABLE "public"."assigned_slot" ADD CONSTRAINT "assigned_slot_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."reserved_slot" ADD CONSTRAINT "reserved_slot_scrim_id_fkey" FOREIGN KEY ("scrim_id") REFERENCES "public"."scrim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."room_detail" ADD CONSTRAINT "room_detail_scrim_id_fkey" FOREIGN KEY ("scrim_id") REFERENCES "public"."scrim"("id") ON DELETE CASCADE ON UPDATE CASCADE;
