@@ -12,8 +12,7 @@ import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { getFirstAvailableSlot } from "@/database";
 import { CommandInfo } from "@/types/command";
-import { randomString, suppress } from "@/lib/utils";
-import th from "zod/v4/locales/th.js";
+import { randomString } from "@/lib/utils";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -112,7 +111,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
       );
       return;
     }
@@ -121,7 +120,7 @@ export default class RegisterTeam extends Command {
 
   async registerTeam(
     scrim: Scrim,
-    team: Team
+    team: Team,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null }
     | { success: false; reason: string }
@@ -171,46 +170,15 @@ export default class RegisterTeam extends Command {
         userId: teamCaptain.userId,
       },
     });
-    const guild = this.client.guilds.cache.get(scrim.guildId);
-    if (!guild) {
-      return {
-        success: false,
-        reason: "Guild not found",
-      };
-    }
-    const participantRoleId = scrim.participantsRoleId;
-    const participantRole = guild?.roles.cache.get(participantRoleId);
-    if (!participantRole) {
-      return {
-        success: false,
-        reason: "Participant role not found",
-      };
-    }
+
     let assignedSlot = null;
     let performAutoSlot = reservedSlot || scrim.autoSlotList;
     if (performAutoSlot) {
       let slot = -1;
       if (reservedSlot) {
         slot = reservedSlot.slotNumber;
-        for (const member of teamMembers) {
-          const guildMember = await guild.members.fetch(member.userId);
-          if (!guildMember) continue;
-
-          if (guildMember && !guildMember.roles.cache.has(participantRoleId)) {
-            suppress(await guildMember.roles.add(participantRole));
-          }
-        }
       } else {
         slot = await getFirstAvailableSlot(scrim.id);
-
-        for (const member of teamMembers) {
-          const guildMember = await guild.members.fetch(member.userId);
-          if (!guildMember) continue;
-
-          if (guildMember && !guildMember.roles.cache.has(participantRoleId)) {
-            suppress(await guildMember.roles.add(participantRole));
-          }
-        }
       }
 
       if (slot !== -1)
@@ -228,7 +196,7 @@ export default class RegisterTeam extends Command {
 
   async registerSoloTeam(
     scrim: Scrim,
-    user: User
+    user: User,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null; team: Team }
     | { success: false; reason: string }

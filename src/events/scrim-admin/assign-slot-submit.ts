@@ -57,35 +57,6 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       update: { slotNumber: slot },
       create: { teamId, scrimId, slotNumber: slot },
     });
-
-    const participantRoleId = team.scrim.participantsRoleId;
-    const guild = interaction.guild;
-    if (!guild) {
-      await interaction.reply({
-        content: "Guild not found.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-    const participantRole = guild.roles.cache.get(participantRoleId);
-    if (!participantRole) {
-      await interaction.reply({
-        content: "Participant role not found.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { teamId: team.id },
-    });
-    for (const member of teamMembers) {
-      const guildMember = await guild.members.fetch(member.userId);
-      if (!guildMember) continue;
-      if (guildMember && !guildMember.roles.cache.has(participantRoleId)) {
-        await guildMember.roles.add(participantRole);
-      }
-    }
-
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}.`,
       flags: ["Ephemeral"],
