@@ -76,11 +76,6 @@ export default class KickTeam extends Event<"interactionCreate"> {
         continue;
       }
       await guildMember.roles.remove(participantRole);
-
-      // await interaction.followUp({
-      //   content: `Failed to remove participant role from <@${member.userId}>. They might have left the server.`,
-      //   flags: "Ephemeral",
-      // });
     }
 
     await interaction.reply({
