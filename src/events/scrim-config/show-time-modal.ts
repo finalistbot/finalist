@@ -9,8 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
 import { parseIdFromString } from "@/lib/utils";
+import { toZonedTime } from "date-fns-tz";
 
-function timingConfigModal(scrim: Scrim) {
+async function timingConfigModal(scrim: Scrim) {
+  const guildConfig = await prisma.guildConfig.findUnique({
+    where: { guildId: scrim.guildId },
+  });
   const input = new TextInputBuilder()
     .setCustomId("registrationStartTime")
     .setLabel("Registration Time (YYYY-MM-DD HH:MM)")
@@ -21,9 +25,11 @@ function timingConfigModal(scrim: Scrim) {
     .setPlaceholder("e.g., 2024-12-31 15:30");
 
   if (scrim.registrationStartTime) {
-    input.setValue(
-      dateFns.format(scrim.registrationStartTime, "yyyy-MM-dd HH:mm"),
+    const zonedRegistrationTime = toZonedTime(
+      scrim.registrationStartTime,
+      guildConfig?.timezone || "UTC",
     );
+    input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   }
   return new ModalBuilder()
     .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
@@ -47,7 +53,7 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
     if (!scrim) {
       return;
     }
-    const modal = timingConfigModal(scrim);
+    const modal = await timingConfigModal(scrim);
     await interaction.showModal(modal);
   }
 }

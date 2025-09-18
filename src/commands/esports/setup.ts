@@ -3,19 +3,30 @@ import {
   ChatInputCommandInteraction,
   InteractionContextType,
   PermissionFlagsBits,
+  AutocompleteInteraction,
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { CommandInfo } from "@/types/command";
+import { popularTimeZones } from "@/lib/constants";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
     .setName("setup")
     .setDescription("Sets up the bot for the server.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .setContexts(InteractionContextType.Guild);
+    .setContexts(InteractionContextType.Guild)
+    .addStringOption((option) =>
+      option
+        .setName("timezone")
+        .setDescription(
+          "The timezone for the server (e.g., 'Asia/Kolkata'). Defaults to UTC if not set.",
+        )
+        .setAutocomplete(true)
+        .setRequired(false),
+    );
 
   info: CommandInfo = {
     name: "setup",
@@ -29,6 +40,13 @@ export default class SetupCommand extends Command {
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     await interaction.deferReply({ flags: "Ephemeral" });
+    const timezone = interaction.options.getString("timezone") || "UTC";
+    if (!popularTimeZones.find((tz) => tz.value === timezone)) {
+      await interaction.editReply({
+        content: "Please provide a valid timezone.",
+      });
+      return;
+    }
     const guild = interaction.guild;
     const guildConfig = await prisma.guildConfig.findUnique({
       where: { guildId: interaction.guildId },
@@ -52,7 +70,7 @@ export default class SetupCommand extends Command {
       create: {
         guildId: guild.id,
         adminRoleId: adminRole.id,
-        timezone: "UTC",
+        timezone,
       },
       update: {
         adminRoleId: adminRole.id,
@@ -61,5 +79,17 @@ export default class SetupCommand extends Command {
     await interaction.editReply({
       content: "The bot has been set up for this server.",
     });
+  }
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const focusedValue = interaction.options.getFocused();
+    const filtered = popularTimeZones.filter(
+      (tz) =>
+        tz.label.toLowerCase().includes(focusedValue.toLowerCase()) ||
+        tz.value.toLowerCase().includes(focusedValue.toLowerCase()),
+    );
+    await interaction.respond(
+      filtered.slice(0, 25).map((tz) => ({ name: tz.label, value: tz.value })),
+    );
   }
 }

@@ -21,7 +21,7 @@ CREATE TABLE "public"."scrim" (
     "id" SERIAL NOT NULL,
     "guild_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "registration_start_time" TIMESTAMP(3) NOT NULL,
+    "registration_start_time" TIMESTAMPTZ(6) NOT NULL,
     "registration_ended_time" TIMESTAMP(3),
     "max_teams" INTEGER NOT NULL,
     "min_players_per_team" INTEGER NOT NULL,
