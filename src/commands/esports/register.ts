@@ -2,6 +2,7 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import {
   ChatInputCommandInteraction,
+  Guild,
   SlashCommandBuilder,
   TextChannel,
   User,
@@ -12,7 +13,8 @@ import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { getFirstAvailableSlot } from "@/database";
 import { CommandInfo } from "@/types/command";
-import { randomString } from "@/lib/utils";
+import { randomString, suppress } from "@/lib/utils";
+import th from "zod/v4/locales/th.js";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -29,7 +31,7 @@ export default class RegisterTeam extends Command {
   };
   checks = [checkIsNotBanned];
 
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,
@@ -66,7 +68,11 @@ export default class RegisterTeam extends Command {
     let assignedSlot = null;
 
     if (!teamMember && scrim.minPlayersPerTeam == 1) {
-      const result = await this.registerSoloTeam(scrim, interaction.user);
+      const result = await this.registerSoloTeam(
+        scrim,
+        interaction.user,
+        interaction
+      );
       if (result.success) {
         team = result.team;
         assignedSlot = result.assignedSlot;
@@ -85,7 +91,11 @@ export default class RegisterTeam extends Command {
       });
       return;
     } else {
-      const result = await this.registerTeam(scrim, teamMember.team);
+      const result = await this.registerTeam(
+        scrim,
+        teamMember.team,
+        interaction
+      );
       if (result.success) {
         team = teamMember.team;
         assignedSlot = result.assignedSlot;
@@ -111,7 +121,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+        `Participants channel with ID ${scrim.participantsChannelId} not found`
       );
       return;
     }
@@ -121,6 +131,7 @@ export default class RegisterTeam extends Command {
   async registerTeam(
     scrim: Scrim,
     team: Team,
+    interaction: ChatInputCommandInteraction<"cached">
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null }
     | { success: false; reason: string }
@@ -128,6 +139,16 @@ export default class RegisterTeam extends Command {
     const teamMembers = await prisma.teamMember.findMany({
       where: { teamId: team.id },
     });
+    const teamSize = teamMembers.filter((t) => !t.isSubstitute).length;
+    if (teamSize > scrim.maxPlayersPerTeam) {
+      return {
+        success: false,
+        reason: `Your team has reached the maximum number of players (${scrim.maxPlayersPerTeam}).`,
+      };
+    }
+    if (team.registeredAt)
+      return { success: false, reason: "Your team is already registered." };
+
     for (const member of teamMembers) {
       const isBanned = await isUserBanned(scrim.guildId, member.userId);
       if (isBanned) {
@@ -180,8 +201,7 @@ export default class RegisterTeam extends Command {
       } else {
         slot = await getFirstAvailableSlot(scrim.id);
       }
-
-      if (slot !== -1)
+      if (slot !== -1) {
         assignedSlot = await prisma.assignedSlot.create({
           data: {
             scrimId: scrim.id,
@@ -189,6 +209,7 @@ export default class RegisterTeam extends Command {
             slotNumber: Number(slot),
           },
         });
+      }
     }
 
     return { success: true, assignedSlot };
@@ -197,6 +218,7 @@ export default class RegisterTeam extends Command {
   async registerSoloTeam(
     scrim: Scrim,
     user: User,
+    interaction: ChatInputCommandInteraction<"cached">
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null; team: Team }
     | { success: false; reason: string }
@@ -225,7 +247,7 @@ export default class RegisterTeam extends Command {
         scrim: { connect: { id: scrim.id } },
       },
     });
-    const result = await this.registerTeam(scrim, team);
+    const result = await this.registerTeam(scrim, team, interaction);
     if (result.success) {
       return { success: true, assignedSlot: result.assignedSlot, team };
     } else {
