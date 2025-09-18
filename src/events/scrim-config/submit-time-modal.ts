@@ -4,6 +4,7 @@ import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
+import { toZonedTime } from "date-fns-tz";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -48,7 +49,14 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       });
       return;
     }
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { guildId: interaction.guildId! },
+    });
     const data = parsed.data;
+    data.registrationStartTime = toZonedTime(
+      data.registrationStartTime,
+      guildConfig?.timezone || "UTC",
+    );
     if (dateFns.isBefore(data.registrationStartTime, new Date())) {
       await interaction.reply({
         content: "Registration start time must be in the future.",

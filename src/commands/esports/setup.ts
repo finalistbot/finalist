@@ -22,7 +22,7 @@ export default class SetupCommand extends Command {
       option
         .setName("timezone")
         .setDescription(
-          "The timezone for the server (e.g., 'America/New_York'). Defaults to UTC if not set.",
+          "The timezone for the server (e.g., 'Asia/Kolkata'). Defaults to UTC if not set.",
         )
         .setAutocomplete(true)
         .setRequired(false),

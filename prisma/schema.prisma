@@ -39,7 +39,7 @@ model Scrim {
   id                    Int       @id @default(autoincrement()) @map("id")
   guildId               String    @map("guild_id")
   name                  String    @map("name")
-  registrationStartTime DateTime  @map("registration_start_time")
+  registrationStartTime DateTime  @map("registration_start_time") @db.Timestamptz(6)
   registrationEndedTime DateTime? @map("registration_ended_time")
   maxTeams              Int       @map("max_teams")
   minPlayersPerTeam     Int       @map("min_players_per_team")
