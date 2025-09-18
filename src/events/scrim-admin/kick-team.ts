@@ -30,20 +30,7 @@ export default class KickTeam extends Event<"interactionCreate"> {
       return;
     }
 
-    if (team.messageId) {
-      await suppress(interaction.channel?.messages.delete(team.messageId));
-    }
-
-    await prisma.team.update({
-      where: { id: teamId },
-      data: {
-        registeredAt: null,
-        messageId: null,
-      },
-    });
-    await prisma.assignedSlot.deleteMany({
-      where: { teamId: teamId, scrimId: team.scrimId },
-    });
+    await this.client.scrimService.unregisterTeam(team);
 
     await interaction.reply({
       content: `Team with ID ${teamId} has been kicked.`,

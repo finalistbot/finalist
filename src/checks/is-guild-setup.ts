@@ -4,7 +4,6 @@ import { Guild } from "discord.js";
 
 type ValidGuildConfig = GuildConfig & {
   adminRoleId: string;
-  updatesChannelId: string;
 };
 
 type IsGuildSetupReturn =
@@ -20,7 +19,7 @@ type IsGuildSetupReturn =
 function isValidGuildConfig(
   config: GuildConfig | null,
 ): config is ValidGuildConfig {
-  return !!config?.adminRoleId && !!config?.updatesChannelId;
+  return !!config?.adminRoleId;
 }
 
 const errors = {
@@ -46,11 +45,8 @@ export async function checkIsGuildSetup(
 
   if (!guildConfig) return fail(errors.noConfig);
   if (!guildConfig.adminRoleId) return fail(errors.noAdminRole);
-  if (!guildConfig.updatesChannelId) return fail(errors.noUpdatesChannel);
   if (!guild.roles.cache.has(guildConfig.adminRoleId))
     return fail(errors.missingAdminRole);
-  if (!guild.channels.cache.has(guildConfig.updatesChannelId))
-    return fail(errors.missingUpdatesChannel);
 
   if (!isValidGuildConfig(guildConfig)) return fail(errors.invalidConfig);
 

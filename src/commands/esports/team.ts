@@ -25,11 +25,11 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team"),
+      subcommand.setName("disband").setDescription("Disband your team")
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -40,8 +40,8 @@ export default class TeamCommand extends Command {
             .setName("memberid")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -51,20 +51,20 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("leave").setDescription("Leave your current team"),
+      subcommand.setName("leave").setDescription("Leave your current team")
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("info").setDescription("Get info about your team"),
+      subcommand.setName("info").setDescription("Get info about your team")
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -74,8 +74,8 @@ export default class TeamCommand extends Command {
           option
             .setName("member")
             .setDescription("The member to add to your team")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     );
 
   info: CommandInfo = {
@@ -202,7 +202,7 @@ export default class TeamCommand extends Command {
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
     const isBanned = await isUserBanned(
       interaction.guildId,
-      interaction.user.id,
+      interaction.user.id
     );
     if (isBanned) {
       await interaction.reply({
@@ -212,7 +212,7 @@ export default class TeamCommand extends Command {
       return;
     }
     const teamName = convertToTitleCase(
-      interaction.options.getString("name", true),
+      interaction.options.getString("name", true)
     );
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
@@ -459,7 +459,10 @@ export default class TeamCommand extends Command {
 
     const team = await prisma.team.findUnique({
       where: { code: teamCode, scrimId: scrim.id },
-      include: { scrim: true, TeamMember: true },
+      include: {
+        scrim: true,
+        _count: { select: { TeamMember: { where: { isSubstitute: false } } } },
+      },
     });
 
     if (!team) {
@@ -470,7 +473,7 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    if (scrim.maxPlayersPerTeam <= team.TeamMember.length) {
+    if (scrim.maxPlayersPerTeam <= team._count.TeamMember) {
       await interaction.reply({
         content:
           "This team is already full. You may want to join as a substitute. Use `/jointeam <teamcode> true` to join as a substitute.",
@@ -548,7 +551,7 @@ export default class TeamCommand extends Command {
     }));
 
     const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase())
     );
 
     await interaction.respond(filtered.slice(0, 25));
@@ -674,6 +677,27 @@ export default class TeamCommand extends Command {
       await interaction.reply({
         content:
           "Captains are not allowed to add members to their teams in this scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const team = await prisma.team.findFirst({
+      where: { scrimId: scrim.id },
+      include: {
+        _count: { select: { TeamMember: { where: { isSubstitute: false } } } },
+      },
+    });
+    if (!team) {
+      await interaction.reply({
+        content: "No teams found in this scrim.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    if (team._count.TeamMember >= scrim.maxPlayersPerTeam) {
+      await interaction.reply({
+        content:
+          "The maximum number of teams for this scrim has been reached, You can add subsitute. For subsitute use `/jointeam <teamcode> true` to join as a substitute.",
         flags: "Ephemeral",
       });
       return;

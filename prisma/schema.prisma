@@ -16,13 +16,12 @@ datasource db {
 }
 
 model GuildConfig {
-  id               Int      @id @default(autoincrement())
-  guildId          String   @unique
-  adminRoleId      String?
-  updatesChannelId String?
-  timezone         String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  guildId     String   @unique
+  adminRoleId String?
+  timezone    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("guild_config")
 }

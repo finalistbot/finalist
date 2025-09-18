@@ -1,10 +1,11 @@
 import { Service } from "@/base/classes/service";
+import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp } from "@/lib/utils";
-import { Scrim, Stage } from "@prisma/client";
+import { Scrim, Stage, Team } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -307,5 +308,96 @@ export class ScrimService extends Service {
       return true;
     }
     return false;
+  }
+  async unregisterTeam(team: Team) {
+    const scrim = await prisma.scrim.findUnique({
+      where: { id: team.scrimId },
+    });
+    if (!scrim) {
+      logger.error(`Scrim with ID ${team.scrimId} not found`);
+      return;
+    }
+    const AssignedSlot = await prisma.assignedSlot.findFirst({
+      where: {
+        teamId: team.id,
+        scrimId: team.scrimId,
+      },
+    });
+    if (AssignedSlot) {
+      await prisma.assignedSlot.deleteMany({
+        where: {
+          teamId: team.id,
+          scrimId: team.scrimId,
+        },
+      });
+    }
+
+    await prisma.team.update({
+      where: {
+        id: team.id,
+        scrimId: team.scrimId,
+      },
+      data: {
+        registeredAt: null,
+        messageId: null,
+      },
+    });
+    try {
+      if (!team.messageId) return;
+      const channel = await this.client.channels.fetch(
+        scrim.participantsChannelId,
+      );
+      if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+        logger.error(
+          `Participants channel ${scrim.participantsChannelId} not found or not text-based`,
+        );
+        return;
+      }
+      const message = await channel.messages.fetch(team.messageId);
+      if (!message) {
+        logger.error(
+          `Team message with ID ${team.messageId} not found in channel ${channel.id}`,
+        );
+        return;
+      }
+      await message.delete();
+    } catch (error) {
+      logger.error(`Error deleting team message: ${(error as Error).message}`);
+    }
+  }
+  async assignTeamSlot(team: Team, scrim: Scrim, slotNumber: number = -1) {
+    const teamCaptain = await prisma.teamMember.findFirst({
+      where: { teamId: team.id, isCaptain: true },
+    });
+    if (!teamCaptain) {
+      logger.error(`Team captain for team ${team.id} not found`);
+      return;
+    }
+    const reservedSlot = await prisma.reservedSlot.findFirst({
+      where: { scrimId: scrim.id, userId: teamCaptain.userId },
+    });
+    const performAutoSlot = scrim.autoSlotList || reservedSlot;
+    if (!performAutoSlot) {
+      logger.info(
+        `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`,
+      );
+      return;
+    }
+    if (slotNumber == -1) {
+      if (reservedSlot) {
+        slotNumber = reservedSlot.slotNumber;
+      } else {
+        slotNumber = await getFirstAvailableSlot(scrim.id);
+      }
+    }
+
+    if (slotNumber === -1) {
+      logger.warn(`No available slots for scrim ${scrim.id}`);
+      return;
+    }
+    const assignedSlot = await prisma.assignedSlot.create({
+      data: { scrimId: scrim.id, teamId: team.id, slotNumber },
+    });
+    return assignedSlot;
   }
 }
