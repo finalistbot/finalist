@@ -4,7 +4,7 @@ import { Interaction } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
-import { toZonedTime } from "date-fns-tz";
+import { fromZonedTime } from "date-fns-tz";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -53,7 +53,7 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       where: { guildId: interaction.guildId! },
     });
     const data = parsed.data;
-    data.registrationStartTime = toZonedTime(
+    data.registrationStartTime = fromZonedTime(
       data.registrationStartTime,
       guildConfig?.timezone || "UTC",
     );
@@ -77,5 +77,6 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       flags: ["Ephemeral"],
     });
     await this.client.scrimService.scheduleRegistrationStart(scrim);
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
   }
 }
