@@ -14,6 +14,8 @@ const schema = z.object({
 
   BOT_TOKEN: z.string(),
   DEVELOPER_GUILD_ID: z.string().optional(),
+
+  GUILD_LOGS_WEBHOOK_URL: z.url().optional(),
 });
 
 export default schema.parse(process.env);
