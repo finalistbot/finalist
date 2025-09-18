@@ -238,7 +238,24 @@ export default class TeamCommand extends Command {
 
     if (existingTeam) {
       await interaction.reply({
-        content: `A team with the name "${teamName}" already exists in this scrim. Please choose a different name.`,
+        content: `A team with the name "${teamName}" already exists in this scrim. Please try \`${teamName} v2\` or choose a different name.`,
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const existingMember = await prisma.teamMember.findUnique({
+      where: {
+        scrimId_userId: {
+          scrimId: scrim.id,
+          userId: interaction.user.id,
+        },
+      },
+      include: { team: true },
+    });
+
+    if (existingMember) {
+      await interaction.reply({
+        content: `You are already in a team (${existingMember.team.name}) for this scrim. You cannot create another team. If you think this is a mistake, please contact an organizer.`,
         flags: "Ephemeral",
       });
       return;

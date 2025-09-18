@@ -4,13 +4,15 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   TextChannel,
+  User,
 } from "discord.js";
-import { Stage } from "@prisma/client";
+import { AssignedSlot, Scrim, Stage, Team } from "@prisma/client";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { getFirstAvailableSlot } from "@/database";
 import { CommandInfo } from "@/types/command";
+import { randomString } from "@/lib/utils";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -53,48 +55,98 @@ export default class RegisterTeam extends Command {
     const teamMember = await prisma.teamMember.findFirst({
       where: {
         scrimId: scrim.id,
-        isCaptain: true,
         userId: interaction.user.id,
+      },
+      include: {
+        team: { include: { TeamMember: true } },
       },
     });
 
-    if (!teamMember) {
+    let team;
+    let assignedSlot = null;
+
+    if (!teamMember && scrim.minPlayersPerTeam == 1) {
+      const result = await this.registerSoloTeam(scrim, interaction.user);
+      if (result.success) {
+        team = result.team;
+        assignedSlot = result.assignedSlot;
+      } else {
+        await interaction.reply({
+          content: result.reason,
+          flags: ["Ephemeral"],
+        });
+        return;
+      }
+    } else if (!teamMember || !teamMember.isCaptain) {
       await interaction.reply({
         content:
           "You are not a captain of any team in this scrim. Please contact your team captain to register the team.",
         flags: ["Ephemeral"],
       });
       return;
-    }
-    const teamMembers = await prisma.teamMember.findMany({
-      where: {
-        teamId: teamMember.teamId,
-      },
-    });
-    // TODO: refactor this
-    for (const member of teamMembers) {
-      const isBanned = await isUserBanned(scrim.guildId, member.userId);
-      if (isBanned) {
+    } else {
+      const result = await this.registerTeam(scrim, teamMember.team);
+      if (result.success) {
+        team = teamMember.team;
+        assignedSlot = result.assignedSlot;
+      } else {
         await interaction.reply({
-          content: `Your team cannot be registered as one of the members (${member.userId}) is banned from participating in this server`,
+          content: result.reason,
           flags: ["Ephemeral"],
         });
         return;
       }
     }
 
-    const mainPlayers = teamMembers.filter((member) => !member.isSubstitute);
+    await interaction.reply({
+      content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
+      flags: ["Ephemeral"],
+    });
 
-    if (mainPlayers.length < scrim.minPlayersPerTeam) {
-      await interaction.reply({
-        content: `Your team does not have enough main players. Minimum required is ${scrim.minPlayersPerTeam}.`,
-        flags: ["Ephemeral"],
-      });
+    const needClosing =
+      await this.client.scrimService.registrationNeedsClosing(scrim);
+    if (needClosing) {
+      await this.client.scrimService.closeRegistration(scrim);
+    }
+    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
+    if (!channel) {
+      logger.error(
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
+      );
       return;
     }
+    await sendTeamDetails(channel as TextChannel, team, assignedSlot);
+  }
 
-    const team = await prisma.team.update({
-      where: { id: teamMember.teamId },
+  async registerTeam(
+    scrim: Scrim,
+    team: Team,
+  ): Promise<
+    | { success: true; assignedSlot: AssignedSlot | null }
+    | { success: false; reason: string }
+  > {
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+    });
+    for (const member of teamMembers) {
+      const isBanned = await isUserBanned(scrim.guildId, member.userId);
+      if (isBanned) {
+        return {
+          success: false,
+          reason: `Your team cannot be registered as one of the members (${member.userId}) is banned from participating in this server`,
+        };
+      }
+    }
+    const mainPlayers = teamMembers.filter((member) => !member.isSubstitute);
+    if (mainPlayers.length < scrim.minPlayersPerTeam) {
+      return {
+        success: false,
+        reason: `Your team does not have enough main players. Minimum required is ${scrim.minPlayersPerTeam}.`,
+      };
+    }
+
+    team = await prisma.team.update({
+      where: { id: team.id },
       data: { registeredAt: new Date() },
     });
 
@@ -106,11 +158,10 @@ export default class RegisterTeam extends Command {
     });
 
     if (!teamCaptain) {
-      await interaction.reply({
-        content: "Your team does not have a captain. Please contact support.",
-        flags: ["Ephemeral"],
-      });
-      return;
+      return {
+        success: false,
+        reason: "Your team does not have a captain. Please contact support.",
+      };
     }
 
     const reservedSlot = await prisma.reservedSlot.findFirst({
@@ -140,23 +191,46 @@ export default class RegisterTeam extends Command {
         });
     }
 
-    await interaction.reply({
-      content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
-      flags: ["Ephemeral"],
-    });
+    return { success: true, assignedSlot };
+  }
 
-    const needClosing =
-      await this.client.scrimService.registrationNeedsClosing(scrim);
-    if (needClosing) {
-      await this.client.scrimService.closeRegistration(scrim);
+  async registerSoloTeam(
+    scrim: Scrim,
+    user: User,
+  ): Promise<
+    | { success: true; assignedSlot: AssignedSlot | null; team: Team }
+    | { success: false; reason: string }
+  > {
+    const isBanned = await isUserBanned(scrim.guildId, user.id);
+    if (isBanned) {
+      return {
+        success: false,
+        reason: `You cannot register as you are banned from participating in this server`,
+      };
     }
-    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
-    if (!channel) {
-      logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
-      );
-      return;
+    const teamCode = randomString(8);
+    const team = await prisma.team.create({
+      data: {
+        name: user.username,
+        registeredAt: new Date(),
+        code: teamCode,
+        TeamMember: {
+          create: {
+            userId: user.id,
+            isCaptain: true,
+            displayName: user.username,
+            scrim: { connect: { id: scrim.id } },
+          },
+        },
+        scrim: { connect: { id: scrim.id } },
+      },
+    });
+    const result = await this.registerTeam(scrim, team);
+    if (result.success) {
+      return { success: true, assignedSlot: result.assignedSlot, team };
+    } else {
+      await prisma.team.delete({ where: { id: team.id } });
+      return { success: false, reason: result.reason };
     }
-    await sendTeamDetails(channel as TextChannel, team, assignedSlot);
   }
 }
