@@ -25,11 +25,11 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team")
+      subcommand.setName("disband").setDescription("Disband your team"),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -37,11 +37,11 @@ export default class TeamCommand extends Command {
         .setDescription("Kick a member from your team")
         .addStringOption((option) =>
           option
-            .setName("memberid")
+            .setName("member")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true)
-        )
+            .setAutocomplete(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -51,20 +51,20 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true)
+            .setRequired(true),
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false)
-        )
+            .setRequired(false),
+        ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("leave").setDescription("Leave your current team")
+      subcommand.setName("leave").setDescription("Leave your current team"),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("info").setDescription("Get info about your team")
+      subcommand.setName("info").setDescription("Get info about your team"),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -74,8 +74,8 @@ export default class TeamCommand extends Command {
           option
             .setName("member")
             .setDescription("The member to add to your team")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     );
 
   info: CommandInfo = {
@@ -202,7 +202,7 @@ export default class TeamCommand extends Command {
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
     const isBanned = await isUserBanned(
       interaction.guildId,
-      interaction.user.id
+      interaction.user.id,
     );
     if (isBanned) {
       await interaction.reply({
@@ -212,7 +212,7 @@ export default class TeamCommand extends Command {
       return;
     }
     const teamName = convertToTitleCase(
-      interaction.options.getString("name", true)
+      interaction.options.getString("name", true),
     );
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
@@ -340,7 +340,7 @@ export default class TeamCommand extends Command {
   }
 
   async kickMember(interaction: ChatInputCommandInteraction) {
-    const memberId = interaction.options.getString("memberid", true);
+    const memberId = interaction.options.getString("member", true);
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
@@ -518,7 +518,7 @@ export default class TeamCommand extends Command {
 
   async autocomplete(interaction: AutocompleteInteraction) {
     const focusedOption = interaction.options.getFocused(true);
-    if (focusedOption.name !== "memberid") return;
+    if (focusedOption.name !== "member") return;
 
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
@@ -551,7 +551,7 @@ export default class TeamCommand extends Command {
     }));
 
     const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase())
+      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
     );
 
     await interaction.respond(filtered.slice(0, 25));

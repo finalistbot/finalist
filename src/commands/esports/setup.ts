@@ -22,7 +22,7 @@ export default class SetupCommand extends Command {
       option
         .setName("timezone")
         .setDescription(
-          "The timezone for the server (e.g., 'Asia/Kolkata'). Defaults to UTC if not set.",
+          "The timezone for the server (e.g., 'India (IST)'). Defaults to UTC if not set.",
         )
         .setAutocomplete(true)
         .setRequired(false),
@@ -34,7 +34,20 @@ export default class SetupCommand extends Command {
     category: "Esports",
     longDescription:
       "Sets up the bot for the server by creating an admin role and an updates channel if they do not already exist.",
-    usageExamples: ["/setup"],
+    usageExamples: [
+      "/setup",
+      "/setup timezone:India (IST)",
+      "/setup timezone:US Eastern (New York)",
+    ],
+    options: [
+      {
+        name: "timezone",
+        description:
+          "The timezone for the server (e.g., 'India (IST)'). Defaults to UTC if not set.",
+        type: "STRING",
+        required: false,
+      },
+    ],
   };
   checks = [checkIsScrimAdmin];
 

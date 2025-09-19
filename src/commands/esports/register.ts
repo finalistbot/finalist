@@ -13,8 +13,7 @@ import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { getFirstAvailableSlot } from "@/database";
 import { CommandInfo } from "@/types/command";
-import { randomString, suppress } from "@/lib/utils";
-import th from "zod/v4/locales/th.js";
+import { randomString } from "@/lib/utils";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -71,7 +70,7 @@ export default class RegisterTeam extends Command {
       const result = await this.registerSoloTeam(
         scrim,
         interaction.user,
-        interaction
+        interaction,
       );
       if (result.success) {
         team = result.team;
@@ -94,7 +93,7 @@ export default class RegisterTeam extends Command {
       const result = await this.registerTeam(
         scrim,
         teamMember.team,
-        interaction
+        interaction,
       );
       if (result.success) {
         team = teamMember.team;
@@ -121,7 +120,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
       );
       return;
     }
@@ -131,7 +130,7 @@ export default class RegisterTeam extends Command {
   async registerTeam(
     scrim: Scrim,
     team: Team,
-    interaction: ChatInputCommandInteraction<"cached">
+    interaction: ChatInputCommandInteraction<"cached">,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null }
     | { success: false; reason: string }
@@ -218,7 +217,7 @@ export default class RegisterTeam extends Command {
   async registerSoloTeam(
     scrim: Scrim,
     user: User,
-    interaction: ChatInputCommandInteraction<"cached">
+    interaction: ChatInputCommandInteraction<"cached">,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null; team: Team }
     | { success: false; reason: string }

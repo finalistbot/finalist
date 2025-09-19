@@ -39,6 +39,7 @@ function registerCommand(filePath: string) {
     try {
       const Command = mod.default?.default || mod.default;
       const command = new Command(client);
+      if (command.load === false) return;
       CommandRegistory.registerCommand(command);
       logger.info(`Loaded command ${command.data.name}`);
     } catch (error) {
