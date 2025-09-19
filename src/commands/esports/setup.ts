@@ -74,6 +74,7 @@ export default class SetupCommand extends Command {
       },
       update: {
         adminRoleId: adminRole.id,
+        timezone,
       },
     });
     await interaction.editReply({
