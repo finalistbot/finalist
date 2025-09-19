@@ -18,6 +18,7 @@ export default class UnregisterTeam extends Command {
     usageExamples: ["/unregister"],
   };
   checks = [checkIsNotBanned];
+  load = false;
   async execute(interaction: ChatInputCommandInteraction) {
     const scrim = await prisma.scrim.findFirst({
       where: {

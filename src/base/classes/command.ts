@@ -18,6 +18,7 @@ export abstract class Command {
     | SlashCommandOptionsOnlyBuilder;
   developerOnly = false;
   checks?: CommandCheck[];
+  load: boolean = true;
   abstract execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
   autocomplete?(interaction: AutocompleteInteraction): Promise<unknown>;
 }
