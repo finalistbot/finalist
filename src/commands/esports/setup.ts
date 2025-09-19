@@ -33,7 +33,7 @@ export default class SetupCommand extends Command {
     description: "Sets up the bot for the server.",
     category: "Esports",
     longDescription:
-      "Sets up the bot for the server by creating an admin role and an updates channel if they do not already exist.",
+      "Sets up the bot for the server by creating an Admin role and setting the timezone.",
     usageExamples: [
       "/setup",
       "/setup timezone:India (IST)",
@@ -91,7 +91,7 @@ export default class SetupCommand extends Command {
       },
     });
     await interaction.editReply({
-      content: "The bot has been set up for this server.",
+      content: `The bot has been set up for this server. We have created ${adminRole} role for you. The timezone is set to ${timezone}.`,
     });
   }
 
