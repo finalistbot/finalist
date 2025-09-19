@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 
 const TeamConfigSchema = z.object({
-  maxTeams: z.coerce.number().min(1).max(999),
+  maxTeams: z.coerce.number().min(2).max(999),
   minPlayersPerTeam: z.coerce.number().min(1).max(99),
   maxPlayersPerTeam: z.coerce.number().min(1).max(99),
   maxSubstitutePerTeam: z.coerce.number().min(0).max(99).default(0),
@@ -26,7 +26,7 @@ export default class TeamConfigSubmit extends Event<"interactionCreate"> {
       maxPlayersPerTeam:
         interaction.fields.getTextInputValue("maxPlayersPerTeam"),
       maxSubstitutePerTeam: interaction.fields.getTextInputValue(
-        "maxSubstitutePerTeam",
+        "maxSubstitutePerTeam"
       ),
     };
 
@@ -41,6 +41,15 @@ export default class TeamConfigSubmit extends Event<"interactionCreate"> {
       return;
     }
     const data = parsed.data;
+
+    if (data.minPlayersPerTeam > data.maxPlayersPerTeam) {
+      await interaction.reply({
+        content: `Minimum players per team cannot be greater than maximum players per team.`,
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
     const scrim = await prisma.scrim.update({
       where: {
         id: scrimId,
