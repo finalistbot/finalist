@@ -30,6 +30,14 @@ export default class KickTeam extends Event<"interactionCreate"> {
       return;
     }
 
+    await this.client.eventLogger.logEvent("teamKicked", {
+      team,
+      trigger: {
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        type: "user",
+      },
+    });
     await this.client.scrimService.unregisterTeam(team);
 
     await interaction.reply({
