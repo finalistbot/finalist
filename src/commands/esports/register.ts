@@ -90,11 +90,7 @@ export default class RegisterTeam extends Command {
       });
       return;
     } else {
-      const result = await this.registerTeam(
-        scrim,
-        teamMember.team,
-        interaction
-      );
+      const result = await this.registerTeam(scrim, teamMember.team);
       if (result.success) {
         team = teamMember.team;
         assignedSlot = result.assignedSlot;
@@ -129,8 +125,7 @@ export default class RegisterTeam extends Command {
 
   async registerTeam(
     scrim: Scrim,
-    team: Team,
-    interaction: ChatInputCommandInteraction<"cached">
+    team: Team
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | null }
     | { success: false; reason: string }
@@ -208,6 +203,7 @@ export default class RegisterTeam extends Command {
             slotNumber: Number(slot),
           },
         });
+        await this.client.rolemanageService.setParticipantRole(team);
       }
     }
 
@@ -245,7 +241,7 @@ export default class RegisterTeam extends Command {
         scrim: { connect: { id: scrim.id } },
       },
     });
-    const result = await this.registerTeam(scrim, team, interaction);
+    const result = await this.registerTeam(scrim, team);
     if (result.success) {
       return { success: true, assignedSlot: result.assignedSlot, team };
     } else {

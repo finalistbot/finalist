@@ -12,6 +12,7 @@ import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
+import { Stage } from "@prisma/client";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -150,6 +151,11 @@ export default class CreateScrim extends Command {
         },
       ],
     });
+
+    const participantRole = await guild.roles.create({
+      name: `${name} - Participant`,
+      reason: `Participant role for scrim ${name}`,
+    });
     let scrim = await prisma.scrim.create({
       data: {
         name,
@@ -162,6 +168,7 @@ export default class CreateScrim extends Command {
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
         participantsChannelId: participantsChannel.id,
+        participantRoleId: participantRole.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),
