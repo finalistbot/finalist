@@ -66,4 +66,10 @@ export class RoleManageService extends ScrimService {
     }
     return role;
   }
+  async deleteParticipantRole(guild: Guild, scrim: Scrim) {
+    const role = guild.roles.cache.get(scrim.participantRoleId!);
+    if (role) {
+      await role.delete("Deleting participant role as scrim is deleted");
+    }
+  }
 }
