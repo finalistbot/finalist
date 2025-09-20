@@ -62,16 +62,10 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       });
       return;
     }
-    await prisma.assignedSlot.delete({
-      where: { scrimId_teamId: { scrimId, teamId } },
+    await prisma.assignedSlot.deleteMany({
+      where: { scrimId, teamId },
     });
     await this.client.scrimService.assignTeamSlot(scrim, team, slot);
-    // await prisma.assignedSlot.upsert({
-    //   where: { scrimId_teamId: { scrimId, teamId } },
-    //   update: { slotNumber: slot },
-    //   create: { teamId, scrimId, slotNumber: slot },
-    // });
-    // await this.client.rolemanageService.addParticipantRoleToTeam(team);
 
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}.`,
