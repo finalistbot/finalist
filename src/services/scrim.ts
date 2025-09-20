@@ -321,7 +321,6 @@ export class ScrimService extends Service {
       return;
     }
     await this.removeTeamSlot(scrim, team);
-
     await prisma.team.update({
       where: {
         id: team.id,
