@@ -206,6 +206,7 @@ export default class RegisterTeam extends Command {
             slotNumber: Number(slot),
           },
         });
+        await this.client.rolemanageService.setParticipantRole(team);
       }
     }
 

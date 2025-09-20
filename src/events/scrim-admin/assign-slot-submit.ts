@@ -57,6 +57,7 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       update: { slotNumber: slot },
       create: { teamId, scrimId, slotNumber: slot },
     });
+    await this.client.rolemanageService.setParticipantRole(team);
 
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}.`,

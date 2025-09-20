@@ -17,17 +17,17 @@ export class ScrimService extends Service {
   async scheduleRegistrationStart(scrim: Scrim) {
     // Cancel Existing Job if any
     const existingJob = await queue.getJob(
-      `${SCRIM_REGISTRATION_START}:${scrim.id}`,
+      `${SCRIM_REGISTRATION_START}:${scrim.id}`
     );
     if (existingJob) {
       await existingJob.remove();
       logger.info(
-        `Existing registration open job for scrim ${scrim.id} removed`,
+        `Existing registration open job for scrim ${scrim.id} removed`
       );
     }
     if (scrim.stage != "CONFIGURATION") {
       logger.warn(
-        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`,
+        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`
       );
       return;
     }
@@ -35,7 +35,7 @@ export class ScrimService extends Service {
     console.log(scrim.registrationStartTime, new Date(), delay);
     if (delay <= 0) {
       logger.info(
-        `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`,
+        `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`
       );
       await this.openRegistration(scrim);
       return;
@@ -43,12 +43,12 @@ export class ScrimService extends Service {
     await queue.add(
       SCRIM_REGISTRATION_START,
       { scrimId: scrim.id },
-      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` },
+      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` }
     );
     logger.info(
       `Registration open job for scrim ${scrim.id} queued to run in ${Math.round(
-        delay / 1000,
-      )} seconds`,
+        delay / 1000
+      )} seconds`
     );
   }
   async openRegistration(scrim: Scrim) {
@@ -66,11 +66,11 @@ export class ScrimService extends Service {
     await this.updateScrimConfigMessage(scrim);
 
     const channel = await this.client.channels.fetch(
-      scrim.registrationChannelId,
+      scrim.registrationChannelId
     );
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
       logger.error(
-        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
+        `Registration channel ${scrim.registrationChannelId} not found or not text-based`
       );
       return;
     }
@@ -106,11 +106,11 @@ export class ScrimService extends Service {
     logger.info(`Scrim ${scrim.id} moved to slot allocation stage`);
     await this.updateScrimConfigMessage(scrim);
     const channel = await this.client.channels.fetch(
-      scrim.registrationChannelId,
+      scrim.registrationChannelId
     );
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
       logger.error(
-        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
+        `Registration channel ${scrim.registrationChannelId} not found or not text-based`
       );
       return;
     }
@@ -149,7 +149,7 @@ export class ScrimService extends Service {
       new ButtonBuilder()
         .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
         .setLabel(
-          scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist",
+          scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist"
         )
         .setEmoji(scrim.autoSlotList ? "📝" : "⚡")
         .setStyle(ButtonStyle.Secondary)
@@ -160,11 +160,11 @@ export class ScrimService extends Service {
         .setLabel(
           scrim.autoCloseRegistration
             ? "Disable Auto-Close"
-            : "Enable Auto-Close",
+            : "Enable Auto-Close"
         )
         .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!canConfigure),
+        .setDisabled(!canConfigure)
     );
 
     const startRegistrationButton = new ButtonBuilder()
@@ -183,7 +183,7 @@ export class ScrimService extends Service {
         .setLabel("Close Registration")
         .setEmoji("⏹️")
         .setStyle(ButtonStyle.Danger)
-        .setDisabled(scrim.stage !== Stage.REGISTRATION),
+        .setDisabled(scrim.stage !== Stage.REGISTRATION)
     );
     return [row1, row2];
   }
@@ -233,7 +233,7 @@ export class ScrimService extends Service {
           name: "🎯 Slotlist Mode",
           value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
           inline: false,
-        },
+        }
       )
       .setFooter({
         text: "Configuration locks once the registration opens.",
@@ -245,7 +245,7 @@ export class ScrimService extends Service {
     const channel = await this.client.channels.fetch(scrim.adminChannelId);
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
       logger.error(
-        `Admin channel ${scrim.adminChannelId} not found or not text-based`,
+        `Admin channel ${scrim.adminChannelId} not found or not text-based`
       );
       return;
     }
@@ -270,7 +270,7 @@ export class ScrimService extends Service {
     }
     if (!message) {
       logger.warn(
-        `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`,
+        `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`
       );
       const newMessage = await channel.send({ embeds: [embed], components });
       await prisma.scrim.update({
@@ -300,13 +300,13 @@ export class ScrimService extends Service {
     }
     if (!scrim.autoCloseRegistration) {
       logger.info(
-        `Scrim ${scrim.id} does not have auto-close registration enabled`,
+        `Scrim ${scrim.id} does not have auto-close registration enabled`
       );
       return false;
     }
     if (scrimWithTeamLength._count.Team >= scrim.maxTeams) {
       logger.info(
-        `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`,
+        `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`
       );
       return true;
     }
@@ -333,6 +333,7 @@ export class ScrimService extends Service {
           scrimId: team.scrimId,
         },
       });
+      await this.client.rolemanageService.removeParticipantRole(team);
     }
 
     await prisma.team.update({
@@ -348,18 +349,18 @@ export class ScrimService extends Service {
     try {
       if (!team.messageId) return;
       const channel = await this.client.channels.fetch(
-        scrim.participantsChannelId,
+        scrim.participantsChannelId
       );
       if (!channel || !channel.isTextBased() || channel.isDMBased()) {
         logger.error(
-          `Participants channel ${scrim.participantsChannelId} not found or not text-based`,
+          `Participants channel ${scrim.participantsChannelId} not found or not text-based`
         );
         return;
       }
       const message = await channel.messages.fetch(team.messageId);
       if (!message) {
         logger.error(
-          `Team message with ID ${team.messageId} not found in channel ${channel.id}`,
+          `Team message with ID ${team.messageId} not found in channel ${channel.id}`
         );
         return;
       }
@@ -382,7 +383,7 @@ export class ScrimService extends Service {
     const performAutoSlot = scrim.autoSlotList || reservedSlot;
     if (!performAutoSlot) {
       logger.info(
-        `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`,
+        `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`
       );
       return;
     }

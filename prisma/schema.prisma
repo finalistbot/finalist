@@ -52,6 +52,7 @@ model Scrim {
   registrationChannelId String  @map("registration_channel_id")
   logsChannelId         String  @map("logs_channel_id")
   participantsChannelId String  @map("participants_channel_id")
+  participantRoleId     String? @map("participant_role_id")
   discordCategoryId     String  @map("discord_category_id")
   adminChannelId        String  @map("admin_channel_id")
   adminConfigMessageId  String? @map("admin_config_message_id")

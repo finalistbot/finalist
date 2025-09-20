@@ -7,6 +7,7 @@ import { Client, ClientOptions } from "discord.js";
 export class BracketClient extends Client {
   public ownerIds: Set<string>;
   public scrimService: ScrimService;
+  public rolemanageService: RoleManageService;
   public worker: Worker;
   public eventLogger: EventLogger;
 
@@ -14,6 +15,7 @@ export class BracketClient extends Client {
     super(options);
     this.ownerIds = new Set(extra?.ownerIds);
     this.scrimService = new ScrimService(this);
+    this.rolemanageService = new RoleManageService(this);
     this.worker = createWorker(this);
     this.eventLogger = new EventLogger(this);
   }
