@@ -1,6 +1,6 @@
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString, suppress } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 import { Interaction, CacheType } from "discord.js";
 
 export default class KickTeam extends Event<"interactionCreate"> {

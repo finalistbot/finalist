@@ -320,21 +320,7 @@ export class ScrimService extends Service {
       logger.error(`Scrim with ID ${team.scrimId} not found`);
       return;
     }
-    const AssignedSlot = await prisma.assignedSlot.findFirst({
-      where: {
-        teamId: team.id,
-        scrimId: team.scrimId,
-      },
-    });
-    if (AssignedSlot) {
-      await prisma.assignedSlot.deleteMany({
-        where: {
-          teamId: team.id,
-          scrimId: team.scrimId,
-        },
-      });
-      await this.client.rolemanageService.removeParticipantRoleFromTeam(team);
-    }
+    await this.removeTeamSlot(scrim, team);
 
     await prisma.team.update({
       where: {

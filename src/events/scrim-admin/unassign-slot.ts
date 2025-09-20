@@ -7,19 +7,19 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction<CacheType>): Promise<void> {
     if (!interaction.isButton()) return;
-    if (!interaction.customId.startsWith("unassign-slot:")) return;
+    if (!interaction.customId.startsWith("unassign_slot:")) return;
 
     const teamId = parseIdFromString(interaction.customId);
     if (!teamId) {
       await interaction.reply({
         content: "Invalid team ID.",
-        ephemeral: true,
+        flags: "Ephemeral",
       });
       return;
     }
     const scrim = await prisma.scrim.findFirst({
       where: {
-        adminChannelId: interaction.channelId,
+        participantsChannelId: interaction.channelId,
       },
     });
     if (!scrim) {
