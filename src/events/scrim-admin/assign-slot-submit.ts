@@ -13,6 +13,16 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     if (!teamId) {
       return;
     }
+    const scrim = await prisma.scrim.findFirst({
+      where: { participantsChannelId: interaction.channelId! },
+    });
+    if (!scrim) {
+      await interaction.reply({
+        content: "Scrim not found.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
     const slotNumber = interaction.fields.getTextInputValue("slot_number");
     const slot = parseInt(slotNumber, 10);
     if (isNaN(slot) || slot <= 0) {
@@ -52,12 +62,16 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       });
       return;
     }
-    await prisma.assignedSlot.upsert({
+    await prisma.assignedSlot.delete({
       where: { scrimId_teamId: { scrimId, teamId } },
-      update: { slotNumber: slot },
-      create: { teamId, scrimId, slotNumber: slot },
     });
-    await this.client.rolemanageService.addParticipantRoleToTeam(team);
+    await this.client.scrimService.assignTeamSlot(scrim, team, slot);
+    // await prisma.assignedSlot.upsert({
+    //   where: { scrimId_teamId: { scrimId, teamId } },
+    //   update: { slotNumber: slot },
+    //   create: { teamId, scrimId, slotNumber: slot },
+    // });
+    // await this.client.rolemanageService.addParticipantRoleToTeam(team);
 
     await interaction.reply({
       content: `Slot ${slot} assigned to team ID ${teamId}.`,
