@@ -124,6 +124,10 @@ export class ScrimService extends Service {
       ],
     });
 
+    await this.client.eventLogger.logEvent("registrationClosed", {
+      scrim,
+    });
+
     await channel.send({
       content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
     });

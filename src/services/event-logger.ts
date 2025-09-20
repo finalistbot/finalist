@@ -1,6 +1,6 @@
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
-import { AssignedSlot, Team } from "@prisma/client";
+import { AssignedSlot, Scrim, Team } from "@prisma/client";
 import { EmbedBuilder, TextChannel } from "discord.js";
 
 type EventLoggerPayload = {
@@ -33,6 +33,9 @@ type EventLoggerPayload = {
   roomDetailsPosted: {
     scrimId: number;
     trigger: TriggerSource;
+  };
+  registrationClosed: {
+    scrim: Scrim;
   };
 };
 
@@ -82,6 +85,11 @@ export class EventLogger {
       case "roomDetailsPosted":
         await this.logRoomDetailsPosted(
           payload as EventLoggerPayload["roomDetailsPosted"],
+        );
+        break;
+      case "registrationClosed":
+        await this.logRegistrationClosed(
+          payload as EventLoggerPayload["registrationClosed"],
         );
         break;
       default:
@@ -225,6 +233,20 @@ export class EventLogger {
           this.formatTrigger(trigger),
       )
       .setColor("Purple");
+    await logChannel.send({ embeds: [embed] });
+  }
+
+  private async logRegistrationClosed(
+    payload: EventLoggerPayload["registrationClosed"],
+  ) {
+    const { scrim } = payload;
+    const logChannel = await this.getLogsChannel(scrim.logsChannelId);
+    if (!logChannel) return;
+    const embed = new EmbedBuilder()
+      .setDescription(
+        `Registration has been closed for the scrim **(Scrim ID: ${scrim.id})**`,
+      )
+      .setColor("DarkAqua");
     await logChannel.send({ embeds: [embed] });
   }
 }
