@@ -93,7 +93,6 @@ export class ScrimService extends Service {
       content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
     });
   }
-
   async closeRegistration(scrim: Scrim) {
     if (scrim.stage != "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is not in registration stage`);
@@ -129,7 +128,6 @@ export class ScrimService extends Service {
       content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
     });
   }
-
   private getScrimConfigComponents(scrim: Scrim) {
     const canConfigure =
       scrim.stage === Stage.CONFIGURATION || scrim.stage === Stage.REGISTRATION;
