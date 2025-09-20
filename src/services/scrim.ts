@@ -84,6 +84,11 @@ export class ScrimService extends Service {
       ],
     });
 
+    this.client.eventLogger.logEvent("registrationChannelOpened", {
+      channelId: channel.id,
+      trigger: { type: "system" },
+    });
+
     await channel.send({
       content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
     });
