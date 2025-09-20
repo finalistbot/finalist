@@ -1,10 +1,10 @@
 import { ScrimService } from "./scrim";
-import { ChatInputCommandInteraction, Guild, Interaction } from "discord.js";
+import { Guild } from "discord.js";
 import { Scrim, Team } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export default class RoleManageService extends ScrimService {
-  async setParticipantRole(team: Team) {
+export class RoleManageService extends ScrimService {
+  async addParticipantRoleToTeam(team: Team) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -13,22 +13,16 @@ export default class RoleManageService extends ScrimService {
     const guild = await this.client.guilds.fetch(scrim.guildId);
     if (!guild) throw new Error("Guild not found");
 
-    const role = guild.roles.cache.get(scrim.participantRoleId!);
-    if (!role) {
-      const newRole = await this.createParticipantRole(guild, scrim);
-      return newRole;
-    }
+    const role = await this.ensureParticipantRole(guild, scrim);
     const teamMembers = await prisma.teamMember.findMany({
       where: { scrimId: scrim.id, teamId: team.id },
     });
     for (const member of teamMembers) {
       const guildMember = await guild.members.fetch(member.userId);
-      if (!guildMember || guildMember.roles.cache.has(role.id)) continue;
-
       await guildMember.roles.add(role);
     }
   }
-  async removeParticipantRole(team: Team) {
+  async removeParticipantRoleFromTeam(team: Team) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -38,7 +32,8 @@ export default class RoleManageService extends ScrimService {
     if (!guild) throw new Error("Guild not found");
 
     const role = guild.roles.cache.get(scrim.participantRoleId!);
-    if (!role) await this.createParticipantRole(guild, scrim);
+    // Dont need role removing if it doesnt exist
+    if (!role) return;
 
     const teamMembers = await prisma.teamMember.findMany({
       where: { scrimId: scrim.id, teamId: team.id },
@@ -51,15 +46,23 @@ export default class RoleManageService extends ScrimService {
     }
   }
 
-  async createParticipantRole(guild: Guild, scrim: Scrim) {
+  public async createParticipantRole(guild: Guild) {
     const role = await guild.roles.create({
-      name: `${scrim.name} - Participant`,
-      reason: `Participant role for scrim ${scrim.name}`,
+      name: `Participant`,
+      reason: `Creating a participant role for scrim management`,
     });
-    await prisma.scrim.update({
-      where: { id: scrim.id },
-      data: { participantRoleId: role.id },
-    });
+    return role;
+  }
+
+  async ensureParticipantRole(guild: Guild, scrim: Scrim) {
+    let role = guild.roles.cache.get(scrim.participantRoleId!);
+    if (!role) {
+      role = await this.createParticipantRole(guild);
+      await prisma.scrim.update({
+        where: { id: scrim.id },
+        data: { participantRoleId: role.id },
+      });
+    }
     return role;
   }
 }

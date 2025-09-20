@@ -23,7 +23,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
@@ -34,8 +34,8 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          }))
-        )
+          })),
+        ),
     );
 
   info: CommandInfo = {
@@ -82,7 +82,7 @@ export default class CreateScrim extends Command {
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
     const name = convertToTitleCase(
-      interaction.options.getString("name", true)
+      interaction.options.getString("name", true),
     );
     const category = await guild.channels.create({
       name: `${name} - Scrim`,
@@ -152,10 +152,9 @@ export default class CreateScrim extends Command {
       ],
     });
 
-    const participantRole = await guild.roles.create({
-      name: `${name} - Participant`,
-      reason: `Participant role for scrim ${name}`,
-    });
+    const participantRole =
+      await this.client.rolemanageService.createParticipantRole(guild);
+
     let scrim = await prisma.scrim.create({
       data: {
         name,

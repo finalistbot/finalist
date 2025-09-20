@@ -130,7 +130,7 @@ export default class RegisterTeam extends Command {
     scrim: Scrim,
     team: Team,
   ): Promise<
-    | { success: true; assignedSlot: AssignedSlot | null }
+    | { success: true; assignedSlot: AssignedSlot | undefined }
     | { success: false; reason: string }
   > {
     const teamMembers = await prisma.teamMember.findMany({
@@ -182,33 +182,10 @@ export default class RegisterTeam extends Command {
       };
     }
 
-    const reservedSlot = await prisma.reservedSlot.findFirst({
-      where: {
-        scrimId: scrim.id,
-        userId: teamCaptain.userId,
-      },
-    });
-
-    let assignedSlot = null;
-    let performAutoSlot = reservedSlot || scrim.autoSlotList;
-    if (performAutoSlot) {
-      let slot = -1;
-      if (reservedSlot) {
-        slot = reservedSlot.slotNumber;
-      } else {
-        slot = await getFirstAvailableSlot(scrim.id);
-      }
-      if (slot !== -1) {
-        assignedSlot = await prisma.assignedSlot.create({
-          data: {
-            scrimId: scrim.id,
-            teamId: team.id,
-            slotNumber: Number(slot),
-          },
-        });
-        await this.client.rolemanageService.setParticipantRole(team);
-      }
-    }
+    const assignedSlot = await this.client.scrimService.assignTeamSlot(
+      scrim,
+      team,
+    );
 
     return { success: true, assignedSlot };
   }
@@ -217,7 +194,7 @@ export default class RegisterTeam extends Command {
     scrim: Scrim,
     user: User,
   ): Promise<
-    | { success: true; assignedSlot: AssignedSlot | null; team: Team }
+    | { success: true; assignedSlot: AssignedSlot | undefined; team: Team }
     | { success: false; reason: string }
   > {
     const isBanned = await isUserBanned(scrim.guildId, user.id);

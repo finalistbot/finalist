@@ -1,4 +1,5 @@
 import { EventLogger } from "@/services/event-logger";
+import { RoleManageService } from "@/services/role-manage";
 import { ScrimService } from "@/services/scrim";
 import { createWorker } from "@/workers/worker";
 import { Worker } from "bullmq";
