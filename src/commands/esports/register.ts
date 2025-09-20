@@ -97,14 +97,6 @@ export default class RegisterTeam extends Command {
         return;
       }
     }
-    this.client.eventLogger.logEvent("teamRegistered", {
-      team,
-      trigger: {
-        type: "user",
-        userId: interaction.user.id,
-        username: interaction.user.username,
-      },
-    });
 
     await interaction.reply({
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
@@ -181,6 +173,14 @@ export default class RegisterTeam extends Command {
         reason: "Your team does not have a captain. Please contact support.",
       };
     }
+    await this.client.eventLogger.logEvent("teamRegistered", {
+      team,
+      trigger: {
+        type: "user",
+        userId: teamCaptain.userId,
+        username: teamCaptain.displayName,
+      },
+    });
 
     const assignedSlot = await this.client.scrimService.assignTeamSlot(
       scrim,
