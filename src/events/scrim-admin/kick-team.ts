@@ -1,6 +1,6 @@
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString, suppress } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 import { Interaction, CacheType } from "discord.js";
 
 export default class KickTeam extends Event<"interactionCreate"> {
@@ -30,6 +30,14 @@ export default class KickTeam extends Event<"interactionCreate"> {
       return;
     }
 
+    await this.client.eventLogger.logEvent("teamKicked", {
+      team,
+      trigger: {
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        type: "user",
+      },
+    });
     await this.client.scrimService.unregisterTeam(team);
 
     await interaction.reply({

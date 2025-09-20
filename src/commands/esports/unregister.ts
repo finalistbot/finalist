@@ -19,7 +19,7 @@ export default class UnregisterTeam extends Command {
   };
   checks = [checkIsNotBanned];
   load = false;
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,

@@ -12,6 +12,7 @@ import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
+import { Stage } from "@prisma/client";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -22,7 +23,7 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
@@ -33,8 +34,8 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          }))
-        )
+          })),
+        ),
     );
 
   info: CommandInfo = {
@@ -81,7 +82,7 @@ export default class CreateScrim extends Command {
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
     const name = convertToTitleCase(
-      interaction.options.getString("name", true)
+      interaction.options.getString("name", true),
     );
     const category = await guild.channels.create({
       name: `${name} - Scrim`,
@@ -150,6 +151,10 @@ export default class CreateScrim extends Command {
         },
       ],
     });
+
+    const participantRole =
+      await this.client.rolemanageService.createParticipantRole(guild);
+
     let scrim = await prisma.scrim.create({
       data: {
         name,
@@ -162,6 +167,7 @@ export default class CreateScrim extends Command {
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
         participantsChannelId: participantsChannel.id,
+        participantRoleId: participantRole.id,
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),

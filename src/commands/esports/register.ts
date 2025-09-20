@@ -2,7 +2,6 @@ import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import {
   ChatInputCommandInteraction,
-  Guild,
   SlashCommandBuilder,
   TextChannel,
   User,
@@ -67,11 +66,7 @@ export default class RegisterTeam extends Command {
     let assignedSlot = null;
 
     if (!teamMember && scrim.minPlayersPerTeam == 1) {
-      const result = await this.registerSoloTeam(
-        scrim,
-        interaction.user,
-        interaction
-      );
+      const result = await this.registerSoloTeam(scrim, interaction.user);
       if (result.success) {
         team = result.team;
         assignedSlot = result.assignedSlot;
@@ -90,11 +85,7 @@ export default class RegisterTeam extends Command {
       });
       return;
     } else {
-      const result = await this.registerTeam(
-        scrim,
-        teamMember.team,
-        interaction
-      );
+      const result = await this.registerTeam(scrim, teamMember.team);
       if (result.success) {
         team = teamMember.team;
         assignedSlot = result.assignedSlot;
@@ -120,7 +111,7 @@ export default class RegisterTeam extends Command {
     const channel = this.client.channels.cache.get(scrim.participantsChannelId);
     if (!channel) {
       logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`
+        `Participants channel with ID ${scrim.participantsChannelId} not found`,
       );
       return;
     }
@@ -130,9 +121,8 @@ export default class RegisterTeam extends Command {
   async registerTeam(
     scrim: Scrim,
     team: Team,
-    interaction: ChatInputCommandInteraction<"cached">
   ): Promise<
-    | { success: true; assignedSlot: AssignedSlot | null }
+    | { success: true; assignedSlot: AssignedSlot | undefined }
     | { success: false; reason: string }
   > {
     const teamMembers = await prisma.teamMember.findMany({
@@ -183,33 +173,19 @@ export default class RegisterTeam extends Command {
         reason: "Your team does not have a captain. Please contact support.",
       };
     }
-
-    const reservedSlot = await prisma.reservedSlot.findFirst({
-      where: {
-        scrimId: scrim.id,
+    await this.client.eventLogger.logEvent("teamRegistered", {
+      team,
+      trigger: {
+        type: "user",
         userId: teamCaptain.userId,
+        username: teamCaptain.displayName,
       },
     });
 
-    let assignedSlot = null;
-    let performAutoSlot = reservedSlot || scrim.autoSlotList;
-    if (performAutoSlot) {
-      let slot = -1;
-      if (reservedSlot) {
-        slot = reservedSlot.slotNumber;
-      } else {
-        slot = await getFirstAvailableSlot(scrim.id);
-      }
-      if (slot !== -1) {
-        assignedSlot = await prisma.assignedSlot.create({
-          data: {
-            scrimId: scrim.id,
-            teamId: team.id,
-            slotNumber: Number(slot),
-          },
-        });
-      }
-    }
+    const assignedSlot = await this.client.scrimService.assignTeamSlot(
+      scrim,
+      team,
+    );
 
     return { success: true, assignedSlot };
   }
@@ -217,9 +193,8 @@ export default class RegisterTeam extends Command {
   async registerSoloTeam(
     scrim: Scrim,
     user: User,
-    interaction: ChatInputCommandInteraction<"cached">
   ): Promise<
-    | { success: true; assignedSlot: AssignedSlot | null; team: Team }
+    | { success: true; assignedSlot: AssignedSlot | undefined; team: Team }
     | { success: false; reason: string }
   > {
     const isBanned = await isUserBanned(scrim.guildId, user.id);
@@ -245,7 +220,7 @@ export default class RegisterTeam extends Command {
         scrim: { connect: { id: scrim.id } },
       },
     });
-    const result = await this.registerTeam(scrim, team, interaction);
+    const result = await this.registerTeam(scrim, team);
     if (result.success) {
       return { success: true, assignedSlot: result.assignedSlot, team };
     } else {

@@ -32,29 +32,18 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
       where: { id: teamId },
       data: { banned: true, banReason: banReason || null },
     });
-    // Delete slot if exists
-    await prisma.assignedSlot.deleteMany({
-      where: { teamId: team.id, scrimId: team.scrimId },
+    await this.client.eventLogger.logEvent("teamBanned", {
+      team,
+      trigger: {
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        type: "user",
+      },
     });
+    await this.client.scrimService.unregisterTeam(team);
     await interaction.reply({
       content: `Team **${team.name}** has been banned.${banReason ? ` Reason: ${banReason}` : ""}\n\nThis ban is only for this scrim. To permanently ban a team, please use \`/ban\`.`,
       flags: "Ephemeral",
     });
-
-    try {
-      if (team.messageId) {
-        const channel = this.client.channels.cache.get(
-          team.scrim.participantsChannelId,
-        );
-        if (!channel || !channel.isTextBased() || !team.messageId) return;
-        await channel.messages.delete(team.messageId);
-        await prisma.team.update({
-          where: { id: teamId },
-          data: { messageId: null },
-        });
-      }
-    } catch (err) {
-      console.error("Failed to delete team message:", err);
-    }
   }
 }

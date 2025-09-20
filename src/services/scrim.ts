@@ -84,11 +84,15 @@ export class ScrimService extends Service {
       ],
     });
 
+    this.client.eventLogger.logEvent("registrationChannelOpened", {
+      channelId: channel.id,
+      trigger: { type: "system" },
+    });
+
     await channel.send({
       content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
     });
   }
-
   async closeRegistration(scrim: Scrim) {
     if (scrim.stage != "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is not in registration stage`);
@@ -120,11 +124,14 @@ export class ScrimService extends Service {
       ],
     });
 
+    await this.client.eventLogger.logEvent("registrationClosed", {
+      scrim,
+    });
+
     await channel.send({
       content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
     });
   }
-
   private getScrimConfigComponents(scrim: Scrim) {
     const canConfigure =
       scrim.stage === Stage.CONFIGURATION || scrim.stage === Stage.REGISTRATION;
@@ -317,21 +324,7 @@ export class ScrimService extends Service {
       logger.error(`Scrim with ID ${team.scrimId} not found`);
       return;
     }
-    const AssignedSlot = await prisma.assignedSlot.findFirst({
-      where: {
-        teamId: team.id,
-        scrimId: team.scrimId,
-      },
-    });
-    if (AssignedSlot) {
-      await prisma.assignedSlot.deleteMany({
-        where: {
-          teamId: team.id,
-          scrimId: team.scrimId,
-        },
-      });
-    }
-
+    await this.removeTeamSlot(scrim, team);
     await prisma.team.update({
       where: {
         id: team.id,
@@ -365,7 +358,8 @@ export class ScrimService extends Service {
       logger.error(`Error deleting team message: ${(error as Error).message}`);
     }
   }
-  async assignTeamSlot(team: Team, scrim: Scrim, slotNumber: number = -1) {
+
+  async assignTeamSlot(scrim: Scrim, team: Team, slotNumber: number = -1) {
     const teamCaptain = await prisma.teamMember.findFirst({
       where: { teamId: team.id, isCaptain: true },
     });
@@ -376,7 +370,8 @@ export class ScrimService extends Service {
     const reservedSlot = await prisma.reservedSlot.findFirst({
       where: { scrimId: scrim.id, userId: teamCaptain.userId },
     });
-    const performAutoSlot = scrim.autoSlotList || reservedSlot;
+    const performAutoSlot =
+      scrim.autoSlotList || reservedSlot || slotNumber != -1;
     if (!performAutoSlot) {
       logger.info(
         `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`,
@@ -398,6 +393,36 @@ export class ScrimService extends Service {
     const assignedSlot = await prisma.assignedSlot.create({
       data: { scrimId: scrim.id, teamId: team.id, slotNumber },
     });
+    if (assignedSlot) {
+      this.client.rolemanageService.addParticipantRoleToTeam(team);
+      this.client.eventLogger.logEvent("slotAssigned", {
+        team,
+        assignedSlot,
+        trigger: { type: "system" },
+      });
+    }
     return assignedSlot;
+  }
+
+  async removeTeamSlot(scrim: Scrim, team: Team) {
+    const assigned = await prisma.assignedSlot.findFirst({
+      where: { scrimId: scrim.id, teamId: team.id },
+    });
+    if (!assigned) {
+      logger.warn(
+        `Team ${team.id} does not have an assigned slot in scrim ${scrim.id}`,
+      );
+      return;
+    }
+    await prisma.assignedSlot.deleteMany({
+      where: { scrimId: scrim.id, teamId: team.id },
+    });
+    this.client.rolemanageService.removeParticipantRoleFromTeam(team);
+    this.client.eventLogger.logEvent("slotUnassigned", {
+      team,
+      unassignedSlot: assigned,
+      trigger: { type: "system" },
+    });
+    return assigned;
   }
 }
