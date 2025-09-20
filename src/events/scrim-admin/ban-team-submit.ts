@@ -33,6 +33,14 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
       data: { banned: true, banReason: banReason || null },
     });
     await this.client.scrimService.unregisterTeam(team);
+    await this.client.eventLogger.logEvent("teamBanned", {
+      team,
+      trigger: {
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        type: "user",
+      },
+    });
     await interaction.reply({
       content: `Team **${team.name}** has been banned.${banReason ? ` Reason: ${banReason}` : ""}\n\nThis ban is only for this scrim. To permanently ban a team, please use \`/ban\`.`,
       flags: "Ephemeral",
