@@ -50,7 +50,6 @@ export class RoleManageService extends ScrimService {
     const role = await guild.roles.create({
       name: `Participant`,
       reason: `Creating a participant role for scrim management`,
-      color: "Random",
     });
     return role;
   }
