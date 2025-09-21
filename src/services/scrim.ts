@@ -11,6 +11,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  TextChannel,
 } from "discord.js";
 
 export class ScrimService extends Service {
@@ -32,7 +33,6 @@ export class ScrimService extends Service {
       return;
     }
     const delay = scrim.registrationStartTime.getTime() - Date.now();
-    console.log(scrim.registrationStartTime, new Date(), delay);
     if (delay <= 0) {
       logger.info(
         `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`,
@@ -57,32 +57,34 @@ export class ScrimService extends Service {
       return;
     }
 
-    // Update Scrim Stage to Registration
+    let channel;
+    try {
+      channel = (await this.client.channels.fetch(
+        scrim.registrationChannelId,
+      )) as TextChannel;
+    } catch (error) {
+      logger.error(
+        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+      );
+      this.client.eventLogger.logEvent("fatalError", {
+        scrim,
+        error: `Can't find registration channel ${scrim.registrationChannelId}. Maybe it was deleted? or I don't have access to it.`,
+      });
+      return;
+    }
+
+    await channel.permissionOverwrites.edit(scrim.guildId, {
+      ViewChannel: true,
+      SendMessages: true,
+      ReadMessageHistory: true,
+    });
+
     await prisma.scrim.update({
       where: { id: scrim.id },
       data: { stage: "REGISTRATION" },
     });
     logger.info(`Scrim ${scrim.id} moved to registration stage`);
     await this.updateScrimConfigMessage(scrim);
-
-    const channel = await this.client.channels.fetch(
-      scrim.registrationChannelId,
-    );
-    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-      logger.error(
-        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
-      );
-      return;
-    }
-    // Open Registration Channel For Everyone
-    await channel.edit({
-      permissionOverwrites: [
-        {
-          id: scrim.guildId,
-          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
-        },
-      ],
-    });
 
     this.client.eventLogger.logEvent("registrationChannelOpened", {
       channelId: channel.id,
@@ -105,23 +107,25 @@ export class ScrimService extends Service {
     });
     logger.info(`Scrim ${scrim.id} moved to slot allocation stage`);
     await this.updateScrimConfigMessage(scrim);
-    const channel = await this.client.channels.fetch(
-      scrim.registrationChannelId,
-    );
-    if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+    let channel;
+    try {
+      channel = (await this.client.channels.fetch(
+        scrim.registrationChannelId,
+      )) as TextChannel;
+    } catch (error) {
       logger.error(
-        `Registration channel ${scrim.registrationChannelId} not found or not text-based`,
+        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
       );
+      this.client.eventLogger.logEvent("fatalError", {
+        scrim,
+        error: `Can't find registration channel ${scrim.registrationChannelId}. Maybe it was deleted? or I don't have access to it.`,
+      });
       return;
     }
-    // Close Registration Channel For Everyone
-    await channel.edit({
-      permissionOverwrites: [
-        {
-          id: scrim.guildId,
-          deny: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
-        },
-      ],
+    await channel.permissionOverwrites.edit(scrim.guildId, {
+      ViewChannel: false,
+      SendMessages: false,
+      ReadMessageHistory: false,
     });
 
     await this.client.eventLogger.logEvent("registrationClosed", {

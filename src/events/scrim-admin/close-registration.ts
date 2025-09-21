@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { CheckFailure } from "@/base/classes/error";
 
 export default class CloseRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;

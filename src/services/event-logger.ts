@@ -37,6 +37,10 @@ type EventLoggerPayload = {
   registrationClosed: {
     scrim: Scrim;
   };
+  fatalError: {
+    scrim: Scrim;
+    error: string;
+  };
 };
 
 type TriggerSource =
@@ -92,6 +96,10 @@ export class EventLogger {
           payload as EventLoggerPayload["registrationClosed"],
         );
         break;
+      case "fatalError":
+        await this.logFatalError(payload as EventLoggerPayload["fatalError"]);
+        break;
+
       default:
         throw new Error(`Unknown event type: ${event}`);
     }
@@ -247,6 +255,17 @@ export class EventLogger {
         `Registration has been closed for the scrim **(Scrim ID: ${scrim.id})**`,
       )
       .setColor("DarkAqua");
+    await logChannel.send({ embeds: [embed] });
+  }
+
+  private async logFatalError(payload: EventLoggerPayload["fatalError"]) {
+    const { scrim, error } = payload;
+    const logChannel = await this.getLogsChannel(scrim.logsChannelId);
+    if (!logChannel) return;
+    const embed = new EmbedBuilder()
+      .setTitle(`Fatal Error in Scrim ID: ${scrim.id}`)
+      .setDescription(`An unexpected error occurred:\n\`\`\`${error}\`\`\``)
+      .setColor("DarkRed");
     await logChannel.send({ embeds: [embed] });
   }
 }
