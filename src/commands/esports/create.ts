@@ -92,6 +92,14 @@ export default class CreateScrim extends Command {
           id: guild.roles.everyone,
           deny: ["ViewChannel"],
         },
+        {
+          id: guildConfig.adminRoleId,
+          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+        },
+        {
+          id: this.client.user!.id,
+          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+        },
       ],
     });
     const adminChannel = await category.children.create({
