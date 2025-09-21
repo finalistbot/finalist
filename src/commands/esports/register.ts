@@ -10,9 +10,9 @@ import { AssignedSlot, Scrim, Stage, Team } from "@prisma/client";
 import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
-import { getFirstAvailableSlot } from "@/database";
 import { CommandInfo } from "@/types/command";
 import { randomString } from "@/lib/utils";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -27,7 +27,7 @@ export default class RegisterTeam extends Command {
       "Register your team for the scrim in this channel. You must be a team captain to use this command. Once registered, you can no longer make changes to your team.",
     usageExamples: ["/register"],
   };
-  checks = [checkIsNotBanned];
+  checks = [botHasPermissions("SendMessages", "EmbedLinks"), checkIsNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrim = await prisma.scrim.findFirst({

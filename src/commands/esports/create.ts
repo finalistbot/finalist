@@ -13,7 +13,7 @@ import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { Stage } from "@prisma/client";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -65,7 +65,16 @@ export default class CreateScrim extends Command {
       },
     ],
   };
-  checks = [checkIsScrimAdmin];
+  checks = [
+    botHasPermissions(
+      "ManageChannels",
+      "ManageRoles",
+      "SendMessages",
+      "ViewChannel",
+      "ReadMessageHistory",
+    ),
+    checkIsScrimAdmin,
+  ];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const guild = interaction.guild;
