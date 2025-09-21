@@ -1,4 +1,6 @@
+import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 import { Team } from "@prisma/client";
@@ -34,6 +36,17 @@ export default class BanTeam extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("ban_team:")) return;
     const teamId = parseIdFromString(interaction.customId);
     if (!teamId) return;
+    try {
+      await checkIsScrimAdmin(interaction);
+    } catch (e) {
+      if (e instanceof CheckFailure) {
+        await interaction.reply({
+          content: "You do not have permission to perform this action.",
+          flags: "Ephemeral",
+        });
+        return;
+      }
+    }
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       include: { TeamMember: true },

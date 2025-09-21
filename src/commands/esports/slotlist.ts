@@ -10,6 +10,8 @@ import { table } from "table";
 import { BRAND_COLOR } from "@/lib/constants";
 import { Scrim } from "@prisma/client";
 import { CommandInfo } from "@/types/command";
+import { CommandCheck } from "@/base/classes/check";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 
 type SlotDetails = {
   slotNumber: number;
@@ -164,6 +166,8 @@ export default class SlotlistExport extends Command {
       },
     ],
   };
+
+  checks = [checkIsScrimAdmin];
 
   async execute(interaction: ChatInputCommandInteraction) {
     const format = interaction.options.getString("format") || "embed";

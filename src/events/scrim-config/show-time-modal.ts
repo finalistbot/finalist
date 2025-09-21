@@ -10,6 +10,8 @@ import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
 import { parseIdFromString } from "@/lib/utils";
 import { toZonedTime } from "date-fns-tz";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { CheckFailure } from "@/base/classes/error";
 
 async function timingConfigModal(scrim: Scrim) {
   const guildConfig = await prisma.guildConfig.findUnique({
@@ -47,6 +49,17 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
       return;
     const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) return;
+    try {
+      await checkIsScrimAdmin(interaction);
+    } catch (e) {
+      if (e instanceof CheckFailure) {
+        await interaction.reply({
+          content: "You do not have permission to perform this action.",
+          flags: "Ephemeral",
+        });
+        return;
+      }
+    }
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
     });

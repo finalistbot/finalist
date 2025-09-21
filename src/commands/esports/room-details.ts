@@ -1,4 +1,6 @@
+import { CommandCheck } from "@/base/classes/check";
 import { Command } from "@/base/classes/command";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { convertToSlug, convertToTitleCase } from "@/lib/utils";
@@ -115,6 +117,8 @@ export default class RoomDetailCommand extends Command {
       },
     ],
   };
+
+  checks = [checkIsScrimAdmin];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();
