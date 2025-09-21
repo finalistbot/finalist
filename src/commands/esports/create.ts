@@ -2,6 +2,7 @@ import {
   ChannelType,
   ChatInputCommandInteraction,
   InteractionContextType,
+  OverwriteResolvable,
   SlashCommandBuilder,
 } from "discord.js";
 import { Command } from "@/base/classes/command";
@@ -84,6 +85,10 @@ export default class CreateScrim extends Command {
     const name = convertToTitleCase(
       interaction.options.getString("name", true),
     );
+    const botOverwrites: OverwriteResolvable = {
+      id: this.client.user!.id,
+      allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
+    };
     const category = await guild.channels.create({
       name: `${name} - Scrim`,
       type: ChannelType.GuildCategory,
@@ -96,10 +101,7 @@ export default class CreateScrim extends Command {
           id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
         },
-        {
-          id: this.client.user!.id,
-          allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
-        },
+        botOverwrites,
       ],
     });
     const adminChannel = await category.children.create({
@@ -114,6 +116,7 @@ export default class CreateScrim extends Command {
           id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
         },
+        botOverwrites,
       ],
     });
     const logsChannel = await category.children.create({
@@ -128,6 +131,7 @@ export default class CreateScrim extends Command {
           id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
         },
+        botOverwrites,
       ],
     });
     const registrationChannel = await category.children.create({
@@ -142,6 +146,7 @@ export default class CreateScrim extends Command {
           id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
         },
+        botOverwrites,
       ],
     });
 
@@ -157,6 +162,7 @@ export default class CreateScrim extends Command {
           id: guildConfig.adminRoleId,
           allow: ["ViewChannel", "ReadMessageHistory"],
         },
+        botOverwrites,
       ],
     });
 
