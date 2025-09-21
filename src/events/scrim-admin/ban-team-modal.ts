@@ -1,8 +1,8 @@
 import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { Team } from "@prisma/client";
 import {
   Interaction,
@@ -36,32 +36,27 @@ export default class BanTeam extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("ban_team:")) return;
     const teamId = parseIdFromString(interaction.customId);
     if (!teamId) return;
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.reply({
-          content: "You do not have permission to perform this action.",
-          flags: "Ephemeral",
-        });
-        return;
-      }
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
     }
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       include: { TeamMember: true },
     });
     if (!team) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Team not found.",
-        flags: "Ephemeral",
       });
       return;
     }
     if (team.banned) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Team is already banned.",
-        flags: "Ephemeral",
       });
       return;
     }

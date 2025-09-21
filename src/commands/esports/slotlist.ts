@@ -10,8 +10,9 @@ import { table } from "table";
 import { BRAND_COLOR } from "@/lib/constants";
 import { Scrim } from "@prisma/client";
 import { CommandInfo } from "@/types/command";
-import { CommandCheck } from "@/base/classes/check";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { InteractionCheck } from "@/base/classes/check";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { safeRunChecks } from "@/lib/utils";
 
 type SlotDetails = {
   slotNumber: number;
@@ -167,9 +168,15 @@ export default class SlotlistExport extends Command {
     ],
   };
 
-  checks = [checkIsScrimAdmin];
-
   async execute(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply({ flags: "Ephemeral" });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
+    }
     const format = interaction.options.getString("format") || "embed";
     await interaction.deferReply({ flags: "Ephemeral" });
 

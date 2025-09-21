@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import {
   ActionRowBuilder,
   Interaction,
@@ -10,7 +10,7 @@ import {
 import { Event } from "@/base/classes/event";
 import { Team } from "@prisma/client";
 import { getFirstAvailableSlot } from "@/database";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CheckFailure } from "@/base/classes/error";
 
 function createAssignSlotModal(team: Team, defaultSlot: number) {
@@ -42,16 +42,13 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
     if (!teamId) {
       return;
     }
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.reply({
-          content: "You do not have permission to perform this action.",
-          flags: "Ephemeral",
-        });
-        return;
-      }
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
     }
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -62,10 +59,9 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
     }
     const slot = await getFirstAvailableSlot(team.scrimId);
     if (slot === -1) {
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "All slots are already assigned. Kindly use /assign-slot command.",
-        flags: ["Ephemeral"],
       });
       return;
     }

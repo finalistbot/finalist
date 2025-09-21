@@ -6,7 +6,7 @@ import {
   SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 import { BracketClient } from "./client";
-import { CommandCheck } from "./check";
+import { InteractionCheck } from "./check";
 import { CommandCategory, CommandInfo } from "@/types/command";
 
 export abstract class Command {
@@ -17,7 +17,7 @@ export abstract class Command {
     | SlashCommandSubcommandsOnlyBuilder
     | SlashCommandOptionsOnlyBuilder;
   developerOnly = false;
-  checks?: CommandCheck[];
+  checks?: InteractionCheck[];
   load: boolean = true;
   abstract execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
   autocomplete?(interaction: AutocompleteInteraction): Promise<unknown>;

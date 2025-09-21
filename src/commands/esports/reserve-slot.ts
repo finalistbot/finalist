@@ -1,7 +1,8 @@
 import { Command } from "@/base/classes/command";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
+import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
@@ -48,17 +49,24 @@ export default class ReserveSlotCommand extends Command {
     ],
   };
 
-  checks = [botHasPermissions("SendMessages", "EmbedLinks"), checkIsScrimAdmin];
+  checks = [botHasPermissions("SendMessages", "EmbedLinks")];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
+    }
     const teamLeader = interaction.options.getUser("team-leader", true);
     const slotNumber = interaction.options.getInteger("slot-number", true);
     const scrim = await prisma.scrim.findFirst({
       where: { adminChannelId: interaction.channelId },
     });
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "This command can be used only in admin channel.",
-        flags: "Ephemeral",
       });
       return;
     }
@@ -69,7 +77,7 @@ export default class ReserveSlotCommand extends Command {
         slotNumber,
       },
     });
-    await interaction.reply(
+    await interaction.editReply(
       `Slot number ${slotNumber} has been reserved for team leader ${teamLeader.tag}.`,
     );
   }

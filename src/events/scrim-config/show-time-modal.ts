@@ -8,9 +8,9 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { toZonedTime } from "date-fns-tz";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CheckFailure } from "@/base/classes/error";
 
 async function timingConfigModal(scrim: Scrim) {
@@ -48,17 +48,20 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("show_scrim_timing_config_modal"))
       return;
     const scrimId = parseIdFromString(interaction.customId);
-    if (!scrimId) return;
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.reply({
-          content: "You do not have permission to perform this action.",
-          flags: "Ephemeral",
-        });
-        return;
-      }
+    if (!scrimId) {
+      await interaction.reply({
+        content: "Invalid scrim ID.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
     }
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },

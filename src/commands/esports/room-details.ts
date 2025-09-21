@@ -1,9 +1,8 @@
-import { CommandCheck } from "@/base/classes/check";
 import { Command } from "@/base/classes/command";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { convertToSlug, convertToTitleCase } from "@/lib/utils";
+import { convertToSlug, convertToTitleCase, safeRunChecks } from "@/lib/utils";
 import { RoomDetailsField } from "@/types";
 import { CommandInfo } from "@/types/command";
 import {
@@ -118,9 +117,15 @@ export default class RoomDetailCommand extends Command {
     ],
   };
 
-  checks = [checkIsScrimAdmin];
-
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
+    }
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === "set") {
       await this.setRd(interaction);
@@ -129,9 +134,8 @@ export default class RoomDetailCommand extends Command {
     } else if (subcommand === "clear") {
       await this.clearRd(interaction);
     } else {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Unknown subcommand.",
-        ephemeral: true,
       });
     }
   }
@@ -146,9 +150,8 @@ export default class RoomDetailCommand extends Command {
       },
     });
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "This command can only be used in a scrim admin channel.",
-        ephemeral: true,
       });
       return;
     }
@@ -180,18 +183,16 @@ export default class RoomDetailCommand extends Command {
         fields,
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: `Set field \`${name}\` to \`${value}\`.`,
-      flags: "Ephemeral",
     });
   }
 
   private async postRd(interaction: ChatInputCommandInteraction<"cached">) {
     const channel = interaction.options.getChannel("channel", true);
     if (!channel.isTextBased()) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Please select a text-based channel.",
-        ephemeral: true,
       });
       return;
     }

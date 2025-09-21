@@ -1,8 +1,8 @@
 import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { Interaction, CacheType } from "discord.js";
 
 export default class KickTeam extends Event<"interactionCreate"> {
@@ -19,16 +19,13 @@ export default class KickTeam extends Event<"interactionCreate"> {
       });
       return;
     }
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.reply({
-          content: "You do not have permission to perform this action.",
-          flags: "Ephemeral",
-        });
-        return;
-      }
+    await interaction.deferReply({ flags: "Ephemeral" });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
     }
 
     const team = await prisma.team.findUnique({
@@ -36,9 +33,8 @@ export default class KickTeam extends Event<"interactionCreate"> {
     });
 
     if (!team) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Team with ID ${teamId} does not exist.`,
-        flags: "Ephemeral",
       });
       return;
     }
@@ -53,9 +49,8 @@ export default class KickTeam extends Event<"interactionCreate"> {
     });
     await this.client.scrimService.unregisterTeam(team);
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Team with ID ${teamId} has been kicked.`,
-      flags: "Ephemeral",
     });
   }
 }

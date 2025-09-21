@@ -1,8 +1,8 @@
-import { CommandCheck } from "@/base/classes/check";
+import { InteractionCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
 import { prisma } from "@/lib/prisma";
 
-export const checkIsNotBanned: CommandCheck = async (interaction) => {
+export const isNotBanned: InteractionCheck = async (interaction) => {
   const { guildId, user } = interaction;
   if (!guildId) return true;
   const bannedUser = await isUserBanned(guildId, user.id);

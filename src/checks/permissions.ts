@@ -3,8 +3,10 @@ import { Interaction, PermissionResolvable } from "discord.js";
 
 export const botHasPermissions = (...perms: PermissionResolvable[]) => {
   return async (interaction: Interaction) => {
-    if (!interaction.inGuild()) return true;
-    if (!interaction.inCachedGuild()) return false;
+    if (!interaction.inGuild())
+      throw new CheckFailure("This is guild only command.");
+    if (!interaction.inCachedGuild())
+      throw new CheckFailure("This is guild only command.");
     const botMember = await interaction.guild.members.fetchMe();
     const missing = botMember.permissions.missing(perms);
     if (missing.length > 0) {

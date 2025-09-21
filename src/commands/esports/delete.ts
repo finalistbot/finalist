@@ -1,9 +1,9 @@
 import { Command } from "@/base/classes/command";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
-import { suppress } from "@/lib/utils";
+import { safeRunChecks, suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import { Scrim, Stage } from "@prisma/client";
 import {
@@ -39,11 +39,16 @@ export default class ScrimDelete extends Command {
       },
     ],
   };
-  checks = [
-    botHasPermissions("ManageChannels", "ManageRoles"),
-    checkIsScrimAdmin,
-  ];
+  checks = [botHasPermissions("ManageChannels", "ManageRoles")];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const result = await safeRunChecks(interaction, isScrimAdmin);
+    if (!result.success) {
+      await interaction.editReply({
+        content: result.reason,
+      });
+      return;
+    }
     const scrimId = interaction.options.getInteger("id");
     let scrim: Scrim | null = null;
 
@@ -52,10 +57,9 @@ export default class ScrimDelete extends Command {
         where: { adminChannelId: interaction.channelId },
       });
       if (!scrim) {
-        return await interaction.reply({
+        return await interaction.editReply({
           content:
             "Could not find a scrim associated with this channel. Please provide a scrim ID.",
-          flags: "Ephemeral",
         });
       }
     } else {
@@ -123,7 +127,7 @@ export default class ScrimDelete extends Command {
           AND SIMILARITY(name, ${search}) > 0.1
             ORDER BY SIMILARITY(name, ${search}) DESC LIMIT 25;`;
     }
-    let isAdmin = await suppress(checkIsScrimAdmin(interaction), false);
+    let isAdmin = await suppress(isScrimAdmin(interaction), false);
 
     if (!isAdmin) {
       await interaction.respond([]);

@@ -1,8 +1,8 @@
 import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import { CacheType, Interaction } from "discord.js";
 
@@ -12,23 +12,20 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
   async execute(interaction: Interaction<CacheType>): Promise<void> {
     if (!interaction.isButton()) return;
     if (!interaction.customId.startsWith("start_registration:")) return;
-    await interaction.deferReply({ flags: "Ephemeral" });
     const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
-      await interaction.editReply({
+      await interaction.reply({
         content: "Invalid scrim ID.",
       });
       return;
     }
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.editReply({
-          content: "You do not have permission to perform this action.",
-        });
-        return;
-      }
+    await interaction.deferReply({ flags: "Ephemeral" });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
     }
 
     const scrim = await prisma.scrim.findUnique({

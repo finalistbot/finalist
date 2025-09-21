@@ -1,5 +1,5 @@
 import { Interaction } from "discord.js";
 
-export type CommandCheck = (
+export type InteractionCheck = (
   interaction: Interaction,
 ) => Promise<boolean> | boolean;
