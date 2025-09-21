@@ -42,11 +42,11 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
     if (!teamId) {
       return;
     }
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const checkResult = await safeRunChecks(interaction, isScrimAdmin);
     if (!checkResult.success) {
-      await interaction.editReply({
+      await interaction.reply({
         content: checkResult.reason,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -59,9 +59,10 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
     }
     const slot = await getFirstAvailableSlot(team.scrimId);
     if (slot === -1) {
-      await interaction.editReply({
+      await interaction.reply({
         content:
           "All slots are already assigned. Kindly use /assign-slot command.",
+        flags: ["Ephemeral"],
       });
       return;
     }

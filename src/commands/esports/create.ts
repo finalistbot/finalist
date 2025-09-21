@@ -85,7 +85,6 @@ export default class CreateScrim extends Command {
       return;
     }
     const guild = interaction.guild;
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const result = await checkIsGuildSetup(guild);
     if (!result.valid) {
       await interaction.editReply({

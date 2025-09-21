@@ -55,11 +55,11 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
       });
       return;
     }
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const checkResult = await safeRunChecks(interaction, isScrimAdmin);
     if (!checkResult.success) {
-      await interaction.editReply({
+      await interaction.reply({
         content: checkResult.reason,
+        flags: "Ephemeral",
       });
       return;
     }
@@ -67,6 +67,10 @@ export default class ScrimTimingConfig extends Event<"interactionCreate"> {
       where: { id: scrimId },
     });
     if (!scrim) {
+      await interaction.reply({
+        content: "Scrim not found.",
+        flags: "Ephemeral",
+      });
       return;
     }
     const modal = await timingConfigModal(scrim);

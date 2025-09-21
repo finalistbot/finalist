@@ -36,11 +36,11 @@ export default class BanTeam extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("ban_team:")) return;
     const teamId = parseIdFromString(interaction.customId);
     if (!teamId) return;
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const checkResult = await safeRunChecks(interaction, isScrimAdmin);
     if (!checkResult.success) {
-      await interaction.editReply({
+      await interaction.reply({
         content: checkResult.reason,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -49,14 +49,16 @@ export default class BanTeam extends Event<"interactionCreate"> {
       include: { TeamMember: true },
     });
     if (!team) {
-      await interaction.editReply({
+      await interaction.reply({
         content: "Team not found.",
+        flags: ["Ephemeral"],
       });
       return;
     }
     if (team.banned) {
-      await interaction.editReply({
+      await interaction.reply({
         content: "Team is already banned.",
+        flags: ["Ephemeral"],
       });
       return;
     }

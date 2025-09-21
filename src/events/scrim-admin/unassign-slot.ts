@@ -1,4 +1,3 @@
-import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
@@ -33,9 +32,8 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
       },
     });
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Scrim not found.",
-        ephemeral: true,
       });
       return;
     }
@@ -43,9 +41,8 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
       where: { id: teamId },
     });
     if (!team) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Team not found.",
-        ephemeral: true,
       });
       return;
     }
@@ -54,15 +51,13 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
       team,
     );
     if (!assignedSlot) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Team ${team.name} does not have an assigned slot.`,
-        ephemeral: true,
       });
       return;
     }
-    await interaction.reply({
+    await interaction.editReply({
       content: `Unassigned slot for team ${team.name}.`,
-      flags: "Ephemeral",
     });
     await suppress(editTeamDetails(scrim, team, this.client));
   }

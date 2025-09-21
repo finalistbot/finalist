@@ -39,13 +39,14 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       ),
     };
 
+    await interaction.deferReply({ flags: "Ephemeral" });
+
     const parsed = TimingConfigSchema.safeParse(rawBody);
     if (!parsed.success) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `There was an error with your input: ${parsed.error.issues
           .map((i) => i.message)
           .join(", ")}`,
-        flags: ["Ephemeral"],
       });
       return;
     }
@@ -58,9 +59,8 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       guildConfig?.timezone || "UTC",
     );
     if (dateFns.isBefore(data.registrationStartTime, new Date())) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Registration start time must be in the future.",
-        flags: ["Ephemeral"],
       });
       return;
     }
@@ -72,9 +72,8 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
         registrationStartTime: data.registrationStartTime,
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: "Scrim timing configuration updated successfully.",
-      flags: ["Ephemeral"],
     });
     await this.client.scrimService.scheduleRegistrationStart(scrim);
     await this.client.scrimService.updateScrimConfigMessage(scrim);

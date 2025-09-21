@@ -87,11 +87,11 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
       });
       return;
     }
-    await interaction.deferReply({ flags: ["Ephemeral"] });
     const checkResult = await safeRunChecks(interaction, isScrimAdmin);
     if (!checkResult.success) {
-      await interaction.editReply({
+      await interaction.reply({
         content: checkResult.reason,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -100,6 +100,10 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
       include: { _count: { select: { Team: true } } },
     });
     if (!scrim) {
+      await interaction.reply({
+        content: "Scrim not found.",
+        flags: ["Ephemeral"],
+      });
       return;
     }
     const modal = teamConfigModal(scrim);
