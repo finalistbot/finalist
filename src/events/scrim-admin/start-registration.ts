@@ -1,4 +1,6 @@
+import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
@@ -17,6 +19,16 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
         content: "Invalid scrim ID.",
       });
       return;
+    }
+    try {
+      await checkIsScrimAdmin(interaction);
+    } catch (e) {
+      if (e instanceof CheckFailure) {
+        await interaction.editReply({
+          content: "You do not have permission to perform this action.",
+        });
+        return;
+      }
     }
 
     const scrim = await prisma.scrim.findUnique({

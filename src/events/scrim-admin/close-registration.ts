@@ -3,6 +3,8 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
+import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { CheckFailure } from "@/base/classes/error";
 
 export default class CloseRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -17,6 +19,17 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
         content: "Invalid scrim ID.",
       });
       return;
+    }
+    try {
+      await checkIsScrimAdmin(interaction);
+    } catch (e) {
+      if (e instanceof CheckFailure) {
+        await interaction.reply({
+          content: "You do not have permission to perform this action.",
+          flags: "Ephemeral",
+        });
+        return;
+      }
     }
 
     const scrim = await prisma.scrim.findUnique({
