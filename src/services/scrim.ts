@@ -1,3 +1,4 @@
+import { BracketError } from "@/base/classes/error";
 import { Service } from "@/base/classes/service";
 import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
@@ -54,7 +55,7 @@ export class ScrimService extends Service {
   async openRegistration(scrim: Scrim) {
     if (scrim.stage == "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is already in registration stage`);
-      return;
+      throw new BracketError("Scrim is already in registration stage.");
     }
 
     let channel;
@@ -66,18 +67,25 @@ export class ScrimService extends Service {
       logger.error(
         `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
       );
-      this.client.eventLogger.logEvent("fatalError", {
-        scrim,
-        error: `Can't find registration channel ${scrim.registrationChannelId}. Maybe it was deleted? or I don't have access to it.`,
-      });
-      return;
+      throw new BracketError(
+        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted?`,
+      );
     }
 
-    await channel.permissionOverwrites.edit(scrim.guildId, {
-      ViewChannel: true,
-      SendMessages: true,
-      ReadMessageHistory: true,
-    });
+    try {
+      await channel.permissionOverwrites.edit(scrim.guildId, {
+        ViewChannel: true,
+        SendMessages: true,
+        ReadMessageHistory: true,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+      );
+      throw new BracketError(
+        `Can't update permissions for registration channel <#${scrim.registrationChannelId}>. Maybe I don't have permission to do so?`,
+      );
+    }
 
     await prisma.scrim.update({
       where: { id: scrim.id },
@@ -91,14 +99,20 @@ export class ScrimService extends Service {
       trigger: { type: "system" },
     });
 
-    await channel.send({
-      content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
-    });
+    try {
+      await channel.send({
+        content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to send registration open message in channel <#${scrim.registrationChannelId}> for scrim ${scrim.id}: ${(error as Error).message}`,
+      );
+    }
   }
   async closeRegistration(scrim: Scrim) {
     if (scrim.stage != "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is not in registration stage`);
-      return;
+      throw new BracketError("Scrim is not in registration stage.");
     }
     // Update Scrim Stage to Ongoing
     await prisma.scrim.update({
@@ -116,25 +130,38 @@ export class ScrimService extends Service {
       logger.error(
         `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
       );
-      this.client.eventLogger.logEvent("fatalError", {
-        scrim,
-        error: `Can't find registration channel ${scrim.registrationChannelId}. Maybe it was deleted? or I don't have access to it.`,
-      });
-      return;
+      throw new BracketError(
+        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted? or I don't have access to it.`,
+      );
     }
-    await channel.permissionOverwrites.edit(scrim.guildId, {
-      ViewChannel: false,
-      SendMessages: false,
-      ReadMessageHistory: false,
-    });
+    try {
+      await channel.permissionOverwrites.edit(scrim.guildId, {
+        ViewChannel: false,
+        SendMessages: false,
+        ReadMessageHistory: false,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+      );
+      throw new BracketError(
+        `Can't update permissions for registration channel ${scrim.registrationChannelId}. Maybe I don't have permission to do so?`,
+      );
+    }
 
-    await this.client.eventLogger.logEvent("registrationClosed", {
+    this.client.eventLogger.logEvent("registrationClosed", {
       scrim,
     });
 
-    await channel.send({
-      content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
-    });
+    try {
+      await channel.send({
+        content: `Registration for scrim **${scrim.name}** is now CLOSED! The staff will now proceed to allocate slots and create teams.`,
+      });
+    } catch (error) {
+      logger.error(
+        `Failed to send registration close message in channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+      );
+    }
   }
   private getScrimConfigComponents(scrim: Scrim) {
     const canConfigure =
