@@ -7,12 +7,12 @@ import {
   User,
 } from "discord.js";
 import { AssignedSlot, Scrim, Stage, Team } from "@prisma/client";
-import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
+import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { sendTeamDetails } from "@/ui/messages/teams";
 import logger from "@/lib/logger";
 import { CommandInfo } from "@/types/command";
-import { randomString } from "@/lib/utils";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
+import { randomString, safeRunChecks } from "@/lib/utils";
+import { botHasPermissions } from "@/checks/permissions";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -27,9 +27,17 @@ export default class RegisterTeam extends Command {
       "Register your team for the scrim in this channel. You must be a team captain to use this command. Once registered, you can no longer make changes to your team.",
     usageExamples: ["/register"],
   };
-  checks = [botHasPermissions("SendMessages", "EmbedLinks"), checkIsNotBanned];
+  checks = [botHasPermissions("SendMessages", "EmbedLinks")];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const checkResult = await safeRunChecks(interaction, isNotBanned);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
+    }
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,
@@ -37,17 +45,15 @@ export default class RegisterTeam extends Command {
     });
 
     if (!scrim) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "This channel is not set up for team registration.",
-        flags: ["Ephemeral"],
       });
       return;
     }
 
     if (scrim.stage !== Stage.REGISTRATION) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "Team registration is not open.",
-        flags: ["Ephemeral"],
       });
       return;
     }
@@ -71,17 +77,15 @@ export default class RegisterTeam extends Command {
         team = result.team;
         assignedSlot = result.assignedSlot;
       } else {
-        await interaction.reply({
+        await interaction.editReply({
           content: result.reason,
-          flags: ["Ephemeral"],
         });
         return;
       }
     } else if (!teamMember || !teamMember.isCaptain) {
-      await interaction.reply({
+      await interaction.editReply({
         content:
           "You are not a captain of any team in this scrim. Please contact your team captain to register the team.",
-        flags: ["Ephemeral"],
       });
       return;
     } else {
@@ -90,17 +94,15 @@ export default class RegisterTeam extends Command {
         team = teamMember.team;
         assignedSlot = result.assignedSlot;
       } else {
-        await interaction.reply({
+        await interaction.editReply({
           content: result.reason,
-          flags: ["Ephemeral"],
         });
         return;
       }
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
-      flags: ["Ephemeral"],
     });
 
     const needClosing =

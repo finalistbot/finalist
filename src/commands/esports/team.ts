@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { isUserBanned, checkIsNotBanned } from "@/checks/banned";
+import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
 import { convertToTitleCase, randomString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
@@ -164,7 +164,7 @@ export default class TeamCommand extends Command {
       },
     ],
   };
-  checks = [checkIsNotBanned];
+  checks = [isNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();

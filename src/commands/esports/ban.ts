@@ -1,9 +1,9 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned } from "@/checks/banned";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
-import { mentionUser } from "@/lib/utils";
+import { mentionUser, safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import {
   ChatInputCommandInteraction,
@@ -27,16 +27,21 @@ export default class BanUser extends Command {
     category: "Esports",
   };
 
-  checks = [checkIsScrimAdmin];
-
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const result = await safeRunChecks(interaction, isScrimAdmin);
+    if (!result.success) {
+      await interaction.editReply({
+        content: result.reason,
+      });
+      return;
+    }
     const user = interaction.options.getUser("user", true);
     const guildId = interaction.guildId;
     const isBanned = await isUserBanned(guildId, user.id);
     if (isBanned) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `User ${mentionUser(user.id)} is already banned.`,
-        flags: ["Ephemeral"],
       });
       return;
     }
@@ -47,9 +52,8 @@ export default class BanUser extends Command {
         guildId: guildId,
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: `User ${mentionUser(user.id)} has been banned.`,
-      flags: ["Ephemeral"],
     });
   }
 }

@@ -1,9 +1,9 @@
-import { CommandCheck } from "@/base/classes/check";
+import { InteractionCheck } from "@/base/classes/check";
 import { BracketClient } from "@/base/classes/client";
 import { CheckFailure } from "@/base/classes/error";
 import { Interaction } from "discord.js";
 
-export const checkIsBotOwner: CommandCheck = async (
+export const checkIsBotOwner: InteractionCheck = async (
   interaction: Interaction,
 ) => {
   const client = interaction.client as BracketClient;

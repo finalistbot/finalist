@@ -1,5 +1,5 @@
 import { Command } from "@/base/classes/command";
-import { checkIsNotBanned } from "@/checks/banned";
+import { isNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
 import { CommandInfo } from "@/types/command";
 import { Stage } from "@prisma/client";
@@ -17,7 +17,7 @@ export default class UnregisterTeam extends Command {
       "Unregister your team from the scrim in this channel. You must be a team captain to use this command. Once unregistered, you can register again if the registration is still open.",
     usageExamples: ["/unregister"],
   };
-  checks = [checkIsNotBanned];
+  checks = [isNotBanned];
   load = false;
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrim = await prisma.scrim.findFirst({

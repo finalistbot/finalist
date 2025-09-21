@@ -1,5 +1,5 @@
 import { Event } from "@/base/classes/event";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
@@ -40,7 +40,7 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
     });
 
     try {
-      await checkIsScrimAdmin(interaction);
+      await isScrimAdmin(interaction);
     } catch {
       if (!teamCaption) {
         await interaction.editReply({

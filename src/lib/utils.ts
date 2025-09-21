@@ -1,3 +1,7 @@
+import { InteractionCheck } from "@/base/classes/check";
+import { CheckFailure } from "@/base/classes/error";
+import { Interaction } from "discord.js";
+
 export function randomString(length: number): string {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -51,4 +55,34 @@ export function convertToSlug(str: string): string {
     .toLowerCase()
     .replace(/ /g, "-")
     .replace(/[^\w-]+/g, "");
+}
+
+export async function safeRunChecks(
+  interaction: Interaction,
+  ...checks: InteractionCheck[]
+): Promise<
+  | {
+      success: true;
+    }
+  | { success: false; reason: string }
+> {
+  for (const check of checks) {
+    let success = false;
+    try {
+      success = await check(interaction);
+    } catch (e) {
+      if (e instanceof CheckFailure) {
+        return { success: false, reason: e.message };
+      }
+    }
+    if (!success) {
+      return {
+        success: false,
+        reason: "A check for this interaction is failed.",
+      };
+    }
+  }
+  return {
+    success: true,
+  };
 }

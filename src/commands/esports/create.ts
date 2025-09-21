@@ -10,10 +10,10 @@ import { prisma } from "@/lib/prisma";
 import * as dateFns from "date-fns";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
-import { convertToTitleCase } from "@/lib/utils";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { convertToTitleCase, safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
+import { botHasPermissions } from "@/checks/permissions";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -73,12 +73,18 @@ export default class CreateScrim extends Command {
       "ViewChannel",
       "ReadMessageHistory",
     ),
-    checkIsScrimAdmin,
   ];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
-    const guild = interaction.guild;
     await interaction.deferReply({ flags: ["Ephemeral"] });
+    const adminCheckResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!adminCheckResult.success) {
+      await interaction.editReply({
+        content: adminCheckResult.reason,
+      });
+      return;
+    }
+    const guild = interaction.guild;
     const result = await checkIsGuildSetup(guild);
     if (!result.valid) {
       await interaction.editReply({

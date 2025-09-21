@@ -7,8 +7,8 @@ import {
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
-import { parseIdFromString } from "@/lib/utils";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CheckFailure } from "@/base/classes/error";
 
 function teamConfigModal(scrim: Scrim & { _count: { Team: number } }) {
@@ -81,24 +81,29 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("show_team_config_modal")) return;
     const scrimId = parseIdFromString(interaction.customId);
     if (!scrimId) {
+      await interaction.reply({
+        content: "Invalid scrim ID.",
+        flags: ["Ephemeral"],
+      });
       return;
     }
-    try {
-      await checkIsScrimAdmin(interaction);
-    } catch (e) {
-      if (e instanceof CheckFailure) {
-        await interaction.reply({
-          content: "You do not have permission to perform this action.",
-          flags: "Ephemeral",
-        });
-        return;
-      }
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.reply({
+        content: checkResult.reason,
+        flags: ["Ephemeral"],
+      });
+      return;
     }
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
       include: { _count: { select: { Team: true } } },
     });
     if (!scrim) {
+      await interaction.reply({
+        content: "Scrim not found.",
+        flags: ["Ephemeral"],
+      });
       return;
     }
     const modal = teamConfigModal(scrim);

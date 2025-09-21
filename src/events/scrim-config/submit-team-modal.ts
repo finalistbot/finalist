@@ -26,26 +26,26 @@ export default class TeamConfigSubmit extends Event<"interactionCreate"> {
       maxPlayersPerTeam:
         interaction.fields.getTextInputValue("maxPlayersPerTeam"),
       maxSubstitutePerTeam: interaction.fields.getTextInputValue(
-        "maxSubstitutePerTeam"
+        "maxSubstitutePerTeam",
       ),
     };
 
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+
     const parsed = TeamConfigSchema.safeParse(rawBody);
     if (!parsed.success) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `There was an error with your input: ${parsed.error.issues
           .map((i) => i.message)
           .join(", ")}`,
-        flags: ["Ephemeral"],
       });
       return;
     }
     const data = parsed.data;
 
     if (data.minPlayersPerTeam > data.maxPlayersPerTeam) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Minimum players per team cannot be greater than maximum players per team.`,
-        flags: ["Ephemeral"],
       });
       return;
     }
@@ -61,9 +61,8 @@ export default class TeamConfigSubmit extends Event<"interactionCreate"> {
         maxSubstitutePerTeam: data.maxSubstitutePerTeam,
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: `Team configuration updated successfully!`,
-      flags: ["Ephemeral"],
     });
     await this.client.scrimService.updateScrimConfigMessage(scrim);
   }

@@ -7,11 +7,11 @@ import {
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { suppress } from "@/lib/utils";
-import { checkIsScrimAdmin } from "@/checks/scrim-admin";
+import { safeRunChecks, suppress } from "@/lib/utils";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CommandInfo } from "@/types/command";
 import { popularTimeZones } from "@/lib/constants";
-import { botHasPermissions } from "@/checks/bot-has-permissions";
+import { botHasPermissions } from "@/checks/permissions";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -50,13 +50,17 @@ export default class SetupCommand extends Command {
       },
     ],
   };
-  checks = [
-    botHasPermissions("ManageRoles", "SendMessages", "EmbedLinks"),
-    checkIsScrimAdmin,
-  ];
+  checks = [botHasPermissions("ManageRoles", "SendMessages", "EmbedLinks")];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     await interaction.deferReply({ flags: "Ephemeral" });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
+    if (!checkResult.success) {
+      await interaction.editReply({
+        content: checkResult.reason,
+      });
+      return;
+    }
     const timezone = interaction.options.getString("timezone") || "UTC";
     if (!popularTimeZones.find((tz) => tz.value === timezone)) {
       await interaction.editReply({
