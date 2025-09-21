@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BracketError } from "@/base/classes/error";
 
 export default class CloseRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -44,7 +45,16 @@ export default class CloseRegistrationButtonHandler extends Event<"interactionCr
       return;
     }
 
-    await this.client.scrimService.closeRegistration(scrim);
+    try {
+      await this.client.scrimService.closeRegistration(scrim);
+    } catch (e) {
+      if (e instanceof BracketError) {
+        await interaction.editReply({
+          content: e.message,
+        });
+        return;
+      }
+    }
     await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been closed.`,
     });

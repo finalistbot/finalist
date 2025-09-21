@@ -1,4 +1,4 @@
-import { CheckFailure } from "@/base/classes/error";
+import { BracketError, CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
@@ -44,7 +44,16 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
       });
       return;
     }
-    await this.client.scrimService.openRegistration(scrim);
+    try {
+      await this.client.scrimService.openRegistration(scrim);
+    } catch (e) {
+      if (e instanceof BracketError) {
+        await interaction.editReply({
+          content: e.message,
+        });
+        return;
+      }
+    }
     await interaction.editReply({
       content: `Registration for scrim with ID ${scrimId} has been started.`,
     });
