@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +39,10 @@ export default class ScrimDelete extends Command {
       },
     ],
   };
-  checks = [checkIsScrimAdmin];
+  checks = [
+    botHasPermissions("ManageChannels", "ManageRoles"),
+    checkIsScrimAdmin,
+  ];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const scrimId = interaction.options.getInteger("id");
     let scrim: Scrim | null = null;

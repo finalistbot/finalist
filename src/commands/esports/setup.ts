@@ -11,6 +11,7 @@ import { suppress } from "@/lib/utils";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { CommandInfo } from "@/types/command";
 import { popularTimeZones } from "@/lib/constants";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -49,7 +50,10 @@ export default class SetupCommand extends Command {
       },
     ],
   };
-  checks = [checkIsScrimAdmin];
+  checks = [
+    botHasPermissions("ManageRoles", "SendMessages", "EmbedLinks"),
+    checkIsScrimAdmin,
+  ];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     await interaction.deferReply({ flags: "Ephemeral" });

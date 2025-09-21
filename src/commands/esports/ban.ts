@@ -1,5 +1,6 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned } from "@/checks/banned";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser } from "@/lib/utils";

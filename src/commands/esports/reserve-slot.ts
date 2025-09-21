@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import { botHasPermissions } from "@/checks/bot-has-permissions";
 import { checkIsScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { CommandInfo } from "@/types/command";
@@ -47,7 +48,7 @@ export default class ReserveSlotCommand extends Command {
     ],
   };
 
-  checks = [checkIsScrimAdmin];
+  checks = [botHasPermissions("SendMessages", "EmbedLinks"), checkIsScrimAdmin];
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const teamLeader = interaction.options.getUser("team-leader", true);
     const slotNumber = interaction.options.getInteger("slot-number", true);
