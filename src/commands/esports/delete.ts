@@ -79,7 +79,6 @@ export default class ScrimDelete extends Command {
         flags: "Ephemeral",
       });
     }
-    await interaction.deferReply({ flags: "Ephemeral" });
     const deletableChannels = [
       scrim.adminChannelId,
       scrim.registrationChannelId,
@@ -97,7 +96,10 @@ export default class ScrimDelete extends Command {
     if (!guild) {
       return;
     }
-    suppress(this.client.rolemanageService.deleteParticipantRole(guild, scrim));
+    await suppress(
+      this.client.rolemanageService.deleteParticipantRole(guild, scrim),
+    );
+
     await prisma.scrim.delete({ where: { id: scrim.id } });
 
     await suppress(
