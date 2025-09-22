@@ -1,15 +1,12 @@
 import { Command } from "@/base/classes/command";
-import { botHasPermissions } from "@/checks/permissions";
+
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks, suppress } from "@/lib/utils";
 import {
-  AutocompleteInteraction,
   ChatInputCommandInteraction,
-  Embed,
   EmbedBuilder,
-  InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 

@@ -1,6 +1,5 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned } from "@/checks/banned";
-import { botHasPermissions } from "@/checks/permissions";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser, safeRunChecks } from "@/lib/utils";
@@ -16,7 +15,7 @@ export default class BanUser extends Command {
     .setName("ban")
     .setDescription("Ban a player from any event in this server.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("User to ban").setRequired(true),
+      option.setName("user").setDescription("User to ban").setRequired(true)
     )
     .setContexts(InteractionContextType.Guild);
 
