@@ -67,16 +67,14 @@ export default class ScrimDelete extends Command {
         where: { id: scrimId },
       });
       if (!scrim) {
-        return await interaction.reply({
+        return await interaction.editReply({
           content: `Could not find a scrim with ID ${scrimId}.`,
-          flags: "Ephemeral",
         });
       }
     }
-    if (scrim.stage != Stage.CONFIGURATION) {
-      return await interaction.reply({
-        content: `Cannot delete scrim with ID ${scrim.id} because it is already started.`,
-        flags: "Ephemeral",
+    if (([Stage.ONGOING, Stage.COMPLETED] as Stage[]).includes(scrim.stage)) {
+      return await interaction.editReply({
+        content: `Scrim with ID ${scrim.id} is already ${scrim.stage.toLowerCase()} and cannot be deleted.`,
       });
     }
     const deletableChannels = [
@@ -92,6 +90,7 @@ export default class ScrimDelete extends Command {
         rest.delete(Routes.channel(channelId)),
       ),
     );
+
     const guild = await this.client.guilds.fetch(scrim.guildId);
     if (!guild) {
       return;
@@ -102,11 +101,9 @@ export default class ScrimDelete extends Command {
 
     await prisma.scrim.delete({ where: { id: scrim.id } });
 
-    await suppress(
-      interaction.editReply({
-        content: `Scrim with ID ${scrim.id} has been deleted.`,
-      }),
-    );
+    await interaction.editReply({
+      content: `Scrim with ID ${scrim.id} has been deleted.`,
+    });
   }
 
   async autocomplete(interaction: AutocompleteInteraction<"cached">) {
