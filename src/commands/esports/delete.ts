@@ -101,9 +101,12 @@ export default class ScrimDelete extends Command {
 
     await prisma.scrim.delete({ where: { id: scrim.id } });
 
-    await interaction.editReply({
-      content: `Scrim with ID ${scrim.id} has been deleted.`,
-    });
+    // Have to suppress because the channel itself can be deleted above
+    await suppress(
+      interaction.editReply({
+        content: `Scrim with ID ${scrim.id} has been deleted.`,
+      }),
+    );
   }
 
   async autocomplete(interaction: AutocompleteInteraction<"cached">) {
