@@ -1,7 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { prisma } from "@/lib/prisma";
-import { convertToTitleCase, randomString } from "@/lib/utils";
+import { randomString } from "@/lib/utils";
 import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
@@ -25,7 +25,9 @@ export default class TeamCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the team")
-            .setRequired(true),
+            .setRequired(true)
+            .setMinLength(3)
+            .setMaxLength(50),
         ),
     )
     .addSubcommand((subcommand) =>
@@ -211,9 +213,8 @@ export default class TeamCommand extends Command {
       });
       return;
     }
-    const teamName = convertToTitleCase(
-      interaction.options.getString("name", true),
-    );
+    const teamName = interaction.options.getString("name", true);
+
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
@@ -425,6 +426,13 @@ export default class TeamCommand extends Command {
   }
 
   async joinTeam(interaction: ChatInputCommandInteraction) {
+    if (interaction.user.bot) {
+      await interaction.reply({
+        content: "Bots cannot join teams.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
     const bannedUser = await prisma.bannedUser.findFirst({
       where: { userId: interaction.user.id, guildId: interaction.guildId! },
     });
@@ -655,6 +663,13 @@ export default class TeamCommand extends Command {
   }
   async addMember(interaction: ChatInputCommandInteraction) {
     const member = interaction.options.getUser("member", true);
+    if (member.bot) {
+      await interaction.reply({
+        content: "You cannot add a bot as a team member.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });

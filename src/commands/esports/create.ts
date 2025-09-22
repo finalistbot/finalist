@@ -11,7 +11,7 @@ import * as dateFns from "date-fns";
 import { scrimTemplateMap } from "@/templates/scrim";
 import { checkIsGuildSetup } from "@/checks/is-guild-setup";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { convertToTitleCase, safeRunChecks } from "@/lib/utils";
+import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import { botHasPermissions } from "@/checks/permissions";
 
@@ -24,7 +24,9 @@ export default class CreateScrim extends Command {
       option
         .setName("name")
         .setDescription("Name of the scrim")
-        .setRequired(true),
+        .setRequired(true)
+        .setMinLength(3)
+        .setMaxLength(50),
     )
     .addStringOption((option) =>
       option
@@ -97,9 +99,8 @@ export default class CreateScrim extends Command {
     const template = templateValue
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
-    const name = convertToTitleCase(
-      interaction.options.getString("name", true),
-    );
+    const name = interaction.options.getString("name", true);
+
     const botOverwrites: OverwriteResolvable = {
       id: this.client.user!.id,
       allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
