@@ -1,8 +1,9 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
+import { CommandInfo } from "@/types/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-export class ScrimConfig extends Command {
+export default class ScrimConfig extends Command {
   data = new SlashCommandBuilder()
     .setName("sconfig")
     .setDescription("Configure scrim settings")
@@ -13,6 +14,24 @@ export class ScrimConfig extends Command {
           "Resend the scrim configuration message to the admin channel",
         ),
     );
+
+  info: CommandInfo = {
+    name: "sconfig",
+    description: "Configure scrim settings.",
+    longDescription:
+      "Commands to manage and configure scrim settings. Currently supports resending the configuration message to the admin channel.",
+    usageExamples: ["/sconfig resend"],
+    category: "Esports",
+    options: [
+      {
+        name: "resend",
+        description:
+          "Resend the scrim configuration message to the admin channel",
+        type: "SUB_COMMAND",
+        required: false,
+      },
+    ],
+  };
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();

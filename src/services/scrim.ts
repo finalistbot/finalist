@@ -301,7 +301,14 @@ export class ScrimService extends Service {
     if (!scrim.adminConfigMessageId) {
       logger.warn(`Scrim ${scrim.id} does not have an admin config message ID`);
     } else {
-      message = await channel.messages.fetch(scrim.adminConfigMessageId);
+      try {
+        message = await channel.messages.fetch(scrim.adminConfigMessageId);
+      } catch (error) {
+        logger.error(
+          `Failed to fetch admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        );
+        message = null;
+      }
     }
     if (!message) {
       logger.warn(
