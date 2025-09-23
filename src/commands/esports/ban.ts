@@ -15,7 +15,7 @@ export default class BanUser extends Command {
     .setName("ban")
     .setDescription("Ban a player from any event in this server.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("User to ban").setRequired(true)
+      option.setName("user").setDescription("User to ban").setRequired(true),
     )
     .setContexts(InteractionContextType.Guild);
 

@@ -1,2 +1,3 @@
 # Finalist
-Scrim Management Discord bot 
+
+Scrim Management Discord bot

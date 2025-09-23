@@ -1,5 +1,6 @@
 import { BracketError } from "@/base/classes/error";
 import { Service } from "@/base/classes/service";
+import { slotsToTable } from "@/commands/esports/slotlist";
 import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
@@ -114,7 +115,7 @@ export class ScrimService extends Service {
       logger.warn(`Scrim ${scrim.id} is not in registration stage`);
       throw new BracketError("Scrim is not in registration stage.");
     }
-    // Update Scrim Stage to Ongoing
+    // Update Scrim Stageto Ongoing
     await prisma.scrim.update({
       where: { id: scrim.id },
       data: { stage: "SLOT_ALLOCATION" },
@@ -136,9 +137,9 @@ export class ScrimService extends Service {
     }
     try {
       await channel.permissionOverwrites.edit(scrim.guildId, {
-        ViewChannel: false,
+        ViewChannel: true,
         SendMessages: false,
-        ReadMessageHistory: false,
+        ReadMessageHistory: true,
       });
     } catch (error) {
       logger.error(
@@ -161,6 +162,62 @@ export class ScrimService extends Service {
       logger.error(
         `Failed to send registration close message in channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
       );
+    }
+    if (scrim.autoSlotList) {
+      const slots = await prisma.assignedSlot.findMany({
+        where: { scrimId: scrim.id },
+        include: { team: true },
+      });
+      const details = [];
+      for (const slot of slots) {
+        const slotDetails = {
+          slotNumber: slot.slotNumber,
+          teamName: slot.team.name,
+          teamId: slot.team.id,
+          jumpUrl: `https://discord.com/channels/${scrim.guildId}/${scrim.participantsChannelId}/${slot.team.messageId}`,
+        };
+        details.push(slotDetails);
+      }
+      const table = slotsToTable(details);
+
+      const registerChannel = (await this.client.channels.fetch(
+        scrim.registrationChannelId,
+      )) as TextChannel;
+      const logsChannel = (await this.client.channels.fetch(
+        scrim.logsChannelId,
+      )) as TextChannel;
+      if (!registerChannel?.isTextBased() && !logsChannel?.isTextBased()) {
+        logger.error(
+          `Registration channel ${scrim.registrationChannelId} or participants channel ${scrim.participantsChannelId} not found or not text-based for scrim ${scrim.id}`,
+        );
+        return;
+      }
+      try {
+        await registerChannel.send({
+          content: "Here is the final slotlist:",
+          files: [
+            {
+              attachment: Buffer.from(table, "utf-8"),
+              name: "Slotlist.txt",
+            },
+          ],
+        });
+        await logsChannel.send({
+          content: "Here is the final slotlist:",
+          files: [
+            {
+              attachment: Buffer.from(table, "utf-8"),
+              name: "Slotlist.txt",
+            },
+          ],
+        });
+      } catch (error) {
+        logger.error(
+          `Failed to send slotlist embed in channel ${scrim.registrationChannelId} or ${scrim.participantsChannelId} for scrim ${scrim.id}: ${
+            (error as Error).message
+          }`,
+        );
+      }
     }
   }
   private getScrimConfigComponents(scrim: Scrim) {

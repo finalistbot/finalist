@@ -105,19 +105,21 @@ export default class RegisterTeam extends Command {
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
     });
 
+    // FIXME: Race condition on scrim closing
+    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
+    if (channel) {
+      await sendTeamDetails(channel as TextChannel, team, assignedSlot);
+    } else {
+      logger.error(
+        `Participants channel ${scrim.participantsChannelId} not found for scrim ${scrim.id}`,
+      );
+    }
+
     const needClosing =
       await this.client.scrimService.registrationNeedsClosing(scrim);
     if (needClosing) {
       await this.client.scrimService.closeRegistration(scrim);
     }
-    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
-    if (!channel) {
-      logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
-      );
-      return;
-    }
-    await sendTeamDetails(channel as TextChannel, team, assignedSlot);
   }
 
   async registerTeam(
