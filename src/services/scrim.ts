@@ -455,7 +455,12 @@ export class ScrimService extends Service {
     }
   }
 
-  async assignTeamSlot(scrim: Scrim, team: Team, slotNumber: number = -1) {
+  async assignTeamSlot(
+    scrim: Scrim,
+    team: Team,
+    slotNumber: number = -1,
+    force: boolean = false,
+  ) {
     const teamCaptain = await prisma.teamMember.findFirst({
       where: { teamId: team.id, isCaptain: true },
     });
@@ -467,7 +472,7 @@ export class ScrimService extends Service {
       where: { scrimId: scrim.id, userId: teamCaptain.userId },
     });
     const performAutoSlot =
-      scrim.autoSlotList || reservedSlot || slotNumber != -1;
+      scrim.autoSlotList || reservedSlot || slotNumber != -1 || force;
     if (!performAutoSlot) {
       logger.info(
         `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`,
@@ -548,7 +553,7 @@ export class ScrimService extends Service {
     teams = teams.slice(0, availableSlots);
 
     for (const team of teams) {
-      await this.assignTeamSlot(scrim, team);
+      await this.assignTeamSlot(scrim, team, -1, true);
       editTeamDetails(scrim, team, this.client);
     }
   }

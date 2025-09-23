@@ -106,7 +106,7 @@ export default class CreateScrim extends Command {
       allow: ["ViewChannel", "SendMessages", "ReadMessageHistory"],
     };
     const category = await guild.channels.create({
-      name: `${name} - Scrim`,
+      name,
       type: ChannelType.GuildCategory,
       permissionOverwrites: [
         {
