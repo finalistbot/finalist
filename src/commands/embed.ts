@@ -2,6 +2,7 @@ import { Command } from "@/base/classes/command";
 import { BracketError } from "@/base/classes/error";
 import {
   ActionRowBuilder,
+  APIEmbed,
   ChatInputCommandInteraction,
   EmbedBuilder,
   Interaction,
@@ -24,7 +25,10 @@ class EmbedBuilderHelper {
   private collector: InteractionCollector<any> | null = null;
   private authorizedUserId: string;
 
-  constructor(userId: string) {
+  constructor(userId: string, initial: APIEmbed | null = null) {
+    if (initial) {
+      this.embed = EmbedBuilder.from(initial);
+    }
     this.authorizedUserId = userId;
   }
 
