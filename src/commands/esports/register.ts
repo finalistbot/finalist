@@ -105,24 +105,26 @@ export default class RegisterTeam extends Command {
       content: `Your team has been successfully registered! You can no longer make changes to your team. If you want to make changes, please contact the scrim organizer.`,
     });
 
+    // FIXME: Race condition on scrim closing
+    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
+    if (channel) {
+      await sendTeamDetails(channel as TextChannel, team, assignedSlot);
+    } else {
+      logger.error(
+        `Participants channel ${scrim.participantsChannelId} not found for scrim ${scrim.id}`
+      );
+    }
+
     const needClosing =
       await this.client.scrimService.registrationNeedsClosing(scrim);
     if (needClosing) {
       await this.client.scrimService.closeRegistration(scrim);
     }
-    const channel = this.client.channels.cache.get(scrim.participantsChannelId);
-    if (!channel) {
-      logger.error(
-        `Participants channel with ID ${scrim.participantsChannelId} not found`,
-      );
-      return;
-    }
-    await sendTeamDetails(channel as TextChannel, team, assignedSlot);
   }
 
   async registerTeam(
     scrim: Scrim,
-    team: Team,
+    team: Team
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | undefined }
     | { success: false; reason: string }
@@ -186,7 +188,7 @@ export default class RegisterTeam extends Command {
 
     const assignedSlot = await this.client.scrimService.assignTeamSlot(
       scrim,
-      team,
+      team
     );
 
     return { success: true, assignedSlot };
@@ -194,7 +196,7 @@ export default class RegisterTeam extends Command {
 
   async registerSoloTeam(
     scrim: Scrim,
-    user: User,
+    user: User
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | undefined; team: Team }
     | { success: false; reason: string }

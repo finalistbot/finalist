@@ -81,7 +81,7 @@ function slotsToHTML(slots: SlotDetails[]) {
   </html>
   `;
 }
-function slotsToEmbed(slotDetails: SlotDetails[], scrim: Scrim) {
+export function slotsToEmbed(slotDetails: SlotDetails[], scrim: Scrim) {
   {
     const chunkSize = 25;
     const chunks: SlotDetails[][] = [];
@@ -110,7 +110,7 @@ function slotsToEmbed(slotDetails: SlotDetails[], scrim: Scrim) {
   }
 }
 
-function slotsToTable(slots: SlotDetails[]) {
+export function slotsToTable(slots: SlotDetails[]) {
   const data = [
     ["Slot Number", "Team Name", "Team ID", "Jump URL"],
     ...slots.map((slot) => [
