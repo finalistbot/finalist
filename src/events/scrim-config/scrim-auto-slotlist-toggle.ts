@@ -3,6 +3,7 @@ import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { isScrimAdmin } from "@/checks/scrim-admin";
+import { Scrim } from "@prisma/client";
 
 export default class AutoSlotList extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -35,6 +36,9 @@ export default class AutoSlotList extends Event<"interactionCreate"> {
       where: { id: scrimId },
       data: { autoSlotList: !scrim.autoSlotList },
     });
+    if (updatedScrim.autoSlotList) {
+      this.client.scrimService.fillSlotList(updatedScrim);
+    }
     await this.client.scrimService.updateScrimConfigMessage(updatedScrim);
     await interaction.editReply({
       content: `Auto Slotlist is now ${
