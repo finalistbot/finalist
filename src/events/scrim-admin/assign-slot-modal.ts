@@ -11,7 +11,6 @@ import { Event } from "@/base/classes/event";
 import { Team } from "@prisma/client";
 import { getFirstAvailableSlot } from "@/database";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { CheckFailure } from "@/base/classes/error";
 
 function createAssignSlotModal(team: Team, defaultSlot: number) {
   const modal = new ModalBuilder()
@@ -25,8 +24,8 @@ function createAssignSlotModal(team: Team, defaultSlot: number) {
           .setStyle(TextInputStyle.Short)
           .setPlaceholder("Enter slot number")
           .setRequired(true)
-          .setValue(defaultSlot.toString()),
-      ),
+          .setValue(defaultSlot.toString())
+      )
     );
 
   return modal;
