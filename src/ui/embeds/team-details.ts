@@ -6,7 +6,7 @@ import { BRAND_COLOR } from "@/lib/constants";
 
 export async function teamDetailsEmbed(
   team: Team,
-  assignedSlot: AssignedSlot | null = null
+  assignedSlot: AssignedSlot | null = null,
 ) {
   const captain = await prisma.teamMember.findFirst({
     where: { teamId: team.id, isCaptain: true },
@@ -44,7 +44,7 @@ export async function teamDetailsEmbed(
     .setDescription(
       `**Scrim:** ${
         team.scrimId || "Not assigned"
-      }\n**Registered:** ${registeredAt}`
+      }\n**Registered:** ${registeredAt}`,
     )
     .addFields(
       {
@@ -60,7 +60,7 @@ export async function teamDetailsEmbed(
           ? `Slot Number: ${assignedSlot.slotNumber}`
           : "No slot assigned",
         inline: false,
-      }
+      },
     )
     .setTimestamp(new Date(team.updatedAt))
     .setFooter({

@@ -111,7 +111,7 @@ export default class RegisterTeam extends Command {
       await sendTeamDetails(channel as TextChannel, team, assignedSlot);
     } else {
       logger.error(
-        `Participants channel ${scrim.participantsChannelId} not found for scrim ${scrim.id}`
+        `Participants channel ${scrim.participantsChannelId} not found for scrim ${scrim.id}`,
       );
     }
 
@@ -124,7 +124,7 @@ export default class RegisterTeam extends Command {
 
   async registerTeam(
     scrim: Scrim,
-    team: Team
+    team: Team,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | undefined }
     | { success: false; reason: string }
@@ -188,7 +188,7 @@ export default class RegisterTeam extends Command {
 
     const assignedSlot = await this.client.scrimService.assignTeamSlot(
       scrim,
-      team
+      team,
     );
 
     return { success: true, assignedSlot };
@@ -196,7 +196,7 @@ export default class RegisterTeam extends Command {
 
   async registerSoloTeam(
     scrim: Scrim,
-    user: User
+    user: User,
   ): Promise<
     | { success: true; assignedSlot: AssignedSlot | undefined; team: Team }
     | { success: false; reason: string }

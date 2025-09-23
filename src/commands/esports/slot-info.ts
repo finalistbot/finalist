@@ -19,7 +19,7 @@ export default class SlotlistInfo extends Command {
       option
         .setName("user")
         .setDescription("The user to get the slot information for")
-        .setRequired(true)
+        .setRequired(true),
     );
   info = {
     name: "slot-info",
@@ -111,7 +111,7 @@ export default class SlotlistInfo extends Command {
             ? `Slot Number: **${assignedSlot.slotNumber}**`
             : "No slot assigned",
           inline: false,
-        }
+        },
       )
       .setTimestamp()
       .setFooter({

@@ -37,7 +37,7 @@ function slotsToHTML(slots: SlotDetails[]) {
       <td>${slot.teamId}</td>
       <td><a target="_blank" href="${slot.jumpUrl}">Jump to Team</a></td>
     </tr>
-  `
+  `,
     )
     .join("\n");
   return `
@@ -136,8 +136,8 @@ export default class SlotlistExport extends Command {
           { name: "Embedded", value: "embed" },
           { name: "CSV", value: "csv" },
           { name: "Table", value: "table" },
-          { name: "HTML", value: "html" }
-        )
+          { name: "HTML", value: "html" },
+        ),
     );
 
   info: CommandInfo = {
@@ -201,7 +201,7 @@ export default class SlotlistExport extends Command {
 
     if (!scrim) {
       return interaction.editReply(
-        "This command can only be used in a scrim admin channel."
+        "This command can only be used in a scrim admin channel.",
       );
     }
     const slots = scrim.AssignedSlot;

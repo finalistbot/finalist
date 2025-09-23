@@ -20,7 +20,7 @@ export function prepareScrimConfigComponents(scrim: Scrim) {
     new ButtonBuilder()
       .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
       .setLabel(
-        scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist"
+        scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist",
       )
       .setEmoji(scrim.autoSlotList ? "📝" : "⚡")
       .setStyle(ButtonStyle.Secondary)
@@ -29,11 +29,13 @@ export function prepareScrimConfigComponents(scrim: Scrim) {
     new ButtonBuilder()
       .setCustomId(`toggle_scrim_registration_auto_close:${scrim.id}`)
       .setLabel(
-        scrim.autoCloseRegistration ? "Disable Auto-Close" : "Enable Auto-Close"
+        scrim.autoCloseRegistration
+          ? "Disable Auto-Close"
+          : "Enable Auto-Close",
       )
       .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
       .setStyle(ButtonStyle.Secondary)
-      .setDisabled(scrim.stage !== Stage.CONFIGURATION)
+      .setDisabled(scrim.stage !== Stage.CONFIGURATION),
   );
 
   const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -48,7 +50,7 @@ export function prepareScrimConfigComponents(scrim: Scrim) {
       .setLabel("Close Registration")
       .setEmoji("⏹️")
       .setStyle(ButtonStyle.Danger)
-      .setDisabled(scrim.stage !== Stage.REGISTRATION)
+      .setDisabled(scrim.stage !== Stage.REGISTRATION),
   );
   return [row1, row2];
 }
