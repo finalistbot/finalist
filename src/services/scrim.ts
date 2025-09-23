@@ -1,13 +1,12 @@
 import { BracketError } from "@/base/classes/error";
 import { Service } from "@/base/classes/service";
-import { slotsToEmbed, slotsToTable } from "@/commands/esports/slotlist";
+import { slotsToTable } from "@/commands/esports/slotlist";
 import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp } from "@/lib/utils";
-import { slotListEmbed } from "@/ui/embeds/slotlist";
 import { Scrim, Stage, Team } from "@prisma/client";
 import {
   ActionRowBuilder,
