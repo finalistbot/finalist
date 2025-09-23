@@ -177,7 +177,6 @@ export default class SlotlistExport extends Command {
       return;
     }
     const format = interaction.options.getString("format") || "embed";
-    await interaction.deferReply({ flags: "Ephemeral" });
 
     const scrim = await prisma.scrim.findFirst({
       where: {
