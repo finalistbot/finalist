@@ -6,6 +6,7 @@ import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { discordTimestamp } from "@/lib/utils";
 import { editTeamDetails } from "@/ui/messages/teams";
 import { Scrim, Stage, Team } from "@prisma/client";
