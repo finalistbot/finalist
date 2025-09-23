@@ -36,9 +36,6 @@ export default class AutoSlotList extends Event<"interactionCreate"> {
       where: { id: scrimId },
       data: { autoSlotList: !scrim.autoSlotList },
     });
-    if (updatedScrim.autoSlotList) {
-      this.client.scrimService.fillSlotList(updatedScrim);
-    }
     await this.client.scrimService.updateScrimConfigMessage(updatedScrim);
     await interaction.editReply({
       content: `Auto Slotlist is now ${
