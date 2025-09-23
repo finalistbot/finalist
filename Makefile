@@ -1,2 +1,3 @@
 bot:
-	TZ=UTC pnpm exec tsx src/index.ts
+	pnpm build
+	TZ=UTC pnpm start
