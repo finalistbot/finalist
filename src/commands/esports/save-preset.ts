@@ -1,8 +1,12 @@
 import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
+import { filterPresets } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
+import { ScrimSettings } from "@/types";
+import { ScrimPreset } from "@prisma/client";
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   InteractionContextType,
   SlashCommandBuilder,
@@ -20,6 +24,7 @@ export default class SavePresetCommand extends Command {
         .setRequired(true)
         .setMinLength(3)
         .setMaxLength(50)
+        .setAutocomplete(true),
     );
 
   info = {
@@ -53,14 +58,16 @@ export default class SavePresetCommand extends Command {
     }
     const name = interaction.options.getString("name", true);
 
-    const settings = {
+    const settings: ScrimSettings = {
       autoSlotList: scrim.autoSlotList,
       minPlayersPerTeam: scrim.minPlayersPerTeam,
       maxPlayersPerTeam: scrim.maxPlayersPerTeam,
       maxSubstitutePerTeam: scrim.maxSubstitutePerTeam,
       autoCloseRegistration: scrim.autoCloseRegistration,
       captainAddMembers: scrim.captainAddMembers,
+      maxTeams: scrim.maxTeams,
     };
+    // FIXME: Don't allow users to have more than 10 presets
     await prisma.scrimPreset.upsert({
       where: { guildId_name: { guildId: interaction.guildId, name } },
       update: { settings },
@@ -73,5 +80,17 @@ export default class SavePresetCommand extends Command {
     await interaction.editReply({
       content: `Preset \`${name}\` saved successfully!`,
     });
+  }
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const focusedOption = interaction.options.getFocused(true);
+    if (focusedOption.name !== "name") return;
+    const search = focusedOption.value;
+    const presets = await filterPresets(interaction.guildId!, search);
+    await interaction.respond(
+      presets.map((preset) => ({
+        name: preset.name,
+        value: preset.name,
+      })),
+    );
   }
 }
