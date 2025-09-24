@@ -40,7 +40,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
     });
     await this.client.scrimService.updateScrimConfigMessage(updatedScrim);
     await interaction.editReply({
-      content: `Auto-Close Registration is now ${!scrim.autoCloseRegistration ? "disabled" : "enabled"}.`,
+      content: `Auto-Close Registration is now ${!updatedScrim.autoCloseRegistration ? "disabled" : "enabled"}.`,
     });
   }
 }

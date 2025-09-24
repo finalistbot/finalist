@@ -5,7 +5,7 @@ export class BracketError extends Error {
   }
 }
 
-export class CommandError extends Error {
+export class CommandError extends BracketError {
   constructor(message: string) {
     super(message);
     this.name = "CommandError";

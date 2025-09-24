@@ -1,4 +1,5 @@
 import {
+  AutocompleteInteraction,
   ChannelType,
   ChatInputCommandInteraction,
   InteractionContextType,
@@ -14,6 +15,10 @@ import { isScrimAdmin } from "@/checks/scrim-admin";
 import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import { botHasPermissions } from "@/checks/permissions";
+import { ScrimSettings } from "@/types";
+import { BracketError } from "@/base/classes/error";
+import { ScrimPreset } from "@prisma/client";
+import { filterPresets } from "@/database";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -39,6 +44,13 @@ export default class CreateScrim extends Command {
             value: template.value,
           })),
         ),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("preset")
+        .setDescription("Saved preset to use for the scrim")
+        .setRequired(false)
+        .setAutocomplete(true),
     );
 
   info: CommandInfo = {
@@ -77,6 +89,31 @@ export default class CreateScrim extends Command {
     ),
   ];
 
+  async loadPreset(
+    guildId: string,
+    presetName: string,
+  ): Promise<Partial<ScrimSettings>> {
+    const preset = await prisma.scrimPreset.findFirst({
+      where: { guildId, name: presetName },
+    });
+    if (!preset) {
+      throw new BracketError(`Preset \`${presetName}\` not found.`);
+    }
+    return preset.settings as Partial<ScrimSettings>;
+  }
+
+  getScrimSettings(settings: Partial<ScrimSettings>): ScrimSettings {
+    return {
+      maxTeams: settings.maxTeams ?? 16,
+      minPlayersPerTeam: settings.minPlayersPerTeam ?? 4,
+      maxPlayersPerTeam: settings.maxPlayersPerTeam ?? 4,
+      maxSubstitutePerTeam: settings.maxSubstitutePerTeam ?? 0,
+      autoSlotList: settings.autoSlotList ?? false,
+      autoCloseRegistration: settings.autoCloseRegistration ?? true,
+      captainAddMembers: settings.captainAddMembers ?? true,
+    };
+  }
+
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     await interaction.deferReply({ flags: ["Ephemeral"] });
     const adminCheckResult = await safeRunChecks(interaction, isScrimAdmin);
@@ -99,6 +136,14 @@ export default class CreateScrim extends Command {
     const template = templateValue
       ? scrimTemplateMap.get(templateValue as any)
       : undefined;
+    const presetName = interaction.options.getString("preset");
+    if (presetName && template) {
+      await interaction.editReply({
+        content: "You can only use either a template or a preset, not both.",
+      });
+      return;
+    }
+
     const name = interaction.options.getString("name", true);
 
     const botOverwrites: OverwriteResolvable = {
@@ -185,14 +230,25 @@ export default class CreateScrim extends Command {
     const participantRole =
       await this.client.rolemanageService.createParticipantRole(guild);
 
-    let scrim = await prisma.scrim.create({
+    let scrim;
+    let partialSettings: Partial<ScrimSettings> = {};
+    if (presetName) {
+      partialSettings = await this.loadPreset(guild.id, presetName);
+    } else if (template) {
+      partialSettings = {
+        maxTeams: template.maxTeams,
+        minPlayersPerTeam: template.minPlayersPerTeam,
+        maxPlayersPerTeam: template.maxPlayersPerTeam,
+        maxSubstitutePerTeam: template.maxSubstitutePerTeam,
+      };
+    }
+
+    const settings = this.getScrimSettings(partialSettings);
+
+    scrim = await prisma.scrim.create({
       data: {
         name,
         guildId: guild.id,
-        maxTeams: template ? template.maxTeams : 16,
-        minPlayersPerTeam: template ? template.minPlayersPerTeam : 5,
-        maxPlayersPerTeam: template ? template.maxPlayersPerTeam : 5,
-        maxSubstitutePerTeam: template ? template.maxSubstitutePerTeam : 0,
         discordCategoryId: category.id,
         adminChannelId: adminChannel.id,
         logsChannelId: logsChannel.id,
@@ -201,6 +257,7 @@ export default class CreateScrim extends Command {
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),
+        ...settings,
       },
     });
     await this.client.scrimService.updateScrimConfigMessage(scrim);
@@ -209,5 +266,18 @@ export default class CreateScrim extends Command {
     await interaction.editReply({
       content: `Scrim created successfully!`,
     });
+  }
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const focusedOption = interaction.options.getFocused(true);
+    if (focusedOption.name !== "preset") return;
+    const search = focusedOption.value;
+    const presets = await filterPresets(interaction.guildId!, search);
+    await interaction.respond(
+      presets.map((preset) => ({
+        name: preset.name,
+        value: preset.name,
+      })),
+    );
   }
 }

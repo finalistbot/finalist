@@ -160,3 +160,15 @@ model RoomDetail {
 
   @@map("room_detail")
 }
+
+model ScrimPreset {
+  id        Int      @id @default(autoincrement()) @map("id")
+  settings  Json     @map("settings") @db.JsonB
+  guildId   String   @map("guild_id")
+  name      String   @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([guildId, name])
+  @@map("scrim_preset")
+}
