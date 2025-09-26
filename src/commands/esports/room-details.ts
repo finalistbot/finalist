@@ -26,14 +26,14 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field.")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
             .setName("value")
             .setDescription("The value of the field.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -43,8 +43,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("channel")
             .setDescription("The channel to post the details in.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -54,8 +54,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field to clear.")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     );
   info: CommandInfo = {
     name: "rd",
@@ -196,7 +196,6 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
-    await interaction.deferReply({ flags: "Ephemeral" });
     const scrim = await prisma.scrim.findFirst({
       where: {
         adminChannelId: interaction.channelId,
@@ -231,7 +230,7 @@ export default class RoomDetailCommand extends Command {
         .setLabel("View Room Details")
         .setStyle(ButtonStyle.Secondary)
         .setEmoji("🔑")
-        .setCustomId("view_room_details:" + scrim.id),
+        .setCustomId("view_room_details:" + scrim.id)
     );
 
     const embed = new EmbedBuilder()
