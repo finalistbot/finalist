@@ -16,7 +16,7 @@ export default class ScrimConfig extends Command {
     )
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("captain-add-member")
+        .setName("captain-add-members")
         .setDescription("Toggle whether captains can add members to their team")
         .addBooleanOption((option) =>
           option
@@ -53,7 +53,7 @@ export default class ScrimConfig extends Command {
           "Resend the scrim configuration message to the admin channel",
       },
       {
-        name: "captain-add-member",
+        name: "captain-add-members",
         description: "Toggle whether captains can add members to their team",
         options: [
           {
@@ -85,8 +85,8 @@ export default class ScrimConfig extends Command {
     switch (subcommand) {
       case "resend":
         return await this.resendConfigMessage(interaction);
-      case "captain-add-member":
-        return await this.toggleCaptainAddMember(interaction);
+      case "captain-add-members":
+        return await this.toggleCaptainAddMembers(interaction);
       case "require-ingame-names":
         return await this.toggleRequireIngameNames(interaction);
       default:
@@ -114,7 +114,7 @@ export default class ScrimConfig extends Command {
     });
   }
 
-  async toggleCaptainAddMember(interaction: ChatInputCommandInteraction) {
+  async toggleCaptainAddMembers(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ flags: ["Ephemeral"] });
     const enabled = interaction.options.getBoolean("enabled", true);
     const scrim = await prisma.scrim.findFirst({
