@@ -309,6 +309,10 @@ export class ScrimService extends Service {
                 : "Not set"
             }`,
             `**Substitutes/Team:** ${scrim.maxSubstitutePerTeam}`,
+            `**Require In-Game Names:** ${scrim.requireIngameNames ? "✅ Yes" : "❌ No"}`,
+            `**Captain Add Members:** ${
+              scrim.captainAddMembers ? "✅ Yes" : "❌ No"
+            }`,
           ].join("\n"),
           inline: false,
         },

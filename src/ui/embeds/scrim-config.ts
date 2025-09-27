@@ -32,6 +32,10 @@ export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
               : "Not set"
           }`,
           `**Substitutes/Team:** ${scrim.maxSubstitutePerTeam}`,
+          `**Require In-Game Names:** ${scrim.requireIngameNames ? "✅ Yes" : "❌ No"}`,
+          `**Captain Add Members:** ${
+            scrim.captainAddMembers ? "✅ Yes" : "❌ No"
+          }`,
         ].join("\n"),
         inline: false,
       },

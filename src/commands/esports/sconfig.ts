@@ -13,6 +13,30 @@ export default class ScrimConfig extends Command {
         .setDescription(
           "Resend the scrim configuration message to the admin channel",
         ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("captain-add-member")
+        .setDescription("Toggle whether captains can add members to their team")
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Enable or disable the feature")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("require-ingame-names")
+        .setDescription(
+          "Toggle whether in-game names are required for team members",
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("enabled")
+            .setDescription("Enable or disable the feature")
+            .setRequired(true),
+        ),
     );
 
   info: CommandInfo = {
@@ -22,13 +46,36 @@ export default class ScrimConfig extends Command {
       "Commands to manage and configure scrim settings. Currently supports resending the configuration message to the admin channel.",
     usageExamples: ["/sconfig resend"],
     category: "Esports",
-    options: [
+    subcommands: [
       {
         name: "resend",
         description:
           "Resend the scrim configuration message to the admin channel",
-        type: "SUB_COMMAND",
-        required: false,
+      },
+      {
+        name: "captain-add-member",
+        description: "Toggle whether captains can add members to their team",
+        options: [
+          {
+            name: "enabled",
+            type: "BOOLEAN",
+            description: "Enable or disable the feature",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "require-ingame-names",
+        description:
+          "Toggle whether in-game names are required for team members",
+        options: [
+          {
+            name: "enabled",
+            type: "BOOLEAN",
+            description: "Enable or disable the feature",
+            required: true,
+          },
+        ],
       },
     ],
   };
@@ -38,6 +85,10 @@ export default class ScrimConfig extends Command {
     switch (subcommand) {
       case "resend":
         return await this.resendConfigMessage(interaction);
+      case "captain-add-member":
+        return await this.toggleCaptainAddMember(interaction);
+      case "require-ingame-names":
+        return await this.toggleRequireIngameNames(interaction);
       default:
         return interaction.reply({
           content: "Unknown subcommand.",
@@ -60,6 +111,54 @@ export default class ScrimConfig extends Command {
     await this.client.scrimService.updateScrimConfigMessage(scrim);
     await interaction.editReply({
       content: "Scrim configuration message has been resent or updated.",
+    });
+  }
+
+  async toggleCaptainAddMember(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const enabled = interaction.options.getBoolean("enabled", true);
+    const scrim = await prisma.scrim.findFirst({
+      where: { adminChannelId: interaction.channelId },
+    });
+    if (!scrim) {
+      await interaction.editReply({
+        content: "This command can only be used in a scrim admin channel.",
+      });
+      return;
+    }
+    await prisma.scrim.update({
+      where: { id: scrim.id },
+      data: { captainAddMembers: enabled },
+    });
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
+    await interaction.editReply({
+      content: `Captains can ${
+        enabled ? "now" : "no longer"
+      } add members to their team.`,
+    });
+  }
+
+  async toggleRequireIngameNames(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply({ flags: ["Ephemeral"] });
+    const enabled = interaction.options.getBoolean("enabled", true);
+    const scrim = await prisma.scrim.findFirst({
+      where: { adminChannelId: interaction.channelId },
+    });
+    if (!scrim) {
+      await interaction.editReply({
+        content: "This command can only be used in a scrim admin channel.",
+      });
+      return;
+    }
+    await prisma.scrim.update({
+      where: { id: scrim.id },
+      data: { requireIngameNames: enabled },
+    });
+    await this.client.scrimService.updateScrimConfigMessage(scrim);
+    await interaction.editReply({
+      content: `In-game names are ${
+        enabled ? "now" : "no longer"
+      } required for team members.`,
     });
   }
 }
