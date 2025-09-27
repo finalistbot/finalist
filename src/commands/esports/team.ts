@@ -60,6 +60,12 @@ export default class TeamCommand extends Command {
             .setName("substitute")
             .setDescription("Join as a substitute")
             .setRequired(false),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("Your in-game name")
+            .setRequired(false),
         ),
     )
     .addSubcommand((subcommand) =>
@@ -77,6 +83,12 @@ export default class TeamCommand extends Command {
             .setName("member")
             .setDescription("The member to add to your team")
             .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("The in-game name of the member to add")
+            .setRequired(false),
         ),
     );
 
@@ -138,6 +150,12 @@ export default class TeamCommand extends Command {
             name: "substitute",
             description: "Join as a substitute",
             type: "BOOLEAN",
+            required: false,
+          },
+          {
+            name: "ign",
+            description: "Your in-game name",
+            type: "STRING",
             required: false,
           },
         ],
@@ -445,6 +463,7 @@ export default class TeamCommand extends Command {
     }
     const teamCode = interaction.options.getString("teamcode", true);
     const isSubstitute = interaction.options.getBoolean("substitute") ?? false;
+    const ign = interaction.options.getString("ign") ?? null;
     const scrim = await prisma.scrim.findFirst({
       where: {
         registrationChannelId: interaction.channelId,
@@ -460,6 +479,15 @@ export default class TeamCommand extends Command {
     if (scrim.stage != Stage.REGISTRATION) {
       await interaction.reply({
         content: "Team registration is not open.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
+    if (scrim.requireIngameNames && !ign) {
+      await interaction.reply({
+        content:
+          "You must provide your in-game name to join a team. Try `/team join teamcode:<code> ign:<your_ign>`",
         flags: ["Ephemeral"],
       });
       return;
@@ -523,6 +551,7 @@ export default class TeamCommand extends Command {
           userId: interaction.user.id,
           isCaptain: false,
           isSubstitute: true,
+          ingameName: ign,
         },
       });
       await interaction.reply({
@@ -540,6 +569,7 @@ export default class TeamCommand extends Command {
         userId: interaction.user.id,
         isCaptain: false,
         isSubstitute,
+        ingameName: ign,
       },
     });
 
@@ -689,6 +719,7 @@ export default class TeamCommand extends Command {
   async addMember(interaction: ChatInputCommandInteraction) {
     // refactor this later to reduce code duplication with join team
     const member = interaction.options.getUser("member", true);
+    const ign = interaction.options.getString("ign") ?? null;
     if (member.bot) {
       await interaction.reply({
         content: "You cannot add a bot as a team member.",
@@ -719,6 +750,14 @@ export default class TeamCommand extends Command {
         content:
           "Captains are not allowed to add members to their teams in this scrim.",
         flags: "Ephemeral",
+      });
+      return;
+    }
+    if (scrim.requireIngameNames && !ign) {
+      await interaction.reply({
+        content:
+          "You must provide the in-game name of the member to add. Try `/team add member:@User ign:<their_ign>`",
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -793,6 +832,7 @@ export default class TeamCommand extends Command {
           userId: member.id,
           isCaptain: false,
           isSubstitute: true,
+          ingameName: ign,
         },
       });
       await interaction.reply({
@@ -837,6 +877,7 @@ export default class TeamCommand extends Command {
         userId: member.id,
         isCaptain: false,
         isSubstitute: false,
+        ingameName: ign,
       },
     });
     await interaction.reply({
