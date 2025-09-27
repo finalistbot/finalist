@@ -264,7 +264,6 @@ export default class RoomDetailCommand extends Command {
 
   private async clearRd(interaction: ChatInputCommandInteraction<"cached">) {
     const name = interaction.options.getString("name", false);
-    await interaction.deferReply({ flags: "Ephemeral" });
     const scrim = await prisma.scrim.findFirst({
       where: {
         adminChannelId: interaction.channelId,
