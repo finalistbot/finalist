@@ -20,13 +20,13 @@ export async function teamDetailsEmbed(
   const mainMembers =
     members
       .filter((m) => !m.isSubstitute)
-      .map((m) => `<@${m.userId}>`)
+      .map((m) => `<@${m.userId}>` + (m.ingameName ? ` (${m.ingameName})` : ""))
       .join("\n") || "None";
 
   const substitutes =
     members
       .filter((m) => m.isSubstitute)
-      .map((m) => `<@${m.userId}>`)
+      .map((m) => `<@${m.userId}>` + (m.ingameName ? ` (${m.ingameName})` : ""))
       .join("\n") || "None";
 
   const registeredAt = team.registeredAt

@@ -28,6 +28,12 @@ export default class TeamCommand extends Command {
             .setRequired(true)
             .setMinLength(3)
             .setMaxLength(50),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("Your in-game name")
+            .setRequired(false),
         ),
     )
     .addSubcommand((subcommand) =>
@@ -232,6 +238,7 @@ export default class TeamCommand extends Command {
       return;
     }
     const teamName = interaction.options.getString("name", true);
+    const ign = interaction.options.getString("ign") ?? null;
 
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
@@ -247,6 +254,15 @@ export default class TeamCommand extends Command {
       await interaction.reply({
         content: "Teams can only be created during the registration stage.",
         flags: "Ephemeral",
+      });
+      return;
+    }
+
+    if (scrim.requireIngameNames && !ign) {
+      await interaction.reply({
+        content:
+          "You must provide your in-game name to create a team. Try `/team create name:<team_name> ign:<your_ign>`",
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -292,6 +308,7 @@ export default class TeamCommand extends Command {
             isCaptain: true,
             scrim: { connect: { id: scrim.id } },
             displayName: interaction.user.username,
+            ingameName: ign,
           },
         },
       },
