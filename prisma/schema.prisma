@@ -90,12 +90,47 @@ model Team {
   @@map("team")
 }
 
+model GlobalTeam {
+  id               Int                @id @default(autoincrement()) @map("id")
+  guildId          String             @map("guild_id")
+  name             String             @map("name")
+  code             String?            @unique @map("code")
+  ownerId          String             @map("owner_id")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  banned           Boolean            @default(false) @map("banned")
+  banReason        String?            @map("ban_reason")
+  GlobalTeamMember GlobalTeamMember[]
+  InGameName       String?            @map("ingame_name")
+  Tag              String?            @map("tag")
+
+  @@map("global_team")
+}
+
+model GlobalTeamMember {
+  id           Int      @id @default(autoincrement()) @map("id")
+  teamId       Int      @map("team_id")
+  userId       String   @map("user_id")
+  ign          String?  @map("ign")
+  displayName  String   @map("display_name")
+  isSubstitute Boolean  @default(false) @map("is_substitute")
+  isCaptain    Boolean  @default(false) @map("is_captain")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  globalTeam GlobalTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("global_team_member")
+}
+
 model TeamMember {
   id           Int      @id @default(autoincrement()) @map("id")
   teamId       Int      @map("team_id")
   userId       String   @map("user_id")
   scrimId      Int      @map("scrim_id")
   displayName  String   @map("display_name")
+  ign          String?  @map("ign")
   isSubstitute Boolean  @default(false) @map("is_substitute")
   isCaptain    Boolean  @default(false) @map("is_captain")
   createdAt    DateTime @default(now()) @map("created_at")

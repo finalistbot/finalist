@@ -3,8 +3,10 @@ import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
+import { prepareRegisterTeamComponents } from "@/ui/components/global-team-components";
+import { registerEmbed } from "@/ui/embeds/register";
 import { Stage } from "@prisma/client";
-import { CacheType, Interaction } from "discord.js";
+import { CacheType, Interaction, TextChannel } from "discord.js";
 
 export default class StartRegistrationButtonHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -54,8 +56,12 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
         return;
       }
     }
-    await interaction.editReply({
-      content: `Registration for scrim with ID ${scrimId} has been started.`,
-    });
+    const embed = registerEmbed();
+    const components = prepareRegisterTeamComponents();
+    const channel = (await this.client.channels.fetch(
+      scrim.registrationChannelId
+    )) as TextChannel;
+
+    await channel!.send({ embeds: [embed], components: components });
   }
 }
