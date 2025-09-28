@@ -48,6 +48,7 @@ model Scrim {
   slotListMessageId     String?   @map("slot_list_message_id")
   autoSlotList          Boolean   @default(true) @map("auto_slot_list")
   captainAddMembers     Boolean   @default(true) @map("captain_add_members")
+  requireIngameNames    Boolean   @default(false) @map("require_ingame_names")
 
   registrationChannelId String  @map("registration_channel_id")
   logsChannelId         String  @map("logs_channel_id")
@@ -59,21 +60,18 @@ model Scrim {
   stage                 Stage   @default(CONFIGURATION) @map("stage")
   autoCloseRegistration Boolean @default(true) @map("auto_close_registration")
 
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-  Team         Team[]
-  TeamMember   TeamMember[]
-  AssignedSlot AssignedSlot[]
-  RoomDetail   RoomDetail?
-  roomDetailId Int?
-  ReservedSlot ReservedSlot[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  assignedSlots AssignedSlot[]
+  RoomDetail    RoomDetail?
+  roomDetailId  Int?
+  reservedSlots ReservedSlot[]
 
   @@map("scrim")
 }
 
 model Team {
   id           Int       @id @default(autoincrement()) @map("id")
-  scrimId      Int       @map("scrim_id")
   name         String    @map("name")
   code         String    @unique @map("code")
   createdAt    DateTime  @default(now()) @map("created_at")
@@ -82,10 +80,11 @@ model Team {
   registeredAt DateTime? @map("registered_at")
   banned       Boolean   @default(false) @map("banned")
   banReason    String?   @map("ban_reason")
+  guildId      String    @map("guild_id")
+  tag          String?   @map("tag")
 
-  scrim        Scrim          @relation(fields: [scrimId], references: [id], onDelete: Cascade)
-  TeamMember   TeamMember[]
-  AssignedSlot AssignedSlot[]
+  teamMembers     TeamMember[]
+  registeredTeams RegisteredTeam[]
 
   @@map("team")
 }
@@ -94,19 +93,42 @@ model TeamMember {
   id           Int      @id @default(autoincrement()) @map("id")
   teamId       Int      @map("team_id")
   userId       String   @map("user_id")
-  scrimId      Int      @map("scrim_id")
   displayName  String   @map("display_name")
   isSubstitute Boolean  @default(false) @map("is_substitute")
   isCaptain    Boolean  @default(false) @map("is_captain")
+  ingameName   String?  @map("ingame_name")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
-  @@unique([scrimId, userId])
   @@map("team_member")
+}
+
+model RegisteredTeam {
+  id                    Int                    @id @default(autoincrement()) @map("id")
+  scrimId               Int                    @map("scrim_id")
+  createdAt             DateTime               @default(now()) @map("created_at")
+  teamId                Int                    @map("team_id")
+  assignedSlots         AssignedSlot[]
+  registeredTeamMembers RegisteredTeamMember[]
+  Team                  Team                   @relation(fields: [teamId], references: [id])
+
+  @@unique([scrimId, teamId])
+  @@map("registered_team")
+}
+
+model RegisteredTeamMember {
+  id               Int      @id @default(autoincrement()) @map("id")
+  registeredTeamId Int      @map("registered_team_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  userId           String   @map("user_id")
+
+  registeredTeam RegisteredTeam @relation(fields: [registeredTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([registeredTeamId])
+  @@map("registered_team_member")
 }
 
 model BannedUser {
@@ -121,18 +143,18 @@ model BannedUser {
 }
 
 model AssignedSlot {
-  id         Int      @id @default(autoincrement()) @map("id")
-  scrimId    Int      @map("scrim_id")
-  teamId     Int      @map("team_id")
-  slotNumber Int      @map("slot_number")
-  messageId  String?  @map("message_id")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement()) @map("id")
+  scrimId          Int      @map("scrim_id")
+  slotNumber       Int      @map("slot_number")
+  messageId        String?  @map("message_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  registeredTeamId Int      @unique @map("registered_team_id")
+
+  registeredTeam RegisteredTeam @relation(fields: [registeredTeamId], references: [id], onDelete: Cascade)
 
   scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
-  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  @@unique([scrimId, teamId])
   @@unique([scrimId, slotNumber])
   @@map("assigned_slot")
 }
