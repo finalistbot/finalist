@@ -9,20 +9,13 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
     if (!interaction.customId.startsWith("ban_team_modal:")) return;
     const teamId = parseIdFromString(interaction.customId);
     if (!teamId) return;
-    const team = await prisma.team.findUnique({
+    const team = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
-      include: { teamMembers: true },
+      include: { registeredTeamMembers: true },
     });
     if (!team) {
       await interaction.reply({
         content: "Team not found.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (team.banned) {
-      await interaction.reply({
-        content: "Team is already banned.",
         flags: "Ephemeral",
       });
       return;

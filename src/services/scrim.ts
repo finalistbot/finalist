@@ -8,7 +8,7 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
-import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
+import { RegisteredTeam, Scrim, Stage } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -167,15 +167,17 @@ export class ScrimService extends Service {
     if (scrim.autoSlotList) {
       const slots = await prisma.assignedSlot.findMany({
         where: { scrimId: scrim.id },
-        include: { team: true },
+        include: { registeredTeam: true },
       });
       const details = [];
       for (const slot of slots) {
         const slotDetails = {
           slotNumber: slot.slotNumber,
-          teamName: slot.team.name,
-          teamId: slot.team.id,
-          jumpUrl: `https://discord.com/channels/${scrim.guildId}/${scrim.participantsChannelId}/${slot.team.messageId}`,
+          teamName: slot.registeredTeam.name,
+          teamId: slot.registeredTeam.id,
+          jumpUrl: slot.registeredTeam.messageId
+            ? `https://discord.com/channels/${scrim.guildId}/${scrim.participantsChannelId}/${slot.registeredTeam.messageId}`
+            : "N/A",
         };
         details.push(slotDetails);
       }
@@ -386,7 +388,7 @@ export class ScrimService extends Service {
   async registrationNeedsClosing(scrim: Scrim) {
     const scrimWithTeamLength = await prisma.scrim.findUnique({
       where: { id: scrim.id },
-      include: { _count: { select: { Team: true } } },
+      include: { _count: { select: { registeredTeams: true } } },
     });
 
     if (!scrimWithTeamLength) {
@@ -404,7 +406,7 @@ export class ScrimService extends Service {
       );
       return false;
     }
-    if (scrimWithTeamLength._count.Team >= scrim.maxTeams) {
+    if (scrimWithTeamLength._count.registeredTeams >= scrim.maxTeams) {
       logger.info(
         `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`,
       );
@@ -412,7 +414,7 @@ export class ScrimService extends Service {
     }
     return false;
   }
-  async unregisterTeam(team: Team) {
+  async unregisterTeam(team: RegisteredTeam) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -421,15 +423,8 @@ export class ScrimService extends Service {
       return;
     }
     await this.removeTeamSlot(scrim, team);
-    await prisma.team.update({
-      where: {
-        id: team.id,
-        scrimId: team.scrimId,
-      },
-      data: {
-        registeredAt: null,
-        messageId: null,
-      },
+    await prisma.registeredTeam.delete({
+      where: { id: team.id },
     });
     try {
       if (!team.messageId) return;
@@ -519,7 +514,7 @@ export class ScrimService extends Service {
       return;
     }
     await prisma.assignedSlot.deleteMany({
-      where: { scrimId: scrim.id, teamId: team.id },
+      where: { scrimId: scrim.id, registeredTeamId: team.id },
     });
     this.client.rolemanageService.removeParticipantRoleFromTeam(team);
     this.client.eventLogger.logEvent("slotUnassigned", {
@@ -531,13 +526,12 @@ export class ScrimService extends Service {
   }
 
   async fillSlotList(scrim: Scrim, type: "normal" | "random" = "normal") {
-    let teams = await prisma.team.findMany({
+    let teams = await prisma.registeredTeam.findMany({
       where: {
         scrimId: scrim.id,
-        registeredAt: { not: null },
-        AssignedSlot: { none: {} },
+        assignedSlots: { none: {} },
       },
-      orderBy: { registeredAt: "asc" },
+      orderBy: { createdAt: "asc" },
     });
 
     if (type === "random") {

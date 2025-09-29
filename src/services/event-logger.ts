@@ -9,7 +9,7 @@ type EventLoggerPayload = {
     trigger: TriggerSource;
   };
   teamRegistered: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   slotAssigned: {
@@ -18,16 +18,16 @@ type EventLoggerPayload = {
     trigger: TriggerSource;
   };
   slotUnassigned: {
-    team: Team;
+    team: RegisteredTeam;
     unassignedSlot: AssignedSlot;
     trigger: TriggerSource;
   };
   teamKicked: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   teamBanned: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   roomDetailsPosted: {
