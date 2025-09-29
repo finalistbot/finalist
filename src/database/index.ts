@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ScrimPreset } from "@prisma/client";
+import { User } from "discord.js";
 
 export async function getFirstAvailableSlot(scrimId: number) {
   const query = prisma.$queryRaw<{ slot: number }[]>`
@@ -35,4 +36,19 @@ export async function filterPresets(guildId: string, search?: string) {
             ORDER BY SIMILARITY(name, ${search}) DESC LIMIT 10;`;
   }
   return presets;
+}
+
+export async function ensureUser(user: User) {
+  return await prisma.user.upsert({
+    where: { id: user.id },
+    update: {
+      name: user.username,
+      avatarUrl: user.avatarURL(),
+    },
+    create: {
+      id: user.id,
+      name: user.username,
+      avatarUrl: user.avatarURL(),
+    },
+  });
 }

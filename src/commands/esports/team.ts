@@ -1,5 +1,6 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned, isNotBanned } from "@/checks/banned";
+import { ensureUser } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { teamDetailsEmbed } from "@/ui/embeds/team-details";
@@ -186,14 +187,14 @@ export default class TeamCommand extends Command {
   }
 
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: "Ephemeral" });
     const isBanned = await isUserBanned(
       interaction.guildId,
       interaction.user.id,
     );
     if (isBanned) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `You are banned from participating in this server`,
-        flags: "Ephemeral",
       });
       return;
     }
@@ -206,14 +207,14 @@ export default class TeamCommand extends Command {
     });
 
     if (existingTeam) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `A team with the name "${teamName}" and tag "${tag}" already exists. Please choose a different name or tag.`,
-        flags: "Ephemeral",
       });
       return;
     }
 
     const teamCode = randomString(8);
+    await ensureUser(interaction.user);
     const newTeam = await prisma.team.create({
       data: {
         guildId: interaction.guildId!,
@@ -224,35 +225,23 @@ export default class TeamCommand extends Command {
           create: {
             ingameName: ign,
             userId: interaction.user.id,
-            isCaptain: true,
-            displayName: interaction.user.username,
+            role: "CAPTAIN",
           },
         },
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: `Team "${newTeam.name}" created successfully! Your team code is: \`${newTeam.code}\`. Share this code with your teammates to join your team.`,
-      flags: "Ephemeral",
     });
   }
 
   async disbandTeam(interaction: ChatInputCommandInteraction) {
     const teamId = interaction.options.getInteger("team", true);
-    const registeredTeam = await prisma.registeredTeam.findFirst({
-      where: { teamId },
-    });
-    if (registeredTeam) {
-      await interaction.reply({
-        content:
-          "You cannot disband a team that has already been registered for the scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
-        teamMembers: { some: { isCaptain: true, userId: interaction.user.id } },
+        guildId: interaction.guildId!,
+        teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
       },
     });
     if (!team) {
@@ -276,39 +265,38 @@ export default class TeamCommand extends Command {
     const teamId = interaction.options.getInteger("team", true);
     const memberId = interaction.options.getString("member", true);
     const team = await prisma.team.findUnique({
-      where: { id: teamId, guildId: interaction.guildId! },
+      where: {
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: {
+          some: { role: "CAPTAIN", userId: interaction.user.id },
+        },
+      },
     });
     if (!team) {
       await interaction.reply({
-        content: "The specified team does not exist.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        teamId: team.id,
-        isCaptain: true,
-        userId: interaction.user.id,
-      },
-    });
-    if (!teamMember) {
-      await interaction.reply({
         content:
-          "You are not the captain of this team. Only captains can kick members.",
+          "You are not the captain of this team or the team does not exist.",
         flags: "Ephemeral",
       });
       return;
     }
 
     const memberToKick = await prisma.teamMember.findFirst({
-      where: { userId: memberId, teamId: teamMember.teamId },
+      where: { userId: memberId, teamId: team.id },
     });
 
     if (!memberToKick) {
       await interaction.reply({
         content:
           "The specified member is not part of your team or does not exist.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    if (memberToKick.role === "CAPTAIN") {
+      await interaction.reply({
+        content: "You cannot kick the captain of the team.",
         flags: "Ephemeral",
       });
       return;
@@ -332,13 +320,6 @@ export default class TeamCommand extends Command {
   }
 
   async joinTeam(interaction: ChatInputCommandInteraction) {
-    if (interaction.user.bot) {
-      await interaction.reply({
-        content: "Bots cannot join teams.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
     const bannedUser = await prisma.bannedUser.findFirst({
       where: { userId: interaction.user.id, guildId: interaction.guildId! },
     });
@@ -380,13 +361,14 @@ export default class TeamCommand extends Command {
       return;
     }
 
+    const role = isSubstitute ? "SUBSTITUTE" : "MEMBER";
+
+    await ensureUser(interaction.user);
     await prisma.teamMember.create({
       data: {
-        displayName: interaction.user.username,
         teamId: team.id,
         userId: interaction.user.id,
-        isCaptain: false,
-        isSubstitute,
+        role,
         ingameName: ign,
       },
     });
@@ -426,7 +408,7 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    if (teamMember.isCaptain) {
+    if (teamMember.role === "CAPTAIN") {
       await interaction.reply({
         content:
           "You cannot leave the team as you are the captain. Please disband the team!!",
@@ -485,7 +467,7 @@ export default class TeamCommand extends Command {
       where: {
         id: teamId,
         guildId: interaction.guildId!,
-        teamMembers: { some: { isCaptain: true, userId: interaction.user.id } },
+        teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
       },
     });
 
@@ -508,13 +490,12 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+    await ensureUser(member);
     await prisma.teamMember.create({
       data: {
-        displayName: member.username,
         teamId: team.id,
         userId: member.id,
-        isCaptain: false,
-        isSubstitute: false,
+        role: "MEMBER",
         ingameName: ign,
       },
     });
