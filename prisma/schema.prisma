@@ -44,6 +44,7 @@ model User {
   teams                 Team[]
   teamMembers           TeamMember[]
   bannedUsers           BannedUser[]
+  reservedSlots         ReservedSlot[]
 
   @@map("user")
 }
@@ -128,8 +129,7 @@ model RegisteredTeam {
   scrimId               Int                    @map("scrim_id")
   teamId                Int                    @map("team_id")
   name                  String                 @map("name")
-  messageId             String                 @map("message_id")
-  captainUserId         String                 @map("captain_user_id")
+  messageId             String?                @map("message_id")
   createdAt             DateTime               @default(now()) @map("created_at")
   assignedSlots         AssignedSlot[]
   registeredTeamMembers RegisteredTeamMember[]
@@ -194,6 +194,7 @@ model ReservedSlot {
   slotNumber Int      @map("slot_number")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  user  User  @relation(fields: [userId], references: [id])
   scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
 
   @@unique([scrimId, slotNumber])

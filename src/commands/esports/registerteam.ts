@@ -1,6 +1,12 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { sendTeamDetails } from "@/ui/messages/teams";
+import { RegisteredTeam, Scrim, Team, TeamMember } from "@prisma/client";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  TextChannel,
+} from "discord.js";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -15,9 +21,25 @@ export default class RegisterTeam extends Command {
   async execute(interaction: ChatInputCommandInteraction): Promise<unknown> {
     const teamId = interaction.options.getInteger("team", true);
     const team = await prisma.team.findUnique({
-      where: { id: teamId },
+      where: {
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: {
+          some: {
+            role: "CAPTAIN",
+            userId: interaction.user.id,
+          },
+        },
+      },
       include: { teamMembers: true },
     });
+    if (!team) {
+      return interaction.reply({
+        content:
+          "Team not found or you do not have permission to register this team",
+        flags: ["Ephemeral"],
+      });
+    }
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
@@ -28,12 +50,6 @@ export default class RegisterTeam extends Command {
       });
     }
 
-    if (!team) {
-      return interaction.reply({
-        content: "Team not found",
-        ephemeral: true,
-      });
-    }
     const existing = await prisma.registeredTeam.findUnique({
       where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
     });
@@ -43,8 +59,12 @@ export default class RegisterTeam extends Command {
         ephemeral: true,
       });
     }
-    const mainPlayers = team.teamMembers.filter((tm) => !tm.isSubstitute);
-    const subPlayers = team.teamMembers.filter((tm) => tm.isSubstitute);
+    const mainPlayers = team.teamMembers.filter(
+      (tm) => tm.role != "SUBSTITUTE",
+    );
+    const subPlayers = team.teamMembers.filter(
+      (tm) => tm.role === "SUBSTITUTE",
+    );
     if (mainPlayers.length < scrim.minPlayersPerTeam) {
       return interaction.reply({
         content: `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`,
@@ -63,14 +83,29 @@ export default class RegisterTeam extends Command {
         flags: ["Ephemeral"],
       });
     }
-    await prisma.registeredTeam.create({
+    const registeredTeam = await prisma.registeredTeam.create({
       data: {
+        name: team.name,
         scrimId: scrim.id,
         teamId: team.id,
         registeredTeamMembers: {
-          create: team.teamMembers.map((tm) => ({ userId: tm.userId, displayName: tm.displayName, isSubstitute: tm.isSubstitute,  })
-        }
+          create: team.teamMembers.map((tm) => ({
+            userId: tm.userId,
+            role: tm.role,
+            ingameName: tm.ingameName,
+            position: tm.position,
+          })),
+        },
       },
     });
+    const assignedSlot = await this.client.scrimService.assignTeamSlot(
+      scrim,
+      registeredTeam,
+    );
+    await sendTeamDetails(
+      interaction.channel as TextChannel,
+      registeredTeam,
+      assignedSlot,
+    );
   }
 }

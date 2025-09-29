@@ -7,8 +7,8 @@ import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp } from "@/lib/utils";
-import { editTeamDetails } from "@/ui/messages/teams";
-import { Scrim, Stage, Team } from "@prisma/client";
+import { editRegisteredTeamDetails } from "@/ui/messages/teams";
+import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -457,19 +457,22 @@ export class ScrimService extends Service {
 
   async assignTeamSlot(
     scrim: Scrim,
-    team: Team,
+    team: RegisteredTeam,
     slotNumber: number = -1,
     force: boolean = false,
   ) {
-    const teamCaptain = await prisma.teamMember.findFirst({
-      where: { teamId: team.id, isCaptain: true },
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+      select: { userId: true },
     });
-    if (!teamCaptain) {
-      logger.error(`Team captain for team ${team.id} not found`);
-      return;
-    }
     const reservedSlot = await prisma.reservedSlot.findFirst({
-      where: { scrimId: scrim.id, userId: teamCaptain.userId },
+      where: {
+        scrimId: scrim.id,
+        userId: {
+          in: teamMembers.map((tm) => tm.userId),
+        },
+      },
+      orderBy: { slotNumber: "asc" },
     });
     const performAutoSlot =
       scrim.autoSlotList || reservedSlot || slotNumber != -1 || force;
@@ -492,7 +495,7 @@ export class ScrimService extends Service {
       return;
     }
     const assignedSlot = await prisma.assignedSlot.create({
-      data: { scrimId: scrim.id, teamId: team.id, slotNumber },
+      data: { scrimId: scrim.id, registeredTeamId: team.id, slotNumber },
     });
     if (assignedSlot) {
       this.client.rolemanageService.addParticipantRoleToTeam(team);
@@ -505,9 +508,9 @@ export class ScrimService extends Service {
     return assignedSlot;
   }
 
-  async removeTeamSlot(scrim: Scrim, team: Team) {
+  async removeTeamSlot(scrim: Scrim, team: RegisteredTeam) {
     const assigned = await prisma.assignedSlot.findFirst({
-      where: { scrimId: scrim.id, teamId: team.id },
+      where: { scrimId: scrim.id, registeredTeamId: team.id },
     });
     if (!assigned) {
       logger.warn(
@@ -554,7 +557,7 @@ export class ScrimService extends Service {
 
     for (const team of teams) {
       await this.assignTeamSlot(scrim, team, -1, true);
-      editTeamDetails(scrim, team, this.client);
+      editRegisteredTeamDetails(scrim, team, this.client);
     }
   }
 }

@@ -1,8 +1,8 @@
-import { AssignedSlot, Team } from "@prisma/client";
+import { AssignedSlot, RegisteredTeam, Team } from "@prisma/client";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
 export async function prepareManageParticipantsComponent(
-  team: Team,
+  team: RegisteredTeam,
   assignedSlot: AssignedSlot | null = null,
 ) {
   const assignSlotLabel = assignedSlot ? "Reassign Slot" : "Assign Slot";

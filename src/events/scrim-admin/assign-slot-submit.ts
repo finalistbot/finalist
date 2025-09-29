@@ -1,7 +1,7 @@
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
-import { editTeamDetails } from "@/ui/messages/teams";
+import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 import { Interaction } from "discord.js";
 export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -71,6 +71,6 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       content: `Slot ${slot} assigned to team ID ${teamId}.`,
       flags: ["Ephemeral"],
     });
-    await editTeamDetails(team.scrim, team, this.client);
+    await editRegisteredTeamDetails(team.scrim, team, this.client);
   }
 }

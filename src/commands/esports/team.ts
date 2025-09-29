@@ -3,7 +3,7 @@ import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { ensureUser } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
-import { teamDetailsEmbed } from "@/ui/embeds/team-details";
+import { registeredTeamDetailsEmbed } from "@/ui/embeds/team-details";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -446,7 +446,7 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    const embed = await teamDetailsEmbed(teamMember.team);
+    const embed = await registeredTeamDetailsEmbed(teamMember.team);
     await interaction.reply({
       embeds: [embed],
       flags: "Ephemeral",
