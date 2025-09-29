@@ -71,11 +71,12 @@ model Scrim {
   stage                 Stage   @default(CONFIGURATION) @map("stage")
   autoCloseRegistration Boolean @default(true) @map("auto_close_registration")
 
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  assignedSlots AssignedSlot[]
-  roomDetail    RoomDetail?
-  reservedSlots ReservedSlot[]
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  assignedSlots   AssignedSlot[]
+  roomDetail      RoomDetail?
+  reservedSlots   ReservedSlot[]
+  registeredTeams RegisteredTeam[]
 
   @@map("scrim")
 }
@@ -134,6 +135,7 @@ model RegisteredTeam {
   assignedSlots         AssignedSlot[]
   registeredTeamMembers RegisteredTeamMember[]
   team                  Team                   @relation(fields: [teamId], references: [id])
+  scrim                 Scrim                  @relation(fields: [scrimId], references: [id], onDelete: Cascade)
 
   @@unique([scrimId, teamId])
   @@map("registered_team")

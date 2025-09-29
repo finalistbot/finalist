@@ -1,7 +1,6 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { sendTeamDetails } from "@/ui/messages/teams";
-import { RegisteredTeam, Scrim, Team, TeamMember } from "@prisma/client";
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,

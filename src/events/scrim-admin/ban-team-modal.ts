@@ -1,4 +1,3 @@
-import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
@@ -46,7 +45,7 @@ export default class BanTeam extends Event<"interactionCreate"> {
     }
     const team = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { TeamMember: true },
+      include: { teamMembers: true },
     });
     if (!team) {
       await interaction.reply({

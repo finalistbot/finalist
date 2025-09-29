@@ -183,11 +183,11 @@ export default class SlotlistExport extends Command {
         adminChannelId: interaction.channelId,
       },
       include: {
-        AssignedSlot: {
+        assignedSlots: {
           include: {
-            team: {
+            registeredTeam: {
               include: {
-                TeamMember: true,
+                registeredTeamMembers: true,
               },
             },
           },
@@ -203,16 +203,16 @@ export default class SlotlistExport extends Command {
         "This command can only be used in a scrim admin channel.",
       );
     }
-    const slots = scrim.AssignedSlot;
+    const slots = scrim.assignedSlots;
     if (slots.length === 0) {
       return interaction.editReply("No slots found.");
     }
     const slotDetails: SlotDetails[] = slots.map((slot) => ({
       slotNumber: slot.slotNumber,
-      teamName: slot.team ? slot.team.name : "Unassigned",
-      teamId: slot.team.id,
-      jumpUrl: slot.team
-        ? `https://discord.com/channels/${interaction.guildId}/${scrim.participantsChannelId}/${slot.team.messageId}`
+      teamName: slot.registeredTeam.name,
+      teamId: slot.registeredTeamId,
+      jumpUrl: slot.registeredTeam.messageId
+        ? `https://discord.com/channels/${interaction.guildId}/${scrim.participantsChannelId}/${slot.registeredTeam.messageId}`
         : "N/A",
     }));
     let message = "";

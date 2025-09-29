@@ -10,5 +10,4 @@ export type ScrimSettings = {
   maxSubstitutePerTeam: number;
   autoSlotList: boolean;
   autoCloseRegistration: boolean;
-  captainAddMembers: boolean;
 };

@@ -109,7 +109,6 @@ export default class CreateScrim extends Command {
       maxSubstitutePerTeam: settings.maxSubstitutePerTeam ?? 0,
       autoSlotList: settings.autoSlotList ?? false,
       autoCloseRegistration: settings.autoCloseRegistration ?? true,
-      captainAddMembers: settings.captainAddMembers ?? true,
     };
   }
 

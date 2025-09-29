@@ -40,7 +40,7 @@ export async function checkIsGuildSetup(
   guild: Guild,
 ): Promise<IsGuildSetupReturn> {
   const guildConfig = await prisma.guildConfig.findUnique({
-    where: { guildId: guild.id },
+    where: { id: guild.id },
   });
 
   if (!guildConfig) return fail(errors.noConfig);

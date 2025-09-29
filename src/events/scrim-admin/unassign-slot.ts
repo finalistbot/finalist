@@ -37,7 +37,7 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
       });
       return;
     }
-    const team = await prisma.team.findUnique({
+    const team = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
     });
     if (!team) {

@@ -10,7 +10,7 @@ export const isScrimAdmin: InteractionCheck = async (
   const member = interaction.member as GuildMember;
   if (member.permissions.has("ManageGuild")) return true;
   const guildConfig = await prisma.guildConfig.findUnique({
-    where: { guildId: member.guild.id },
+    where: { id: member.guild.id },
   });
   const isAdmin =
     guildConfig &&

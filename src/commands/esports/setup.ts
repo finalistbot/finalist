@@ -70,7 +70,7 @@ export default class SetupCommand extends Command {
     }
     const guild = interaction.guild;
     const guildConfig = await prisma.guildConfig.findUnique({
-      where: { guildId: interaction.guildId },
+      where: { id: interaction.guildId },
     });
     let adminRole = null;
     if (guildConfig) {
@@ -87,9 +87,9 @@ export default class SetupCommand extends Command {
       });
     }
     await prisma.guildConfig.upsert({
-      where: { guildId: guild.id },
+      where: { id: guild.id },
       create: {
-        guildId: guild.id,
+        id: guild.id,
         adminRoleId: adminRole.id,
         timezone,
       },

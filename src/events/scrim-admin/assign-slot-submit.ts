@@ -32,7 +32,7 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
       });
       return;
     }
-    const team = await prisma.team.findUnique({
+    const team = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
       include: { scrim: true },
     });
@@ -46,9 +46,9 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     const scrimId = team.scrimId;
     const alreadyAssigned = await prisma.assignedSlot.findFirst({
       where: { scrimId, slotNumber: slot },
-      include: { team: true },
+      include: { registeredTeam: true },
     });
-    if (alreadyAssigned && alreadyAssigned.teamId === teamId) {
+    if (alreadyAssigned && alreadyAssigned.registeredTeamId === teamId) {
       await interaction.reply({
         content: `Slot ${slot} is already assigned to this team.`,
         flags: ["Ephemeral"],
@@ -57,13 +57,13 @@ export default class AssignSlotSubmitEvent extends Event<"interactionCreate"> {
     }
     if (alreadyAssigned) {
       await interaction.reply({
-        content: `Slot ${slot} is already assigned to team "${alreadyAssigned.team.name}". Please choose a different slot. Or use the unassign option first.`,
+        content: `Slot ${slot} is already assigned to team "${alreadyAssigned.registeredTeam.name}". Please choose a different slot. Or use the unassign option first.`,
         flags: ["Ephemeral"],
       });
       return;
     }
     await prisma.assignedSlot.deleteMany({
-      where: { scrimId, teamId },
+      where: { scrimId, registeredTeamId: teamId },
     });
     await this.client.scrimService.assignTeamSlot(scrim, team, slot);
 

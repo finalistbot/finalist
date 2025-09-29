@@ -11,7 +11,7 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
     if (!teamId) return;
     const team = await prisma.team.findUnique({
       where: { id: teamId },
-      include: { TeamMember: true, scrim: true },
+      include: { teamMembers: true },
     });
     if (!team) {
       await interaction.reply({

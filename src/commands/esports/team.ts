@@ -7,6 +7,7 @@ import { registeredTeamDetailsEmbed } from "@/ui/embeds/team-details";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  EmbedBuilder,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
@@ -446,7 +447,9 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    const embed = await registeredTeamDetailsEmbed(teamMember.team);
+    // const embed = await registeredTeamDetailsEmbed(team);
+    // FIXME: implement team details embed
+    const embed = new EmbedBuilder();
     await interaction.reply({
       embeds: [embed],
       flags: "Ephemeral",
