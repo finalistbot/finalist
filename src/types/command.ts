@@ -13,7 +13,6 @@ export interface CommandOption {
   description: string;
   type: string;
   required: boolean;
-  choices?: { name: string; value: string | number }[];
 }
 
 export interface CommandCategory {

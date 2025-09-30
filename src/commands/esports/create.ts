@@ -71,10 +71,12 @@ export default class CreateScrim extends Command {
         description: "Template for the scrim",
         type: "STRING",
         required: false,
-        choices: [...scrimTemplateMap.values()].map((template) => ({
-          name: template.name,
-          value: template.value,
-        })),
+      },
+      {
+        name: "preset",
+        description: "Saved preset to use for the scrim",
+        type: "STRING",
+        required: false,
       },
     ],
   };

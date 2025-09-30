@@ -3,6 +3,7 @@ import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { ensureUser } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -152,6 +153,150 @@ export default class TeamCommand extends Command {
         ),
     );
   checks = [isNotBanned];
+  info: CommandInfo = {
+    name: "team",
+    description: "Manage your team",
+    usageExamples: [
+      "/team create name:MyTeam ign:MyInGameName tag:MT",
+      "/team disband team:<team_id>",
+      "/team kick team:<team_id> member:<member_id>",
+      "/team join teamcode:ABCDEFGH ign:MyInGameName substitute:false",
+      "/team leave team:<team_id>",
+      "/team info team:<team_id>",
+      "/team add team:<team_id> member:@User ign:UserInGameName",
+    ],
+    category: "Esports",
+    subcommands: [
+      {
+        name: "create",
+        description: "Create a new team",
+        options: [
+          {
+            name: "name",
+            description: "The name of the team",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "ign",
+            description: "Your in-game name",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "tag",
+            description:
+              "The tag of the team (useful to distinguish teams with the same name)",
+            type: "STRING",
+            required: false,
+          },
+        ],
+      },
+      {
+        name: "disband",
+        description: "Disband your team",
+        options: [
+          {
+            name: "team",
+            description: "The team to disband",
+            type: "INTEGER",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "kick",
+        description: "Kick a member from your team",
+        options: [
+          {
+            name: "team",
+            description: "The team to kick the member from",
+            type: "INTEGER",
+            required: true,
+          },
+          {
+            name: "member",
+            description: "The ID of the member to kick",
+            type: "STRING",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "join",
+        description: "Join a team using a team code",
+        options: [
+          {
+            name: "teamcode",
+            description: "The code of the team to join",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "ign",
+            description: "Your in-game name",
+            type: "STRING",
+            required: true,
+          },
+          {
+            name: "substitute",
+            description: "Join as a substitute",
+
+            type: "BOOLEAN",
+            required: false,
+          },
+        ],
+      },
+      {
+        name: "leave",
+        description: "Leave your current team",
+        options: [
+          {
+            name: "team",
+            description: "The team to leave",
+            type: "INTEGER",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "info",
+        description: "Get info about your team",
+        options: [
+          {
+            name: "team",
+            description: "The team to get info about",
+            type: "INTEGER",
+            required: true,
+          },
+        ],
+      },
+      {
+        name: "add",
+        description: "Add a member to your team",
+        options: [
+          {
+            name: "team",
+            description: "The team to add the member to",
+            type: "INTEGER",
+            required: true,
+          },
+          {
+            name: "member",
+            description: "The member to add to your team",
+            type: "USER",
+            required: true,
+          },
+          {
+            name: "ign",
+            description: "The in-game name of the member",
+            type: "STRING",
+            required: true,
+          },
+        ],
+      },
+    ],
+  };
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subcommand = interaction.options.getSubcommand();

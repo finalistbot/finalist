@@ -151,20 +151,6 @@ export default class SlotlistExport extends Command {
       "/slotlist format:csv",
       "(in scrim admin channel) /slotlist format:table",
     ],
-    options: [
-      {
-        name: "format",
-        description: "The format to export the slotlist in",
-        type: "STRING",
-        required: false,
-        choices: [
-          { name: "Embedded", value: "embed" },
-          { name: "CSV", value: "csv" },
-          { name: "Table", value: "table" },
-          { name: "HTML", value: "html" },
-        ],
-      },
-    ],
   };
 
   async execute(interaction: ChatInputCommandInteraction) {

@@ -1,5 +1,6 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
+import { CommandInfo } from "@/types/command";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -17,6 +18,22 @@ export default class RegisterTeam extends Command {
         .setRequired(true)
         .setAutocomplete(true),
     );
+  info: CommandInfo = {
+    name: "registerteam",
+    description: "Register your team for the scrim.",
+    longDescription:
+      "Register your team for the scrim in the registration channel. You must be a team captain to register a team.",
+    usageExamples: ["/registerteam team:My Team"],
+    category: "Esports",
+    options: [
+      {
+        name: "team",
+        description: "The team you want to register",
+        type: "INTEGER",
+        required: true,
+      },
+    ],
+  };
   async execute(interaction: ChatInputCommandInteraction) {
     const teamId = interaction.options.getInteger("team", true);
     await interaction.deferReply({ flags: ["Ephemeral"] });

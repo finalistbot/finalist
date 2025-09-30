@@ -45,17 +45,19 @@ export default class SetupCommand extends Command {
     category: "Esports",
     longDescription:
       "Sets up the bot for the server by creating an Admin role and setting the timezone.",
-    usageExamples: [
-      "/setup",
-      "/setup timezone:India (IST)",
-      "/setup timezone:US Eastern (New York)",
-    ],
+    usageExamples: ["/setup timezone:UTC teams-per-captain:2"],
     options: [
       {
         name: "timezone",
         description:
           "The timezone for the server (e.g., 'India (IST)'). Defaults to UTC if not set.",
         type: "STRING",
+        required: false,
+      },
+      {
+        name: "teams-per-captain",
+        description: "Number of teams each captain can create. Default is 1.",
+        type: "INTEGER",
         required: false,
       },
     ],
