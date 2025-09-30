@@ -272,6 +272,25 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+    if (team.banned) {
+      await interaction.reply({
+        content: "You cannot disband a team that is banned.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const registeredIn = await prisma.registeredTeam.count({
+      where: { teamId: team.id },
+    });
+    if (registeredIn > 0) {
+      await interaction.reply({
+        content:
+          "You cannot disband a team that is registered for a scrim. Please contact staff for assistance.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
     await prisma.team.delete({
       where: { id: teamId },
     });
@@ -548,5 +567,51 @@ export default class TeamCommand extends Command {
       flags: "Ephemeral",
     });
   }
-  async autocomplete(interaction: AutocompleteInteraction) {}
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const subcommand = interaction.options.getSubcommand();
+    let choices: { name: string; value: number | string }[] = [];
+    switch (subcommand) {
+      case "disband":
+      case "kick":
+      case "leave":
+      case "info":
+      case "add": {
+        const focusedValue = interaction.options.getFocused();
+        const teams = await prisma.team.findMany({
+          where: {
+            guildId: interaction.guildId!,
+            teamMembers: { some: { userId: interaction.user.id } },
+            name: { contains: focusedValue, mode: "insensitive" },
+          },
+          take: 25,
+        });
+        choices = teams.map((team) => ({
+          name: team.name,
+          value: team.id,
+        }));
+        break;
+      }
+      case "kick": {
+        const teamId = interaction.options.getInteger("team");
+        if (!teamId) break;
+        const focusedValue = interaction.options.getFocused();
+        const members = await prisma.teamMember.findMany({
+          where: {
+            teamId,
+            user: {
+              name: { contains: focusedValue, mode: "insensitive" },
+            },
+          },
+          include: { user: true },
+          take: 25,
+        });
+        choices = members.map((member) => ({
+          name: member.user.name,
+          value: member.userId,
+        }));
+        break;
+      }
+    }
+    await interaction.respond(choices);
+  }
 }
