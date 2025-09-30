@@ -14,7 +14,6 @@ export default class SlotlistInfo extends Command {
   data = new SlashCommandBuilder()
     .setName("slot-info")
     .setDescription("Get information about a specific slot")
-
     .addUserOption((option) =>
       option
         .setName("user")

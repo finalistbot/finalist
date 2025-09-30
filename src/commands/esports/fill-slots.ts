@@ -38,10 +38,6 @@ export default class FillSlotsCommand extends Command {
         description: "The method to use for filling the slots",
         type: "STRING",
         required: true,
-        choices: [
-          { name: "Normal", value: "normal" },
-          { name: "Random", value: "random" },
-        ],
       },
     ],
   };

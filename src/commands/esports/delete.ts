@@ -32,8 +32,8 @@ export default class ScrimDelete extends Command {
     category: "Esports",
     options: [
       {
-        name: "id",
-        description: "The ID of the scrim to delete",
+        name: "scrim",
+        description: "The scrim to delete",
         type: "INTEGER",
         required: false,
       },
