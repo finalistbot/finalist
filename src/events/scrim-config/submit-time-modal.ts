@@ -51,7 +51,7 @@ export default class TimingConfigSubmit extends Event<"interactionCreate"> {
       return;
     }
     const guildConfig = await prisma.guildConfig.findUnique({
-      where: { guildId: interaction.guildId! },
+      where: { id: interaction.guildId! },
     });
     const data = parsed.data;
     data.registrationStartTime = fromZonedTime(

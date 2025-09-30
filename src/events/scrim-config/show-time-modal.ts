@@ -11,11 +11,10 @@ import * as dateFns from "date-fns";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { toZonedTime } from "date-fns-tz";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { CheckFailure } from "@/base/classes/error";
 
 async function timingConfigModal(scrim: Scrim) {
   const guildConfig = await prisma.guildConfig.findUnique({
-    where: { guildId: scrim.guildId },
+    where: { id: scrim.guildId },
   });
   const input = new TextInputBuilder()
     .setCustomId("registrationStartTime")

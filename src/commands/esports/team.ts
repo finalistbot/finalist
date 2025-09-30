@@ -1,16 +1,15 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned, isNotBanned } from "@/checks/banned";
+import { ensureUser } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
-import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  EmbedBuilder,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
-import { teamDetailsEmbed } from "@/ui/embeds/team-details";
-import { CommandInfo } from "@/types/command";
 
 export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
@@ -28,15 +27,47 @@ export default class TeamCommand extends Command {
             .setRequired(true)
             .setMinLength(3)
             .setMaxLength(50),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("Your in-game name")
+            .setRequired(true)
+            .setMinLength(3)
+            .setMaxLength(30),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("tag")
+            .setDescription("The tag of the team")
+            .setRequired(false)
+            .setMinLength(2)
+            .setMaxLength(10),
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("disband").setDescription("Disband your team"),
+      subcommand
+        .setName("disband")
+        .setDescription("Disband your team")
+        .addIntegerOption((option) =>
+          option
+            .setName("team")
+            .setDescription("The team to disband")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("kick")
         .setDescription("Kick a member from your team")
+        .addIntegerOption((option) =>
+          option
+            .setName("team")
+            .setDescription("The team to kick the member from")
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
         .addStringOption((option) =>
           option
             .setName("member")
@@ -55,6 +86,14 @@ export default class TeamCommand extends Command {
             .setDescription("The code of the team to join")
             .setRequired(true),
         )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("Your in-game name")
+            .setRequired(true)
+            .setMinLength(3)
+            .setMaxLength(30),
+        )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
@@ -63,109 +102,55 @@ export default class TeamCommand extends Command {
         ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("leave").setDescription("Leave your current team"),
+      subcommand
+        .setName("leave")
+        .setDescription("Leave your current team")
+        .addIntegerOption((option) =>
+          option
+            .setName("team")
+            .setDescription("The team to leave")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
     )
     .addSubcommand((subcommand) =>
-      subcommand.setName("info").setDescription("Get info about your team"),
+      subcommand
+        .setName("info")
+        .setDescription("Get info about your team")
+        .addIntegerOption((option) =>
+          option
+            .setName("team")
+            .setDescription("The team to get info about")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("add")
         .setDescription("Add a member to your team")
+        .addIntegerOption((option) =>
+          option
+            .setName("team")
+            .setDescription("The team to add the member to")
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
         .addUserOption((option) =>
           option
             .setName("member")
             .setDescription("The member to add to your team")
             .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("ign")
+            .setDescription("The in-game name of the member")
+            .setRequired(true)
+            .setMinLength(3)
+            .setMaxLength(30),
         ),
     );
-
-  info: CommandInfo = {
-    name: "team",
-    description: "Manage your team.",
-    category: "Esports",
-    longDescription:
-      "Manage your team for the scrim associated with the current channel. You can create, disband, join, leave teams, kick members (if you're a captain), and view team info.",
-    usageExamples: [
-      "/team create name:My Team",
-      "/team disband",
-      "/team kick memberid:123456789012345678",
-      "/team join teamcode:ABCDEFGH substitute:true",
-      "/team leave",
-      "/team info",
-      "/team add member:@User",
-    ],
-    subcommands: [
-      {
-        name: "create",
-        description: "Create a new team.",
-        options: [
-          {
-            name: "name",
-            description: "The name of the team",
-            type: "STRING",
-            required: true,
-          },
-        ],
-      },
-      {
-        name: "disband",
-        description: "Disband your team.",
-      },
-      {
-        name: "kick",
-        description: "Kick a member from your team.",
-        options: [
-          {
-            name: "memberid",
-            description: "The ID of the member to kick",
-            type: "STRING",
-            required: true,
-          },
-        ],
-      },
-      {
-        name: "join",
-        description: "Join a team using a team code.",
-        options: [
-          {
-            name: "teamcode",
-            description: "The code of the team to join",
-            type: "STRING",
-            required: true,
-          },
-          {
-            name: "substitute",
-            description: "Join as a substitute",
-            type: "BOOLEAN",
-            required: false,
-          },
-        ],
-      },
-      {
-        name: "leave",
-        description: "Leave your current team.",
-      },
-      {
-        name: "info",
-        description: "Get info about your team.",
-      },
-      {
-        name: "add",
-        description: "Add a member to your team.",
-        longDescription:
-          "Add a member to your team. Only captains can add members, and this action can only be performed during the registration stage if the scrim allows captain-added members.",
-        options: [
-          {
-            name: "member",
-            description: "The member to add to your team",
-            type: "USER",
-            required: true,
-          },
-        ],
-      },
-    ],
-  };
   checks = [isNotBanned];
 
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
@@ -202,201 +187,142 @@ export default class TeamCommand extends Command {
   }
 
   async createTeam(interaction: ChatInputCommandInteraction<"cached">) {
+    await interaction.deferReply({ flags: "Ephemeral" });
     const isBanned = await isUserBanned(
       interaction.guildId,
       interaction.user.id,
     );
     if (isBanned) {
-      await interaction.reply({
+      await interaction.editReply({
         content: `You are banned from participating in this server`,
-        flags: "Ephemeral",
       });
       return;
     }
-    const teamName = interaction.options.getString("name", true);
-
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { id: interaction.guildId },
     });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "Teams can only be created during the registration stage.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
+    const maxTeamsPerCaptain = guildConfig?.teamsPerCaptain || 1;
+    const teamName = interaction.options.getString("name", true);
+    const tag = interaction.options.getString("tag") || null;
+    const ign = interaction.options.getString("ign", true);
 
     const existingTeam = await prisma.team.findFirst({
-      where: { name: teamName, scrimId: scrim.id },
+      where: { name: teamName, tag, guildId: interaction.guildId },
     });
 
     if (existingTeam) {
-      await interaction.reply({
-        content: `A team with the name "${teamName}" already exists in this scrim. Please try \`${teamName} v2\` or choose a different name.`,
-        flags: "Ephemeral",
+      await interaction.editReply({
+        content: `A team with the name "${teamName}" and tag "${tag}" already exists. Please choose a different name or tag.`,
       });
       return;
     }
-    const existingMember = await prisma.teamMember.findUnique({
+
+    const captainTeamsCount = await prisma.team.count({
       where: {
-        scrimId_userId: {
-          scrimId: scrim.id,
-          userId: interaction.user.id,
+        guildId: interaction.guildId,
+        teamMembers: {
+          some: { userId: interaction.user.id, role: "CAPTAIN" },
         },
       },
-      include: { team: true },
     });
 
-    if (existingMember) {
-      await interaction.reply({
-        content: `You are already in a team (${existingMember.team.name}) for this scrim. You cannot create another team. If you think this is a mistake, please contact an organizer.`,
-        flags: "Ephemeral",
+    if (captainTeamsCount >= maxTeamsPerCaptain) {
+      await interaction.editReply({
+        content: `You have reached the maximum number of teams (${maxTeamsPerCaptain}) you can create as a captain.`,
       });
       return;
     }
 
     const teamCode = randomString(8);
+    await ensureUser(interaction.user);
     const newTeam = await prisma.team.create({
       data: {
+        guildId: interaction.guildId!,
         name: teamName,
-        scrim: { connect: { id: scrim.id } },
         code: teamCode,
-        TeamMember: {
+        tag,
+        teamMembers: {
           create: {
+            ingameName: ign,
             userId: interaction.user.id,
-            isCaptain: true,
-            scrim: { connect: { id: scrim.id } },
-            displayName: interaction.user.username,
+            role: "CAPTAIN",
           },
         },
       },
     });
-    await interaction.reply({
+    await interaction.editReply({
       content: `Team "${newTeam.name}" created successfully! Your team code is: \`${newTeam.code}\`. Share this code with your teammates to join your team.`,
-      flags: "Ephemeral",
     });
   }
 
   async disbandTeam(interaction: ChatInputCommandInteraction) {
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "Teams can only be disbanded during the registration stage.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    const teamMember = await prisma.teamMember.findFirst({
+    const teamId = interaction.options.getInteger("team", true);
+    const team = await prisma.team.findUnique({
       where: {
-        scrimId: scrim.id,
-        isCaptain: true,
-        userId: interaction.user.id,
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
       },
-      include: { team: true },
     });
-
-    if (!teamMember) {
+    if (!team) {
       await interaction.reply({
         content:
-          "You are not a captain of any team in this scrim. Only captains can disband teams.",
+          "You are not the captain of this team or the team does not exist.",
         flags: "Ephemeral",
       });
       return;
     }
-
-    if (teamMember.team.registeredAt) {
+    if (team.banned) {
+      await interaction.reply({
+        content: "You cannot disband a team that is banned.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    const registeredIn = await prisma.registeredTeam.count({
+      where: { teamId: team.id },
+    });
+    if (registeredIn > 0) {
       await interaction.reply({
         content:
-          "You cannot disband a team that has already been registered for the scrim.",
+          "You cannot disband a team that is registered for a scrim. Please contact staff for assistance.",
         flags: "Ephemeral",
       });
       return;
     }
 
     await prisma.team.delete({
-      where: { id: teamMember.teamId },
+      where: { id: teamId },
     });
-
     await interaction.reply({
-      content: `Your team has been disbanded successfully.`,
+      content: "Team disbanded successfully.",
       flags: "Ephemeral",
     });
   }
 
   async kickMember(interaction: ChatInputCommandInteraction) {
+    const teamId = interaction.options.getInteger("team", true);
     const memberId = interaction.options.getString("member", true);
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "Members can only be kicked during the registration stage.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    const teamMember = await prisma.teamMember.findFirst({
+    const team = await prisma.team.findUnique({
       where: {
-        scrimId: scrim.id,
-        isCaptain: true,
-        userId: interaction.user.id,
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: {
+          some: { role: "CAPTAIN", userId: interaction.user.id },
+        },
       },
-      include: { team: true },
     });
-
-    if (!teamMember) {
+    if (!team) {
       await interaction.reply({
         content:
-          "You are not a captain of any team in this scrim. Only captains can kick members.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (teamMember.team.registeredAt) {
-      await interaction.reply({
-        content:
-          "You cannot kick members from a team that has already been registered for the scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (teamMember.userId === memberId) {
-      await interaction.reply({
-        content: "You cannot kick yourself from the team.",
+          "You are not the captain of this team or the team does not exist.",
         flags: "Ephemeral",
       });
       return;
     }
 
     const memberToKick = await prisma.teamMember.findFirst({
-      where: { userId: memberId, teamId: teamMember.teamId },
+      where: { userId: memberId, teamId: team.id },
     });
 
     if (!memberToKick) {
@@ -407,7 +333,14 @@ export default class TeamCommand extends Command {
       });
       return;
     }
-    if (teamMember.team.banned) {
+    if (memberToKick.role === "CAPTAIN") {
+      await interaction.reply({
+        content: "You cannot kick the captain of the team.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    if (team.banned) {
       await interaction.reply({
         content: "You cannot kick members from a team that is banned.",
         flags: "Ephemeral",
@@ -420,19 +353,12 @@ export default class TeamCommand extends Command {
     });
 
     await interaction.reply({
-      content: `Member <@${memberId}> has been kicked from the team.`,
+      content: `Member <@${memberId}> has been kicked from the team..`,
       flags: "Ephemeral",
     });
   }
 
   async joinTeam(interaction: ChatInputCommandInteraction) {
-    if (interaction.user.bot) {
-      await interaction.reply({
-        content: "Bots cannot join teams.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
     const bannedUser = await prisma.bannedUser.findFirst({
       where: { userId: interaction.user.id, guildId: interaction.guildId! },
     });
@@ -444,44 +370,14 @@ export default class TeamCommand extends Command {
       return;
     }
     const teamCode = interaction.options.getString("teamcode", true);
-    const isSubstitute = interaction.options.getBoolean("substitute") ?? false;
-    const scrim = await prisma.scrim.findFirst({
-      where: {
-        registrationChannelId: interaction.channelId,
-      },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not set up for team registration.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "Team registration is not open.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
+    let isSubstitute = interaction.options.getBoolean("substitute") ?? false;
+    const ign = interaction.options.getString("ign", true);
 
     const team = await prisma.team.findUnique({
-      where: { code: teamCode, scrimId: scrim.id },
-      include: {
-        scrim: true,
-        _count: { select: { TeamMember: { where: { isSubstitute: false } } } },
-      },
+      where: { code: teamCode, guildId: interaction.guildId! },
     });
 
-    const subsitute = await prisma.team.findUnique({
-      where: { code: teamCode, scrimId: scrim.id },
-      include: {
-        scrim: true,
-        _count: { select: { TeamMember: { where: { isSubstitute: true } } } },
-      },
-    });
-
-    if (!team || !subsitute) {
+    if (!team) {
       await interaction.reply({
         content: "Invalid team code.",
         flags: ["Ephemeral"],
@@ -489,12 +385,10 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    const existingMember = await prisma.teamMember.findUnique({
+    const existingMember = await prisma.teamMember.findFirst({
       where: {
-        scrimId_userId: {
-          scrimId: scrim.id,
-          userId: interaction.user.id,
-        },
+        userId: interaction.user.id,
+        teamId: team.id,
       },
     });
 
@@ -506,116 +400,44 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    if (scrim.maxPlayersPerTeam <= team._count.TeamMember) {
-      if (scrim.maxSubstitutePerTeam <= subsitute!._count.TeamMember) {
-        await interaction.reply({
-          content:
-            "This team is already full. You cannot join this team as both main and substitute slots are full.",
-          flags: ["Ephemeral"],
-        });
-        return;
-      }
-      await prisma.teamMember.create({
-        data: {
-          displayName: interaction.user.username,
-          teamId: team.id,
-          scrimId: scrim.id,
-          userId: interaction.user.id,
-          isCaptain: false,
-          isSubstitute: true,
-        },
-      });
-      await interaction.reply({
-        content: `The main slots for this team are full. You have been added as a substitute to the team **${team.name}**!`,
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
+    const role = isSubstitute ? "SUBSTITUTE" : "MEMBER";
+
+    await ensureUser(interaction.user);
+    const memberCount = await prisma.teamMember.count({
+      where: { teamId: team.id },
+    });
 
     await prisma.teamMember.create({
       data: {
-        displayName: interaction.user.username,
         teamId: team.id,
-        scrimId: scrim.id,
         userId: interaction.user.id,
-        isCaptain: false,
-        isSubstitute,
+        role,
+        ingameName: ign,
+        position: memberCount,
       },
     });
 
     await interaction.reply({
-      content: `You have joined the team **${team.name}**!`,
+      content:
+        `You have joined the team **${team.name}**!` +
+        (isSubstitute ? " You joined as a substitute." : ""),
       flags: ["Ephemeral"],
     });
   }
 
-  async autocomplete(interaction: AutocompleteInteraction) {
-    const focusedOption = interaction.options.getFocused(true);
-    if (focusedOption.name !== "member") return;
-
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.respond([]);
-      return;
-    }
-
+  async leaveTeam(interaction: ChatInputCommandInteraction) {
+    const teamId = interaction.options.getInteger("team", true);
     const teamMember = await prisma.teamMember.findFirst({
       where: {
-        scrimId: scrim.id,
-        isCaptain: true,
+        teamId,
         userId: interaction.user.id,
+        team: { guildId: interaction.guildId! },
       },
-    });
-
-    if (!teamMember) {
-      await interaction.respond([]);
-      return;
-    }
-
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { teamId: teamMember.teamId },
-    });
-
-    const choices = teamMembers.map((member) => ({
-      name: `${member.displayName} (${member.userId})`,
-      value: member.userId,
-    }));
-
-    const filtered = choices.filter((choice) =>
-      choice.name.toLowerCase().includes(focusedOption.value.toLowerCase()),
-    );
-
-    await interaction.respond(filtered.slice(0, 25));
-  }
-  async leaveTeam(interaction: ChatInputCommandInteraction) {
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "You can only leave a team during the registration stage.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    const teamMember = await prisma.teamMember.findFirst({
-      where: { scrimId: scrim.id, userId: interaction.user.id },
       include: { team: true },
     });
-
     if (!teamMember) {
       await interaction.reply({
-        content: "You are not part of any team in this scrim.",
+        content: "You are not part of this team.",
         flags: "Ephemeral",
       });
       return;
@@ -629,19 +451,10 @@ export default class TeamCommand extends Command {
       return;
     }
 
-    if (teamMember.isCaptain) {
+    if (teamMember.role === "CAPTAIN") {
       await interaction.reply({
         content:
           "You cannot leave the team as you are the captain. Please disband the team!!",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (teamMember.team.registeredAt) {
-      await interaction.reply({
-        content:
-          "You cannot leave a team that has already been registered for the scrim.",
         flags: "Ephemeral",
       });
       return;
@@ -656,39 +469,38 @@ export default class TeamCommand extends Command {
       flags: "Ephemeral",
     });
   }
-  async teamInfo(interaction: ChatInputCommandInteraction) {
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
 
+  async teamInfo(interaction: ChatInputCommandInteraction) {
+    const teamId = interaction.options.getInteger("team", true);
     const teamMember = await prisma.teamMember.findFirst({
-      where: { scrimId: scrim.id, userId: interaction.user.id },
-      include: { team: { include: { TeamMember: true } } },
+      where: {
+        teamId,
+        userId: interaction.user.id,
+        team: { guildId: interaction.guildId! },
+      },
+      include: { team: true },
     });
 
     if (!teamMember) {
       await interaction.reply({
-        content: "You are not part of any team in this scrim.",
+        content: "You are not part of this team.",
         flags: "Ephemeral",
       });
       return;
     }
-    const embed = await teamDetailsEmbed(teamMember.team);
+
+    // const embed = await registeredTeamDetailsEmbed(team);
+    // FIXME: implement team details embed
+    const embed = new EmbedBuilder();
     await interaction.reply({
       embeds: [embed],
       flags: "Ephemeral",
     });
   }
   async addMember(interaction: ChatInputCommandInteraction) {
-    // refactor this later to reduce code duplication with join team
+    const teamId = interaction.options.getInteger("team", true);
     const member = interaction.options.getUser("member", true);
+    const ign = interaction.options.getString("ign") || null;
     if (member.bot) {
       await interaction.reply({
         content: "You cannot add a bot as a team member.",
@@ -696,124 +508,18 @@ export default class TeamCommand extends Command {
       });
       return;
     }
-    const scrim = await prisma.scrim.findFirst({
-      where: { registrationChannelId: interaction.channelId },
-    });
-    if (!scrim) {
-      await interaction.reply({
-        content: "This channel is not associated with any scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (scrim.stage != Stage.REGISTRATION) {
-      await interaction.reply({
-        content: "Members can only be added during the registration stage.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (!scrim.captainAddMembers) {
-      await interaction.reply({
-        content:
-          "Captains are not allowed to add members to their teams in this scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    const existingMember = await prisma.teamMember.findUnique({
+    const team = await prisma.team.findUnique({
       where: {
-        scrimId_userId: {
-          scrimId: scrim.id,
-          userId: member.id,
-        },
-      },
-    });
-    if (existingMember) {
-      await interaction.reply({
-        content: "This user is already in a team for this scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    const team = await prisma.team.findFirst({
-      where: { scrimId: scrim.id },
-      include: {
-        _count: { select: { TeamMember: { where: { isSubstitute: false } } } },
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
       },
     });
 
-    const subsitute = await prisma.team.findFirst({
-      where: { scrimId: scrim.id },
-      include: {
-        _count: { select: { TeamMember: { where: { isSubstitute: true } } } },
-      },
-    });
-    if (!team || !subsitute) {
-      await interaction.reply({
-        content: "No teams found in this scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    const teamMember = await prisma.teamMember.findFirst({
-      where: {
-        scrimId: scrim.id,
-        isCaptain: true,
-        userId: interaction.user.id,
-      },
-      include: { team: true },
-    });
-
-    if (!teamMember) {
+    if (!team) {
       await interaction.reply({
         content:
-          "You are not a captain of any team in this scrim. Only captains can add members.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (team._count.TeamMember >= scrim.maxPlayersPerTeam) {
-      if (scrim.maxSubstitutePerTeam <= subsitute._count.TeamMember) {
-        await interaction.reply({
-          content:
-            "This team is already full. You cannot join this team as both main and substitute slots are full.",
-          flags: ["Ephemeral"],
-        });
-        return;
-      }
-      await prisma.teamMember.create({
-        data: {
-          displayName: member.username,
-          teamId: teamMember!.teamId,
-          scrimId: scrim.id,
-          userId: member.id,
-          isCaptain: false,
-          isSubstitute: true,
-        },
-      });
-      await interaction.reply({
-        content: `The main slots for this team are full. You have been added as a substitute to the team **${team.name}**!`,
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-
-    if (teamMember.team.registeredAt) {
-      await interaction.reply({
-        content:
-          "You cannot add members to a team that has already been registered for the scrim.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    if (teamMember.userId === member.id) {
-      await interaction.reply({
-        content: "You cannot add yourself to the team.",
+          "You are not the captain of this team or the team does not exist.",
         flags: "Ephemeral",
       });
       return;
@@ -829,19 +535,83 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+    const existingMember = await prisma.teamMember.findFirst({
+      where: {
+        userId: member.id,
+        teamId: team.id,
+      },
+    });
+
+    if (existingMember) {
+      await interaction.reply({
+        content: "This user is already in your team.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+    await ensureUser(member);
+    const memberCount = await prisma.teamMember.count({
+      where: { teamId: team.id },
+    });
     await prisma.teamMember.create({
       data: {
-        displayName: member.username,
-        teamId: teamMember.teamId,
-        scrimId: scrim.id,
+        teamId: team.id,
         userId: member.id,
-        isCaptain: false,
-        isSubstitute: false,
+        role: "MEMBER",
+        ingameName: ign,
+        position: memberCount,
       },
     });
     await interaction.reply({
-      content: `User <@${member.id}> has been added to your team **${teamMember.team.name}**!`,
+      content: `User <@${member.id}> has been added to your team **${team.name}**!`,
       flags: "Ephemeral",
     });
+  }
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const subcommand = interaction.options.getSubcommand();
+    let choices: { name: string; value: number | string }[] = [];
+    switch (subcommand) {
+      case "disband":
+      case "kick":
+      case "leave":
+      case "info":
+      case "add": {
+        const focusedValue = interaction.options.getFocused();
+        const teams = await prisma.team.findMany({
+          where: {
+            guildId: interaction.guildId!,
+            teamMembers: { some: { userId: interaction.user.id } },
+            name: { contains: focusedValue, mode: "insensitive" },
+          },
+          take: 25,
+        });
+        choices = teams.map((team) => ({
+          name: team.name,
+          value: team.id,
+        }));
+        break;
+      }
+      case "kick": {
+        const teamId = interaction.options.getInteger("team");
+        if (!teamId) break;
+        const focusedValue = interaction.options.getFocused();
+        const members = await prisma.teamMember.findMany({
+          where: {
+            teamId,
+            user: {
+              name: { contains: focusedValue, mode: "insensitive" },
+            },
+          },
+          include: { user: true },
+          take: 25,
+        });
+        choices = members.map((member) => ({
+          name: member.user.name,
+          value: member.userId,
+        }));
+        break;
+      }
+    }
+    await interaction.respond(choices);
   }
 }

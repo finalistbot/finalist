@@ -1,6 +1,6 @@
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
-import { AssignedSlot, Scrim, Team } from "@prisma/client";
+import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
 import { EmbedBuilder, TextChannel } from "discord.js";
 
 type EventLoggerPayload = {
@@ -9,25 +9,25 @@ type EventLoggerPayload = {
     trigger: TriggerSource;
   };
   teamRegistered: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   slotAssigned: {
-    team: Team;
+    team: RegisteredTeam;
     assignedSlot: AssignedSlot;
     trigger: TriggerSource;
   };
   slotUnassigned: {
-    team: Team;
+    team: RegisteredTeam;
     unassignedSlot: AssignedSlot;
     trigger: TriggerSource;
   };
   teamKicked: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   teamBanned: {
-    team: Team;
+    team: RegisteredTeam;
     trigger: TriggerSource;
   };
   roomDetailsPosted: {

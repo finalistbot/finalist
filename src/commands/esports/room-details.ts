@@ -146,7 +146,7 @@ export default class RoomDetailCommand extends Command {
         adminChannelId: interaction.channelId,
       },
       include: {
-        RoomDetail: true,
+        roomDetail: true,
       },
     });
     if (!scrim) {
@@ -155,7 +155,7 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
-    let roomDetail = scrim.RoomDetail;
+    let roomDetail = scrim.roomDetail;
     if (!roomDetail) {
       roomDetail = await prisma.roomDetail.create({
         data: {
@@ -219,7 +219,7 @@ export default class RoomDetailCommand extends Command {
         adminChannelId: interaction.channelId,
       },
       include: {
-        RoomDetail: true,
+        roomDetail: true,
       },
     });
     if (!scrim) {
@@ -229,7 +229,7 @@ export default class RoomDetailCommand extends Command {
       return;
     }
 
-    const roomDetail = scrim.RoomDetail;
+    const roomDetail = scrim.roomDetail;
     if (!roomDetail) {
       await interaction.editReply({
         content: "No room details have been set for this scrim.",
@@ -269,7 +269,7 @@ export default class RoomDetailCommand extends Command {
         adminChannelId: interaction.channelId,
       },
       include: {
-        RoomDetail: true,
+        roomDetail: true,
       },
     });
     if (!scrim) {
@@ -278,7 +278,7 @@ export default class RoomDetailCommand extends Command {
       });
       return;
     }
-    const roomDetail = scrim.RoomDetail;
+    const roomDetail = scrim.roomDetail;
     if (!roomDetail) {
       await interaction.editReply({
         content: "No room details have been set for this scrim.",

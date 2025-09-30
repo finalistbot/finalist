@@ -6,9 +6,9 @@ import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { discordTimestamp } from "@/lib/utils";
-import { editTeamDetails } from "@/ui/messages/teams";
-import { Scrim, Stage, Team } from "@prisma/client";
+import { discordTimestamp, suppress } from "@/lib/utils";
+import { editRegisteredTeamDetails } from "@/ui/messages/teams";
+import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -103,7 +103,15 @@ export class ScrimService extends Service {
 
     try {
       await channel.send({
-        content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
+        content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/registerteam\` command to join.`,
+        components: [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setLabel("Register Team")
+              .setStyle(ButtonStyle.Primary)
+              .setCustomId(`show_registration_select_menu`),
+          ),
+        ],
       });
     } catch (error) {
       logger.error(
@@ -167,15 +175,17 @@ export class ScrimService extends Service {
     if (scrim.autoSlotList) {
       const slots = await prisma.assignedSlot.findMany({
         where: { scrimId: scrim.id },
-        include: { team: true },
+        include: { registeredTeam: true },
       });
       const details = [];
       for (const slot of slots) {
         const slotDetails = {
           slotNumber: slot.slotNumber,
-          teamName: slot.team.name,
-          teamId: slot.team.id,
-          jumpUrl: `https://discord.com/channels/${scrim.guildId}/${scrim.participantsChannelId}/${slot.team.messageId}`,
+          teamName: slot.registeredTeam.name,
+          teamId: slot.registeredTeam.id,
+          jumpUrl: slot.registeredTeam.messageId
+            ? `https://discord.com/channels/${scrim.guildId}/${scrim.participantsChannelId}/${slot.registeredTeam.messageId}`
+            : "N/A",
         };
         details.push(slotDetails);
       }
@@ -386,7 +396,7 @@ export class ScrimService extends Service {
   async registrationNeedsClosing(scrim: Scrim) {
     const scrimWithTeamLength = await prisma.scrim.findUnique({
       where: { id: scrim.id },
-      include: { _count: { select: { Team: true } } },
+      include: { _count: { select: { registeredTeams: true } } },
     });
 
     if (!scrimWithTeamLength) {
@@ -404,7 +414,7 @@ export class ScrimService extends Service {
       );
       return false;
     }
-    if (scrimWithTeamLength._count.Team >= scrim.maxTeams) {
+    if (scrimWithTeamLength._count.registeredTeams >= scrim.maxTeams) {
       logger.info(
         `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`,
       );
@@ -412,7 +422,7 @@ export class ScrimService extends Service {
     }
     return false;
   }
-  async unregisterTeam(team: Team) {
+  async unregisterTeam(team: RegisteredTeam) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -421,15 +431,8 @@ export class ScrimService extends Service {
       return;
     }
     await this.removeTeamSlot(scrim, team);
-    await prisma.team.update({
-      where: {
-        id: team.id,
-        scrimId: team.scrimId,
-      },
-      data: {
-        registeredAt: null,
-        messageId: null,
-      },
+    await prisma.registeredTeam.delete({
+      where: { id: team.id },
     });
     try {
       if (!team.messageId) return;
@@ -457,19 +460,22 @@ export class ScrimService extends Service {
 
   async assignTeamSlot(
     scrim: Scrim,
-    team: Team,
+    team: RegisteredTeam,
     slotNumber: number = -1,
     force: boolean = false,
   ) {
-    const teamCaptain = await prisma.teamMember.findFirst({
-      where: { teamId: team.id, isCaptain: true },
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+      select: { userId: true },
     });
-    if (!teamCaptain) {
-      logger.error(`Team captain for team ${team.id} not found`);
-      return;
-    }
     const reservedSlot = await prisma.reservedSlot.findFirst({
-      where: { scrimId: scrim.id, userId: teamCaptain.userId },
+      where: {
+        scrimId: scrim.id,
+        userId: {
+          in: teamMembers.map((tm) => tm.userId),
+        },
+      },
+      orderBy: { slotNumber: "asc" },
     });
     const performAutoSlot =
       scrim.autoSlotList || reservedSlot || slotNumber != -1 || force;
@@ -492,7 +498,7 @@ export class ScrimService extends Service {
       return;
     }
     const assignedSlot = await prisma.assignedSlot.create({
-      data: { scrimId: scrim.id, teamId: team.id, slotNumber },
+      data: { scrimId: scrim.id, registeredTeamId: team.id, slotNumber },
     });
     if (assignedSlot) {
       this.client.rolemanageService.addParticipantRoleToTeam(team);
@@ -505,9 +511,9 @@ export class ScrimService extends Service {
     return assignedSlot;
   }
 
-  async removeTeamSlot(scrim: Scrim, team: Team) {
+  async removeTeamSlot(scrim: Scrim, team: RegisteredTeam) {
     const assigned = await prisma.assignedSlot.findFirst({
-      where: { scrimId: scrim.id, teamId: team.id },
+      where: { scrimId: scrim.id, registeredTeamId: team.id },
     });
     if (!assigned) {
       logger.warn(
@@ -516,7 +522,7 @@ export class ScrimService extends Service {
       return;
     }
     await prisma.assignedSlot.deleteMany({
-      where: { scrimId: scrim.id, teamId: team.id },
+      where: { scrimId: scrim.id, registeredTeamId: team.id },
     });
     this.client.rolemanageService.removeParticipantRoleFromTeam(team);
     this.client.eventLogger.logEvent("slotUnassigned", {
@@ -528,13 +534,12 @@ export class ScrimService extends Service {
   }
 
   async fillSlotList(scrim: Scrim, type: "normal" | "random" = "normal") {
-    let teams = await prisma.team.findMany({
+    let teams = await prisma.registeredTeam.findMany({
       where: {
         scrimId: scrim.id,
-        registeredAt: { not: null },
-        AssignedSlot: { none: {} },
+        assignedSlots: { none: {} },
       },
-      orderBy: { registeredAt: "asc" },
+      orderBy: { createdAt: "asc" },
     });
 
     if (type === "random") {
@@ -554,7 +559,77 @@ export class ScrimService extends Service {
 
     for (const team of teams) {
       await this.assignTeamSlot(scrim, team, -1, true);
-      editTeamDetails(scrim, team, this.client);
+      editRegisteredTeamDetails(scrim, team, this.client);
     }
+  }
+
+  async registerTeam(scrim?: Scrim | null, team?: Team | null) {
+    if (!team) {
+      throw new BracketError(
+        "Team not found or you do not have permission to register this team",
+      );
+    }
+    if (team.banned) {
+      throw new BracketError(
+        `Your team is banned from participating in scrims.${
+          team.banReason ? ` Reason: ${team.banReason}` : ""
+        }`,
+      );
+    }
+    if (!scrim) {
+      throw new BracketError(
+        "This channel is not set up for team registration",
+      );
+    }
+
+    const existing = await prisma.registeredTeam.findUnique({
+      where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
+    });
+
+    if (existing) {
+      throw new BracketError("This team is already registered for the scrim");
+    }
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+    });
+    const mainPlayers = teamMembers.filter((tm) => tm.role != "SUBSTITUTE");
+    const subPlayers = teamMembers.filter((tm) => tm.role === "SUBSTITUTE");
+    if (mainPlayers.length < scrim.minPlayersPerTeam) {
+      throw new BracketError(
+        `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`,
+      );
+    }
+    if (mainPlayers.length > scrim.maxPlayersPerTeam) {
+      throw new BracketError(
+        `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`,
+      );
+    }
+    if (subPlayers.length > scrim.maxSubstitutePerTeam) {
+      throw new BracketError(
+        `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`,
+      );
+    }
+    const registeredTeam = await prisma.registeredTeam.create({
+      data: {
+        name: team.name,
+        scrimId: scrim.id,
+        teamId: team.id,
+        registeredTeamMembers: {
+          create: teamMembers.map((tm) => ({
+            userId: tm.userId,
+            role: tm.role,
+            ingameName: tm.ingameName,
+            position: tm.position,
+          })),
+        },
+      },
+    });
+    const client = this.client;
+    async function assignSlotThenSend(scrim: Scrim) {
+      await client.scrimService.assignTeamSlot(scrim, registeredTeam);
+      await editRegisteredTeamDetails(scrim, registeredTeam, client);
+    }
+    suppress(assignSlotThenSend(scrim));
+    return registeredTeam;
   }
 }

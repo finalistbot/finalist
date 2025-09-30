@@ -4,7 +4,6 @@ import { filterPresets } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
 import { ScrimSettings } from "@/types";
-import { ScrimPreset } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -64,10 +63,9 @@ export default class SavePresetCommand extends Command {
       maxPlayersPerTeam: scrim.maxPlayersPerTeam,
       maxSubstitutePerTeam: scrim.maxSubstitutePerTeam,
       autoCloseRegistration: scrim.autoCloseRegistration,
-      captainAddMembers: scrim.captainAddMembers,
       maxTeams: scrim.maxTeams,
     };
-    // FIXME: Don't allow users to have more than 10 presets
+
     await prisma.scrimPreset.upsert({
       where: { guildId_name: { guildId: interaction.guildId, name } },
       update: { settings },
@@ -77,6 +75,7 @@ export default class SavePresetCommand extends Command {
         settings,
       },
     });
+
     await interaction.editReply({
       content: `Preset \`${name}\` saved successfully!`,
     });

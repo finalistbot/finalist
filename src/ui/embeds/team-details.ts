@@ -1,36 +1,32 @@
-import { AssignedSlot, Team } from "@prisma/client";
-import { client } from "@/client";
+import { AssignedSlot, RegisteredTeam } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { EmbedBuilder } from "discord.js";
 import { BRAND_COLOR } from "@/lib/constants";
 
-export async function teamDetailsEmbed(
-  team: Team,
+export async function registeredTeamDetailsEmbed(
+  team: RegisteredTeam,
   assignedSlot: AssignedSlot | null = null,
 ) {
-  const captain = await prisma.teamMember.findFirst({
-    where: { teamId: team.id, isCaptain: true },
+  const members = await prisma.registeredTeamMember.findMany({
+    where: { registeredTeamId: team.id },
   });
-  const captainUser = captain ? await client.users.fetch(captain.userId) : null;
+  members.sort((a, b) => a.position - b.position);
 
-  const members = await prisma.teamMember.findMany({
-    where: { teamId: team.id },
-  });
-
+  const captain = members.find((m) => m.role === "CAPTAIN")!;
   const mainMembers =
     members
-      .filter((m) => !m.isSubstitute)
+      .filter((m) => m.role != "SUBSTITUTE")
       .map((m) => `<@${m.userId}>`)
       .join("\n") || "None";
 
   const substitutes =
     members
-      .filter((m) => m.isSubstitute)
+      .filter((m) => m.role === "SUBSTITUTE")
       .map((m) => `<@${m.userId}>`)
       .join("\n") || "None";
 
-  const registeredAt = team.registeredAt
-    ? `<t:${Math.floor(new Date(team.registeredAt).getTime() / 1000)}:F>`
+  const registeredAt = team.createdAt
+    ? `<t:${Math.floor(new Date(team.createdAt).getTime() / 1000)}:F>`
     : "Not registered";
 
   const embed = new EmbedBuilder()
@@ -49,7 +45,7 @@ export async function teamDetailsEmbed(
     .addFields(
       {
         name: "👑 Captain",
-        value: captainUser ? captainUser.tag : "No captain assigned",
+        value: `<@${captain.userId}>`,
         inline: true,
       },
       { name: "👤 Members", value: mainMembers, inline: true },
@@ -62,7 +58,7 @@ export async function teamDetailsEmbed(
         inline: false,
       },
     )
-    .setTimestamp(new Date(team.updatedAt))
+    .setTimestamp(new Date(team.createdAt))
     .setFooter({
       text: "Last updated",
       iconURL: "https://i.postimg.cc/dVJBqmqv/Finalist.png",

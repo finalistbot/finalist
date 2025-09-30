@@ -7,6 +7,7 @@ export default class CommandHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   public async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) return;
+    if (interaction.user.bot) return;
 
     const command = CommandRegistory.getCommand(interaction.commandName);
 

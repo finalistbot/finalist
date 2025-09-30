@@ -17,7 +17,6 @@ import { CommandInfo } from "@/types/command";
 import { botHasPermissions } from "@/checks/permissions";
 import { ScrimSettings } from "@/types";
 import { BracketError } from "@/base/classes/error";
-import { ScrimPreset } from "@prisma/client";
 import { filterPresets } from "@/database";
 
 export default class CreateScrim extends Command {
@@ -110,7 +109,6 @@ export default class CreateScrim extends Command {
       maxSubstitutePerTeam: settings.maxSubstitutePerTeam ?? 0,
       autoSlotList: settings.autoSlotList ?? false,
       autoCloseRegistration: settings.autoCloseRegistration ?? true,
-      captainAddMembers: settings.captainAddMembers ?? true,
     };
   }
 

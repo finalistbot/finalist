@@ -9,10 +9,11 @@ import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { CheckFailure } from "@/base/classes/error";
 
-function teamConfigModal(scrim: Scrim & { _count: { Team: number } }) {
-  const canChangeMaxPlayersPerTeam = scrim._count.Team === 0;
+function teamConfigModal(
+  scrim: Scrim & { _count: { registeredTeams: number } },
+) {
+  const canChangeMaxPlayersPerTeam = scrim._count.registeredTeams === 0;
   const rows: ActionRowBuilder<TextInputBuilder>[] = [];
   rows.push(
     new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -97,7 +98,7 @@ export default class ScrimTeamConfig extends Event<"interactionCreate"> {
     }
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
-      include: { _count: { select: { Team: true } } },
+      include: { _count: { select: { registeredTeams: true } } },
     });
     if (!scrim) {
       await interaction.reply({

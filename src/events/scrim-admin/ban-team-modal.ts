@@ -1,9 +1,8 @@
-import { CheckFailure } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { Team } from "@prisma/client";
+import { RegisteredTeam, Team } from "@prisma/client";
 import {
   Interaction,
   CacheType,
@@ -13,7 +12,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 
-function createBanTeamModal(team: Team) {
+function createBanTeamModal(team: RegisteredTeam) {
   return new ModalBuilder()
     .setCustomId(`ban_team_modal:${team.id}`)
     .setTitle(`Ban Team: ${team.name}`)
@@ -44,25 +43,25 @@ export default class BanTeam extends Event<"interactionCreate"> {
       });
       return;
     }
-    const team = await prisma.team.findUnique({
+    const registeredTeam = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
-      include: { TeamMember: true },
+      include: { team: true },
     });
-    if (!team) {
+    if (!registeredTeam) {
       await interaction.reply({
         content: "Team not found.",
         flags: ["Ephemeral"],
       });
       return;
     }
-    if (team.banned) {
+    if (registeredTeam.team.banned) {
       await interaction.reply({
         content: "Team is already banned.",
         flags: ["Ephemeral"],
       });
       return;
     }
-    const modal = createBanTeamModal(team);
+    const modal = createBanTeamModal(registeredTeam);
     await interaction.showModal(modal);
   }
 }

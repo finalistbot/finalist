@@ -8,11 +8,11 @@ import {
   TextInputStyle,
 } from "discord.js";
 import { Event } from "@/base/classes/event";
-import { Team } from "@prisma/client";
+import { RegisteredTeam } from "@prisma/client";
 import { getFirstAvailableSlot } from "@/database";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 
-function createAssignSlotModal(team: Team, defaultSlot: number) {
+function createAssignSlotModal(team: RegisteredTeam, defaultSlot: number) {
   const modal = new ModalBuilder()
     .setTitle(`Assign Slot for ${team.name}`)
     .setCustomId(`assign_slot_submit:${team.id}`)
@@ -24,8 +24,8 @@ function createAssignSlotModal(team: Team, defaultSlot: number) {
           .setStyle(TextInputStyle.Short)
           .setPlaceholder("Enter slot number")
           .setRequired(true)
-          .setValue(defaultSlot.toString())
-      )
+          .setValue(defaultSlot.toString()),
+      ),
     );
 
   return modal;
@@ -49,9 +49,11 @@ export default class AssignSlotModal extends Event<"interactionCreate"> {
       });
       return;
     }
-    const team = await prisma.team.findUnique({
+    const team = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
-      include: { scrim: true },
+      include: {
+        scrim: true,
+      },
     });
     if (!team) {
       return;

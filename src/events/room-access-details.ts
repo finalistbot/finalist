@@ -15,7 +15,7 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
     await interaction.deferReply({ flags: "Ephemeral" });
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
-      include: { RoomDetail: true },
+      include: { roomDetail: true },
     });
     if (!scrim) {
       await interaction.editReply({
@@ -24,16 +24,16 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
       return;
     }
 
-    const teamCaption = await prisma.teamMember.findFirst({
+    const teamCaption = await prisma.registeredTeamMember.findFirst({
       where: {
-        isCaptain: true,
+        role: "CAPTAIN",
         userId: interaction.user.id,
-        team: { scrimId: scrim.id },
+        registeredTeam: { scrimId: scrim.id },
       },
       include: {
-        team: {
+        registeredTeam: {
           include: {
-            AssignedSlot: true,
+            assignedSlots: true,
           },
         },
       },
@@ -48,14 +48,14 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
         });
         return;
       }
-      if (teamCaption.team.AssignedSlot.length == 0) {
+      if (teamCaption.registeredTeam.assignedSlots.length == 0) {
         await interaction.editReply({
           content: "Your team has not been assigned a slot yet.",
         });
         return;
       }
     }
-    const roomDetail = scrim.RoomDetail;
+    const roomDetail = scrim.roomDetail;
     if (!roomDetail) {
       await interaction.editReply({
         content: "No room details have been set for this scrim.",

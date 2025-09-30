@@ -3,7 +3,7 @@ import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { safeRunChecks, suppress } from "@/lib/utils";
+import { safeRunChecks } from "@/lib/utils";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
@@ -65,9 +65,9 @@ export default class SlotlistInfo extends Command {
       });
       return;
     }
-    const teamMember = await prisma.teamMember.findFirst({
-      where: { scrimId: scrim.id, userId: user.id },
-      include: { team: true },
+    const teamMember = await prisma.registeredTeamMember.findFirst({
+      where: { registeredTeam: { scrimId: scrim.id }, userId: user.id },
+      include: { registeredTeam: true },
     });
     if (!teamMember) {
       await interaction.reply({
@@ -77,12 +77,15 @@ export default class SlotlistInfo extends Command {
       return;
     }
     const assignedSlot = await prisma.assignedSlot.findFirst({
-      where: { scrimId: scrim.id, teamId: teamMember.teamId },
+      where: {
+        scrimId: scrim.id,
+        registeredTeamId: teamMember.registeredTeamId,
+      },
     });
     let role = "👤 Player";
-    if (teamMember.isCaptain) {
+    if (teamMember.role === "CAPTAIN") {
       role = "👑 Captain";
-    } else if (teamMember.isSubstitute) {
+    } else if (teamMember.role === "SUBSTITUTE") {
       role = "🟡 Substitute";
     }
     const embed = new EmbedBuilder()
@@ -97,7 +100,7 @@ export default class SlotlistInfo extends Command {
       .addFields(
         {
           name: "🛡️ Team",
-          value: `${teamMember.team.name} (\`${teamMember.team.id}\`)`,
+          value: `${teamMember.registeredTeam.name} (\`${teamMember.registeredTeamId}\`)`,
           inline: true,
         },
         {

@@ -15,7 +15,7 @@ export async function slotListEmbed(scrim: Scrim) {
     .addFields(
       teams.map((t) => ({
         name: `Slot ${t.slotNumber}`,
-        value: `Team ID: ${t.teamId}`,
+        value: `Team ID: ${t.registeredTeamId}`,
         inline: true,
       })),
     );

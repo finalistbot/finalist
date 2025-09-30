@@ -1,10 +1,10 @@
 import { ScrimService } from "./scrim";
 import { Guild } from "discord.js";
-import { Scrim, Team } from "@prisma/client";
+import { RegisteredTeam, Scrim, Team } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export class RoleManageService extends ScrimService {
-  async addParticipantRoleToTeam(team: Team) {
+  async addParticipantRoleToTeam(team: RegisteredTeam) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -14,15 +14,18 @@ export class RoleManageService extends ScrimService {
     if (!guild) throw new Error("Guild not found");
 
     const role = await this.ensureParticipantRole(guild, scrim);
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { scrimId: scrim.id, teamId: team.id },
+    const teamMembers = await prisma.registeredTeamMember.findMany({
+      where: {
+        registeredTeamId: team.id,
+        registeredTeam: { scrimId: scrim.id },
+      },
     });
     for (const member of teamMembers) {
       const guildMember = await guild.members.fetch(member.userId);
       await guildMember.roles.add(role);
     }
   }
-  async removeParticipantRoleFromTeam(team: Team) {
+  async removeParticipantRoleFromTeam(team: RegisteredTeam) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -35,8 +38,10 @@ export class RoleManageService extends ScrimService {
     // Dont need role removing if it doesnt exist
     if (!role) return;
 
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { scrimId: scrim.id, teamId: team.id },
+    const teamMembers = await prisma.registeredTeamMember.findMany({
+      where: {
+        registeredTeam: { id: team.id, scrimId: scrim.id },
+      },
     });
     for (const member of teamMembers) {
       const guildMember = await guild.members.fetch(member.userId);

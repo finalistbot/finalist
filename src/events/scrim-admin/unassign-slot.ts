@@ -2,7 +2,7 @@ import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks, suppress } from "@/lib/utils";
-import { editTeamDetails } from "@/ui/messages/teams";
+import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 import { Interaction, CacheType } from "discord.js";
 export default class UnassignSlot extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -37,7 +37,7 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
       });
       return;
     }
-    const team = await prisma.team.findUnique({
+    const team = await prisma.registeredTeam.findUnique({
       where: { id: teamId },
     });
     if (!team) {
@@ -59,6 +59,6 @@ export default class UnassignSlot extends Event<"interactionCreate"> {
     await interaction.editReply({
       content: `Unassigned slot for team ${team.name}.`,
     });
-    await suppress(editTeamDetails(scrim, team, this.client));
+    await suppress(editRegisteredTeamDetails(scrim, team, this.client));
   }
 }
