@@ -3,7 +3,6 @@ import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { ensureUser } from "@/database";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
-import { registeredTeamDetailsEmbed } from "@/ui/embeds/team-details";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -199,6 +198,10 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { id: interaction.guildId },
+    });
+    const maxTeamsPerCaptain = guildConfig?.teamsPerCaptain || 1;
     const teamName = interaction.options.getString("name", true);
     const tag = interaction.options.getString("tag") || null;
     const ign = interaction.options.getString("ign", true);
@@ -210,6 +213,22 @@ export default class TeamCommand extends Command {
     if (existingTeam) {
       await interaction.editReply({
         content: `A team with the name "${teamName}" and tag "${tag}" already exists. Please choose a different name or tag.`,
+      });
+      return;
+    }
+
+    const captainTeamsCount = await prisma.team.count({
+      where: {
+        guildId: interaction.guildId,
+        teamMembers: {
+          some: { userId: interaction.user.id, role: "CAPTAIN" },
+        },
+      },
+    });
+
+    if (captainTeamsCount >= maxTeamsPerCaptain) {
+      await interaction.editReply({
+        content: `You have reached the maximum number of teams (${maxTeamsPerCaptain}) you can create as a captain.`,
       });
       return;
     }
@@ -315,7 +334,7 @@ export default class TeamCommand extends Command {
     });
 
     await interaction.reply({
-      content: `Member <@${memberId}> has been kicked from the team. The registered team will not get affected. If you want to update it please unregister and register again.`,
+      content: `Member <@${memberId}> has been kicked from the team..`,
       flags: "Ephemeral",
     });
   }
@@ -382,8 +401,7 @@ export default class TeamCommand extends Command {
     await interaction.reply({
       content:
         `You have joined the team **${team.name}**!` +
-        (isSubstitute ? " You joined as a substitute." : "") +
-        " The registered team will not get affected. If you want to update it please unregister and register again.",
+        (isSubstitute ? " You joined as a substitute." : ""),
       flags: ["Ephemeral"],
     });
   }
@@ -428,7 +446,7 @@ export default class TeamCommand extends Command {
     });
 
     await interaction.reply({
-      content: `You have left the team "${teamMember.team.name}" This will not remove you from the registered team, for that either call team captain or scrim admin.`,
+      content: `You have left the team "${teamMember.team.name}".`,
       flags: "Ephemeral",
     });
   }

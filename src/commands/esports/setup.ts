@@ -27,6 +27,16 @@ export default class SetupCommand extends Command {
         )
         .setAutocomplete(true)
         .setRequired(false),
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("teams-per-captain")
+        .setDescription(
+          "Number of teams each captain can create. Default is 1.",
+        )
+        .setRequired(false)
+        .setMinValue(1)
+        .setMaxValue(10),
     );
 
   info: CommandInfo = {
@@ -62,6 +72,8 @@ export default class SetupCommand extends Command {
       return;
     }
     const timezone = interaction.options.getString("timezone") || "UTC";
+    const teamsPerCaptain =
+      interaction.options.getInteger("teams-per-captain") || 1;
     if (!popularTimeZones.find((tz) => tz.value === timezone)) {
       await interaction.editReply({
         content: "Please provide a valid timezone.",
@@ -91,10 +103,12 @@ export default class SetupCommand extends Command {
       create: {
         id: guild.id,
         adminRoleId: adminRole.id,
+        teamsPerCaptain,
         timezone,
       },
       update: {
         adminRoleId: adminRole.id,
+        teamsPerCaptain,
         timezone,
       },
     });
