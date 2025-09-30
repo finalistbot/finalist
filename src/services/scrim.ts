@@ -6,9 +6,9 @@ import { queue } from "@/lib/bullmq";
 import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
-import { discordTimestamp } from "@/lib/utils";
+import { discordTimestamp, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
-import { RegisteredTeam, Scrim, Stage } from "@prisma/client";
+import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -561,5 +561,75 @@ export class ScrimService extends Service {
       await this.assignTeamSlot(scrim, team, -1, true);
       editRegisteredTeamDetails(scrim, team, this.client);
     }
+  }
+
+  async registerTeam(scrim?: Scrim | null, team?: Team | null) {
+    if (!team) {
+      throw new BracketError(
+        "Team not found or you do not have permission to register this team",
+      );
+    }
+    if (team.banned) {
+      throw new BracketError(
+        `Your team is banned from participating in scrims.${
+          team.banReason ? ` Reason: ${team.banReason}` : ""
+        }`,
+      );
+    }
+    if (!scrim) {
+      throw new BracketError(
+        "This channel is not set up for team registration",
+      );
+    }
+
+    const existing = await prisma.registeredTeam.findUnique({
+      where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
+    });
+
+    if (existing) {
+      throw new BracketError("This team is already registered for the scrim");
+    }
+    const teamMembers = await prisma.teamMember.findMany({
+      where: { teamId: team.id },
+    });
+    const mainPlayers = teamMembers.filter((tm) => tm.role != "SUBSTITUTE");
+    const subPlayers = teamMembers.filter((tm) => tm.role === "SUBSTITUTE");
+    if (mainPlayers.length < scrim.minPlayersPerTeam) {
+      throw new BracketError(
+        `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`,
+      );
+    }
+    if (mainPlayers.length > scrim.maxPlayersPerTeam) {
+      throw new BracketError(
+        `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`,
+      );
+    }
+    if (subPlayers.length > scrim.maxSubstitutePerTeam) {
+      throw new BracketError(
+        `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`,
+      );
+    }
+    const registeredTeam = await prisma.registeredTeam.create({
+      data: {
+        name: team.name,
+        scrimId: scrim.id,
+        teamId: team.id,
+        registeredTeamMembers: {
+          create: teamMembers.map((tm) => ({
+            userId: tm.userId,
+            role: tm.role,
+            ingameName: tm.ingameName,
+            position: tm.position,
+          })),
+        },
+      },
+    });
+    const client = this.client;
+    async function assignSlotThenSend(scrim: Scrim) {
+      await client.scrimService.assignTeamSlot(scrim, registeredTeam);
+      await editRegisteredTeamDetails(scrim, registeredTeam, client);
+    }
+    suppress(assignSlotThenSend(scrim));
+    return registeredTeam;
   }
 }
