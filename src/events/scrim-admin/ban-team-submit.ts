@@ -22,7 +22,7 @@ export default class BanTeamModalSubmit extends Event<"interactionCreate"> {
     }
     const banReason = interaction.fields.getTextInputValue("ban_reason");
     await prisma.team.update({
-      where: { id: teamId },
+      where: { id: team.teamId },
       data: { banned: true, banReason: banReason || null },
     });
     await this.client.eventLogger.logEvent("teamBanned", {

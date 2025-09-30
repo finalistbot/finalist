@@ -40,6 +40,13 @@ export default class RegisterTeam extends Command {
           "Team not found or you do not have permission to register this team",
       });
     }
+    if (team.banned) {
+      return interaction.editReply({
+        content: `Your team is banned from participating in scrims.${
+          team.banReason ? ` Reason: ${team.banReason}` : ""
+        }`,
+      });
+    }
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
