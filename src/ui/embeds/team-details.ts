@@ -7,8 +7,8 @@ export async function registeredTeamDetailsEmbed(
   team: RegisteredTeam,
   assignedSlot: AssignedSlot | null = null,
 ) {
-  const members = await prisma.teamMember.findMany({
-    where: { teamId: team.id },
+  const members = await prisma.registeredTeamMember.findMany({
+    where: { registeredTeamId: team.id },
   });
   members.sort((a, b) => a.position - b.position);
 

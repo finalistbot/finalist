@@ -1,10 +1,10 @@
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
-import { sendTeamDetails } from "@/ui/messages/teams";
+import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
-  TextChannel,
 } from "discord.js";
 
 export default class RegisterTeam extends Command {
@@ -15,10 +15,12 @@ export default class RegisterTeam extends Command {
       option
         .setName("team")
         .setDescription("The team you want to register")
-        .setRequired(true),
+        .setRequired(true)
+        .setAutocomplete(true),
     );
   async execute(interaction: ChatInputCommandInteraction): Promise<unknown> {
     const teamId = interaction.options.getInteger("team", true);
+    await interaction.deferReply({ flags: ["Ephemeral"] });
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
@@ -33,19 +35,17 @@ export default class RegisterTeam extends Command {
       include: { teamMembers: true },
     });
     if (!team) {
-      return interaction.reply({
+      return interaction.editReply({
         content:
           "Team not found or you do not have permission to register this team",
-        flags: ["Ephemeral"],
       });
     }
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
     if (!scrim) {
-      return interaction.reply({
+      return interaction.editReply({
         content: "This channel is not set up for team registration",
-        ephemeral: true,
       });
     }
 
@@ -53,9 +53,8 @@ export default class RegisterTeam extends Command {
       where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
     });
     if (existing) {
-      return interaction.reply({
+      return interaction.editReply({
         content: "This team is already registered for the scrim",
-        ephemeral: true,
       });
     }
     const mainPlayers = team.teamMembers.filter(
@@ -65,21 +64,18 @@ export default class RegisterTeam extends Command {
       (tm) => tm.role === "SUBSTITUTE",
     );
     if (mainPlayers.length < scrim.minPlayersPerTeam) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`,
-        flags: ["Ephemeral"],
       });
     }
     if (mainPlayers.length > scrim.maxPlayersPerTeam) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`,
-        flags: ["Ephemeral"],
       });
     }
     if (subPlayers.length > scrim.maxSubstitutePerTeam) {
-      return interaction.reply({
+      return interaction.editReply({
         content: `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`,
-        flags: ["Ephemeral"],
       });
     }
     const registeredTeam = await prisma.registeredTeam.create({
@@ -97,14 +93,40 @@ export default class RegisterTeam extends Command {
         },
       },
     });
-    const assignedSlot = await this.client.scrimService.assignTeamSlot(
-      scrim,
-      registeredTeam,
-    );
-    await sendTeamDetails(
-      interaction.channel as TextChannel,
-      registeredTeam,
-      assignedSlot,
+    await interaction.editReply({
+      content: `Team **${team.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
+    });
+    await this.client.scrimService.assignTeamSlot(scrim, registeredTeam);
+    await editRegisteredTeamDetails(scrim, registeredTeam, this.client);
+  }
+
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const focusedOption = interaction.options.getFocused(true);
+    if (focusedOption.name !== "team") return;
+    const teams = await prisma.team.findMany({
+      where: {
+        guildId: interaction.guildId!,
+        teamMembers: {
+          some: {
+            role: "CAPTAIN",
+            userId: interaction.user.id,
+          },
+        },
+        name: {
+          contains: focusedOption.value,
+          mode: "insensitive",
+        },
+      },
+      take: 25,
+    });
+    await interaction.respond(
+      teams.map((team) => {
+        let name = team.name;
+        if (team.tag) {
+          name = `[${team.tag}] ${name}`;
+        }
+        return { name, value: team.id };
+      }),
     );
   }
 }

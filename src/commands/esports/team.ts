@@ -365,12 +365,17 @@ export default class TeamCommand extends Command {
     const role = isSubstitute ? "SUBSTITUTE" : "MEMBER";
 
     await ensureUser(interaction.user);
+    const memberCount = await prisma.teamMember.count({
+      where: { teamId: team.id },
+    });
+
     await prisma.teamMember.create({
       data: {
         teamId: team.id,
         userId: interaction.user.id,
         role,
         ingameName: ign,
+        position: memberCount,
       },
     });
 
@@ -493,13 +498,31 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+    const existingMember = await prisma.teamMember.findFirst({
+      where: {
+        userId: member.id,
+        teamId: team.id,
+      },
+    });
+
+    if (existingMember) {
+      await interaction.reply({
+        content: "This user is already in your team.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
     await ensureUser(member);
+    const memberCount = await prisma.teamMember.count({
+      where: { teamId: team.id },
+    });
     await prisma.teamMember.create({
       data: {
         teamId: team.id,
         userId: member.id,
         role: "MEMBER",
         ingameName: ign,
+        position: memberCount,
       },
     });
     await interaction.reply({

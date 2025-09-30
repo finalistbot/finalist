@@ -5,7 +5,7 @@ import { registeredTeamDetailsEmbed } from "../embeds/team-details";
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
 
-export async function sendTeamDetails(
+async function sendTeamDetails(
   channel: TextChannel,
   team: RegisteredTeam,
   assignedSlot: AssignedSlot | null = null,
