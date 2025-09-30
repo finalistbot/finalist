@@ -65,7 +65,7 @@ export default class SavePresetCommand extends Command {
       autoCloseRegistration: scrim.autoCloseRegistration,
       maxTeams: scrim.maxTeams,
     };
-    // FIXME: Don't allow users to have more than 10 presets
+
     await prisma.scrimPreset.upsert({
       where: { guildId_name: { guildId: interaction.guildId, name } },
       update: { settings },
@@ -75,6 +75,7 @@ export default class SavePresetCommand extends Command {
         settings,
       },
     });
+
     await interaction.editReply({
       content: `Preset \`${name}\` saved successfully!`,
     });
