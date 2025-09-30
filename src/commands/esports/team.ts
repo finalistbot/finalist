@@ -26,7 +26,7 @@ export default class TeamCommand extends Command {
             .setDescription("The name of the team")
             .setRequired(true)
             .setMinLength(3)
-            .setMaxLength(50),
+            .setMaxLength(50)
         )
         .addStringOption((option) =>
           option
@@ -34,7 +34,7 @@ export default class TeamCommand extends Command {
             .setDescription("Your in-game name")
             .setRequired(true)
             .setMinLength(3)
-            .setMaxLength(30),
+            .setMaxLength(30)
         )
         .addStringOption((option) =>
           option
@@ -42,8 +42,8 @@ export default class TeamCommand extends Command {
             .setDescription("The tag of the team")
             .setRequired(false)
             .setMinLength(2)
-            .setMaxLength(10),
-        ),
+            .setMaxLength(10)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -54,8 +54,8 @@ export default class TeamCommand extends Command {
             .setName("team")
             .setDescription("The team to disband")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -66,15 +66,15 @@ export default class TeamCommand extends Command {
             .setName("team")
             .setDescription("The team to kick the member from")
             .setRequired(true)
-            .setAutocomplete(true),
+            .setAutocomplete(true)
         )
         .addStringOption((option) =>
           option
             .setName("member")
             .setDescription("The ID of the member to kick")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -84,7 +84,7 @@ export default class TeamCommand extends Command {
           option
             .setName("teamcode")
             .setDescription("The code of the team to join")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
@@ -92,14 +92,14 @@ export default class TeamCommand extends Command {
             .setDescription("Your in-game name")
             .setRequired(true)
             .setMinLength(3)
-            .setMaxLength(30),
+            .setMaxLength(30)
         )
         .addBooleanOption((option) =>
           option
             .setName("substitute")
             .setDescription("Join as a substitute")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -110,8 +110,8 @@ export default class TeamCommand extends Command {
             .setName("team")
             .setDescription("The team to leave")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -122,8 +122,8 @@ export default class TeamCommand extends Command {
             .setName("team")
             .setDescription("The team to get info about")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -134,13 +134,13 @@ export default class TeamCommand extends Command {
             .setName("team")
             .setDescription("The team to add the member to")
             .setRequired(true)
-            .setAutocomplete(true),
+            .setAutocomplete(true)
         )
         .addUserOption((option) =>
           option
             .setName("member")
             .setDescription("The member to add to your team")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
@@ -148,8 +148,8 @@ export default class TeamCommand extends Command {
             .setDescription("The in-game name of the member")
             .setRequired(true)
             .setMinLength(3)
-            .setMaxLength(30),
-        ),
+            .setMaxLength(30)
+        )
     );
   checks = [isNotBanned];
 
@@ -190,7 +190,7 @@ export default class TeamCommand extends Command {
     await interaction.deferReply({ flags: "Ephemeral" });
     const isBanned = await isUserBanned(
       interaction.guildId,
-      interaction.user.id,
+      interaction.user.id
     );
     if (isBanned) {
       await interaction.editReply({
@@ -240,6 +240,7 @@ export default class TeamCommand extends Command {
         guildId: interaction.guildId!,
         name: teamName,
         code: teamCode,
+        userId: interaction.user.id,
         tag,
         teamMembers: {
           create: {

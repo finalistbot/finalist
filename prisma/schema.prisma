@@ -89,14 +89,15 @@ model Team {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   banned    Boolean  @default(false) @map("banned")
+  messageId String?  @map("message_id")
   banReason String?  @map("ban_reason")
   guildId   String   @map("guild_id")
   tag       String?  @map("tag")
+  userId    String?  @map("user_id")
 
   teamMembers     TeamMember[]
   registeredTeams RegisteredTeam[]
   User            User?            @relation(fields: [userId], references: [id])
-  userId          String?
 
   @@map("team")
 }

@@ -16,7 +16,7 @@ export default class RegisterTeam extends Command {
         .setName("team")
         .setDescription("The team you want to register")
         .setRequired(true)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
   async execute(interaction: ChatInputCommandInteraction): Promise<unknown> {
     const teamId = interaction.options.getInteger("team", true);
@@ -65,10 +65,10 @@ export default class RegisterTeam extends Command {
       });
     }
     const mainPlayers = team.teamMembers.filter(
-      (tm) => tm.role != "SUBSTITUTE",
+      (tm) => tm.role != "SUBSTITUTE"
     );
     const subPlayers = team.teamMembers.filter(
-      (tm) => tm.role === "SUBSTITUTE",
+      (tm) => tm.role === "SUBSTITUTE"
     );
     if (mainPlayers.length < scrim.minPlayersPerTeam) {
       return interaction.editReply({
@@ -133,7 +133,7 @@ export default class RegisterTeam extends Command {
           name = `[${team.tag}] ${name}`;
         }
         return { name, value: team.id };
-      }),
+      })
     );
   }
 }
