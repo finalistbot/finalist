@@ -6,6 +6,10 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
 } from "discord.js";
 
 export default class HelpCommand extends Command {
@@ -52,7 +56,7 @@ export default class HelpCommand extends Command {
       const [commandName, subcommandName] = query.split(" ", 2);
       if (!commandName || !subcommandName) {
         return await interaction.reply({
-          content: `Invalid command format. Use "command subcommand".`,
+          content: `❌ Invalid format. Use: \`/help name:command subcommand\`\nExample: \`/help name:team create\``,
           ephemeral: true,
         });
       }
@@ -83,51 +87,189 @@ export default class HelpCommand extends Command {
       return await this.sendCategoryHelp(interaction, category);
     }
 
-    // If nothing found
+    // If nothing found - provide helpful suggestions
+    const allCommands = CommandRegistory.getAllCommands()
+      .filter((cmd) => cmd.info)
+      .map((cmd) => cmd.info!.name);
+    const categories = Array.from(
+      new Set(
+        CommandRegistory.getAllCommands()
+          .map((cmd) => cmd.info?.category)
+          .filter(Boolean),
+      ),
+    );
+
     await interaction.reply({
-      content: `Command or category "${query}" not found.`,
+      content:
+        `❌ **"${query}" not found**\n\n` +
+        `💡 **Try:**\n` +
+        `• \`/help\` - See all commands\n` +
+        `• \`/help name:${allCommands[0]}\` - View a command\n` +
+        `• \`/help name:${categories[0]}\` - Browse a category`,
       ephemeral: true,
     });
   }
 
   async sendBotHelp(interaction: ChatInputCommandInteraction) {
-    const commandByCategory = CommandRegistory.getAllCommands().reduce(
-      (acc, command) => {
-        const category = command.info?.category || "General";
-        if (!acc[category]) {
-          acc[category] = [];
-        }
-        acc[category].push(command);
-        return acc;
-      },
-      {} as Record<string, Command[]>,
-    );
+    const allCommands = CommandRegistory.getAllCommands()
+      .filter((cmd) => cmd.info)
+      .sort((a, b) => a.info!.name.localeCompare(b.info!.name));
 
-    const embed = new EmbedBuilder()
-      .setTitle("Commands")
-      .setDescription("Use `/help <command>` for more details")
-      .setColor(BRAND_COLOR)
-      .setTimestamp();
+    const COMMANDS_PER_PAGE = 8;
+    const totalPages = Math.ceil(allCommands.length / COMMANDS_PER_PAGE);
+    let currentPage = 0;
 
-    for (const [categoryName, commands] of Object.entries(commandByCategory)) {
-      const filteredCommands = commands.filter((cmd) => cmd.info !== undefined);
-      const category = CommandRegistory.getCategory(categoryName);
-      const emoji = category?.emoji || "";
+    const generateEmbed = (page: number) => {
+      const start = page * COMMANDS_PER_PAGE;
+      const end = start + COMMANDS_PER_PAGE;
+      const pageCommands = allCommands.slice(start, end);
 
-      const commandList = filteredCommands
-        .map((cmd) => `\`${cmd.info!.name}\``)
-        .join("  ");
+      const embed = new EmbedBuilder()
+        .setTitle("📚 Command Help")
+        .setDescription(
+          `Showing **${allCommands.length}** available commands\n\n` +
+            `💡 Use \`/help name:command\` for detailed information`,
+        )
+        .setColor(BRAND_COLOR)
+        .setFooter({
+          text: `Page ${page + 1} of ${totalPages} • Use buttons to navigate`,
+        })
+        .setTimestamp();
 
-      if (commandList) {
+      for (const command of pageCommands) {
+        const info = command.info!;
+
+        let description = info.description || "No description available";
+
         embed.addFields({
-          name: `${emoji} ${categoryName}`,
-          value: commandList,
+          name: `/${info.name}`,
+          value: description,
           inline: false,
         });
       }
-    }
 
-    await interaction.reply({ embeds: [embed] });
+      return embed;
+    };
+
+    const generateButtons = (page: number) => {
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("first")
+          .setLabel("⏮️ First")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId("prev")
+          .setLabel("◀️ Previous")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId("page_indicator")
+          .setLabel(`${page + 1}/${totalPages}`)
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId("next")
+          .setLabel("Next ▶️")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(page === totalPages - 1),
+        new ButtonBuilder()
+          .setCustomId("last")
+          .setLabel("Last ⏭️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === totalPages - 1),
+      );
+      return row;
+    };
+
+    const interactionResponse = await interaction.reply({
+      embeds: [generateEmbed(currentPage)],
+      components: totalPages > 1 ? [generateButtons(currentPage)] : [],
+      withResponse: true,
+    });
+    const message = interactionResponse.resource?.message!;
+
+    if (totalPages <= 1) return;
+
+    const collector = message.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 300000, // 5 minutes
+    });
+
+    collector.on("collect", async (buttonInteraction) => {
+      if (buttonInteraction.user.id !== interaction.user.id) {
+        await buttonInteraction.reply({
+          content:
+            "❌ These buttons aren't for you! Use `/help` to get your own help menu.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      switch (buttonInteraction.customId) {
+        case "first":
+          currentPage = 0;
+          break;
+        case "prev":
+          currentPage = Math.max(0, currentPage - 1);
+          break;
+        case "next":
+          currentPage = Math.min(totalPages - 1, currentPage + 1);
+          break;
+        case "last":
+          currentPage = totalPages - 1;
+          break;
+      }
+
+      await buttonInteraction.update({
+        embeds: [generateEmbed(currentPage)],
+        components: [generateButtons(currentPage)],
+      });
+    });
+
+    collector.on("end", async () => {
+      try {
+        // Disable all buttons instead of removing them
+        const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId("first")
+            .setLabel("⏮️ First")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId("prev")
+            .setLabel("◀️ Previous")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId("page_indicator")
+            .setLabel(`${currentPage + 1}/${totalPages}`)
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId("next")
+            .setLabel("Next ▶️")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId("last")
+            .setLabel("Last ⏭️")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(true),
+        );
+
+        const currentEmbed = EmbedBuilder.from(message.embeds[0]!).setFooter({
+          text: `Page ${currentPage + 1} of ${totalPages} • Buttons timed out`,
+        });
+
+        await message.edit({
+          embeds: [currentEmbed],
+          components: [disabledRow],
+        });
+      } catch (error) {
+        // Message was likely deleted
+      }
+    });
   }
 
   async sendCommandHelp(
@@ -136,57 +278,86 @@ export default class HelpCommand extends Command {
   ) {
     if (!command.info) {
       return interaction.reply({
-        content: "No help available for this command.",
+        content: "❌ No help available for this command.",
         ephemeral: true,
       });
     }
 
     const info = command.info;
+    const categoryEmoji =
+      (info.category
+        ? CommandRegistory.getCategory(info.category)?.emoji
+        : null) || "📁";
+
     const embed = new EmbedBuilder()
-      .setTitle(`/${info.name}`)
-      .setDescription(info.description)
+      .setTitle(`\`/${info.name}\``)
       .setColor(BRAND_COLOR)
       .setTimestamp();
 
-    if (info.longDescription) {
-      embed.setDescription(`${info.longDescription || info.description}`);
-    }
+    // Description section
+    let description = `**${info.longDescription || info.description}**\n\n`;
+    description += `${categoryEmoji} **Category:** ${info.category}`;
 
+    embed.setDescription(description);
+
+    // Usage section with examples
     if (info.usageExamples && info.usageExamples.length > 0) {
+      const exampleText = info.usageExamples
+        .map((example, index) => `${index + 1}. \`${example}\``)
+        .join("\n");
+
       embed.addFields({
-        name: "Examples",
-        value: info.usageExamples.map((example) => `\`${example}\``).join("\n"),
+        name: "📝 Usage Examples",
+        value: exampleText,
         inline: false,
       });
     }
 
+    // Parameters section
     if (info.options && info.options.length > 0) {
       const options = info.options
         .map((option) => {
-          const req = option.required ? " *" : "";
-          return `**${option.name}**${req} - ${option.description}`;
+          const required = option.required ? "**[Required]**" : "[Optional]";
+          return `• **\`${option.name}\`** ${required}\n  ${option.description}`;
         })
-        .join("\n");
+        .join("\n\n");
 
       embed.addFields({
-        name: "Parameters",
+        name: "⚙️ Parameters",
         value: options,
         inline: false,
       });
     }
 
+    // Subcommands section with pagination if needed
     if (info.subcommands && info.subcommands.length > 0) {
-      const subcommands = info.subcommands
-        .map(
-          (sub) => `**${sub.name}** - ${sub.description || "No description"}`,
-        )
-        .join("\n");
+      if (info.subcommands.length <= 10) {
+        const subcommands = info.subcommands
+          .map((sub) => {
+            const desc = sub.description || "No description";
+            return `• **\`${sub.name}\`** - ${desc}`;
+          })
+          .join("\n");
 
-      embed.addFields({
-        name: "Subcommands",
-        value: subcommands,
-        inline: false,
-      });
+        embed.addFields({
+          name: `⚡ Subcommands (${info.subcommands.length})`,
+          value: subcommands,
+          inline: false,
+        });
+      } else {
+        // Just list names if too many
+        const subcommands = info.subcommands
+          .map((sub) => `\`${sub.name}\``)
+          .join(" • ");
+
+        embed.addFields({
+          name: `⚡ Subcommands (${info.subcommands.length})`,
+          value:
+            subcommands +
+            `\n\n💡 Use \`/help name:${info.name} <subcommand>\` for details`,
+          inline: false,
+        });
+      }
     }
 
     await interaction.reply({ embeds: [embed] });
@@ -199,43 +370,53 @@ export default class HelpCommand extends Command {
   ) {
     if (!command.info) {
       return interaction.reply({
-        content: "No help available for this subcommand.",
+        content: "❌ No help available for this subcommand.",
         ephemeral: true,
       });
     }
 
+    const info = command.info;
+
+    const categoryEmoji =
+      (info.category
+        ? CommandRegistory.getCategory(info.category)?.emoji
+        : null) || "📁";
+
     const embed = new EmbedBuilder()
-      .setTitle(`/${command.info.name} ${subcommand.name}`)
-      .setDescription(subcommand.description || "No description available")
+      .setTitle(`\`/${command.info.name} ${subcommand.name}\``)
       .setColor(BRAND_COLOR)
       .setTimestamp();
 
-    if (subcommand.longDescription) {
-      embed.setDescription(
-        `${subcommand.description}\n\n${subcommand.longDescription}`,
-      );
-    }
+    // Description
+    let description = `**${subcommand.longDescription || subcommand.description || "No description available"}**\n\n`;
+    description += `${categoryEmoji} **Parent Command:** \`/${command.info.name}\``;
 
+    embed.setDescription(description);
+
+    // Usage examples
     if (subcommand.usageExamples && subcommand.usageExamples.length > 0) {
+      const exampleText = subcommand.usageExamples
+        .map((example: string, index: number) => `${index + 1}. \`${example}\``)
+        .join("\n");
+
       embed.addFields({
-        name: "Examples",
-        value: subcommand.usageExamples
-          .map((example: string) => `\`${example}\``)
-          .join("\n"),
+        name: "📝 Usage Examples",
+        value: exampleText,
         inline: false,
       });
     }
 
+    // Parameters
     if (subcommand.options && subcommand.options.length > 0) {
       const options = subcommand.options
         .map((option: any) => {
-          const req = option.required ? " *" : "";
-          return `**${option.name}**${req} - ${option.description}`;
+          const required = option.required ? "**[Required]**" : "[Optional]";
+          return `• **\`${option.name}\`** ${required}\n  ${option.description}`;
         })
-        .join("\n");
+        .join("\n\n");
 
       embed.addFields({
-        name: "Parameters",
+        name: "⚙️ Parameters",
         value: options,
         inline: false,
       });
@@ -248,33 +429,140 @@ export default class HelpCommand extends Command {
     interaction: ChatInputCommandInteraction,
     category: CommandCategory,
   ) {
-    const commands = CommandRegistory.getCommandsByCategory(category.name);
-    const emoji = category.emoji || "";
+    const commands = CommandRegistory.getCommandsByCategory(category.name)
+      .filter((cmd) => cmd.info)
+      .sort((a, b) => a.info!.name.localeCompare(b.info!.name));
 
-    const embed = new EmbedBuilder()
-      .setTitle(`${emoji} ${category.name}`)
-      .setColor(BRAND_COLOR)
-      .setTimestamp();
+    const emoji = category.emoji || "📁";
+    const COMMANDS_PER_PAGE = 8;
+    const totalPages = Math.ceil(commands.length / COMMANDS_PER_PAGE);
+    let currentPage = 0;
 
-    for (const command of commands) {
-      if (!command.info) continue;
+    const generateEmbed = (page: number) => {
+      const start = page * COMMANDS_PER_PAGE;
+      const end = start + COMMANDS_PER_PAGE;
+      const pageCommands = commands.slice(start, end);
 
-      let description = command.info.description || "No description available";
+      const embed = new EmbedBuilder()
+        .setTitle(`${emoji} ${category.name} Commands`)
+        .setDescription(
+          `**${commands.length}** commands in this category\n\n` +
+            `💡 Use \`/help name:command\` for detailed information`,
+        )
+        .setColor(BRAND_COLOR)
+        .setFooter({
+          text: `Page ${page + 1} of ${totalPages}`,
+        })
+        .setTimestamp();
 
-      if (command.info.subcommands && command.info.subcommands.length > 0) {
-        const subList = command.info.subcommands
-          .map((sub) => sub.name)
-          .join(", ");
-        description += `\n*Subcommands: ${subList}*`;
+      for (const command of pageCommands) {
+        if (!command.info) continue;
+
+        let description =
+          command.info.description || "No description available";
+
+        // Add subcommands info if they exist
+        if (command.info.subcommands && command.info.subcommands.length > 0) {
+          description += `\n⚡ ${command.info.subcommands.length} subcommand${command.info.subcommands.length > 1 ? "s" : ""}`;
+        }
+
+        // Add usage example if available
+        if (
+          command.info.usageExamples &&
+          command.info.usageExamples.length > 0
+        ) {
+          description += `\n📝 \`${command.info.usageExamples[0]}\``;
+        }
+
+        embed.addFields({
+          name: `/${command.info.name}`,
+          value: description,
+          inline: false,
+        });
       }
 
-      embed.addFields({
-        name: `/${command.info.name}`,
-        value: description,
-        inline: false,
-      });
-    }
+      return embed;
+    };
 
-    await interaction.reply({ embeds: [embed] });
+    const generateButtons = (page: number) => {
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("cat_first")
+          .setLabel("⏮️ First")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId("cat_prev")
+          .setLabel("◀️ Previous")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId("cat_page")
+          .setLabel(`${page + 1}/${totalPages}`)
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId("cat_next")
+          .setLabel("Next ▶️")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(page === totalPages - 1),
+        new ButtonBuilder()
+          .setCustomId("cat_last")
+          .setLabel("Last ⏭️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === totalPages - 1),
+      );
+      return row;
+    };
+
+    const interactionResponse = await interaction.reply({
+      embeds: [generateEmbed(currentPage)],
+      components: totalPages > 1 ? [generateButtons(currentPage)] : [],
+      withResponse: true,
+    });
+    const message = interactionResponse.resource?.message!;
+
+    if (totalPages <= 1) return;
+
+    const collector = message.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 300000, // 5 minutes
+    });
+
+    collector.on("collect", async (buttonInteraction) => {
+      if (buttonInteraction.user.id !== interaction.user.id) {
+        await buttonInteraction.reply({
+          content: "❌ These buttons aren't for you!",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      switch (buttonInteraction.customId) {
+        case "cat_first":
+          currentPage = 0;
+          break;
+        case "cat_prev":
+          currentPage = Math.max(0, currentPage - 1);
+          break;
+        case "cat_next":
+          currentPage = Math.min(totalPages - 1, currentPage + 1);
+          break;
+        case "cat_last":
+          currentPage = totalPages - 1;
+          break;
+      }
+
+      await buttonInteraction.update({
+        embeds: [generateEmbed(currentPage)],
+        components: [generateButtons(currentPage)],
+      });
+    });
+
+    collector.on("end", async () => {
+      try {
+        await message.edit({ components: [] });
+      } catch (error) {}
+    });
   }
 }
