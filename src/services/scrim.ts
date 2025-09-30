@@ -103,7 +103,15 @@ export class ScrimService extends Service {
 
     try {
       await channel.send({
-        content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/register\` command to join.`,
+        content: `Registration for scrim **${scrim.name}** is now OPEN! Use the \`/registerteam\` command to join.`,
+        components: [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setLabel("Register Team")
+              .setStyle(ButtonStyle.Primary)
+              .setCustomId(`show_registration_select_menu`),
+          ),
+        ],
       });
     } catch (error) {
       logger.error(
