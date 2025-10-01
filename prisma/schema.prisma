@@ -42,7 +42,6 @@ model User {
   createdAt             DateTime               @default(now()) @map("created_at")
   updatedAt             DateTime               @updatedAt @map("updated_at")
   registeredTeamMembers RegisteredTeamMember[]
-  teams                 Team[]
   teamMembers           TeamMember[]
   bannedUsers           BannedUser[]
   reservedSlots         ReservedSlot[]
@@ -95,8 +94,6 @@ model Team {
 
   teamMembers     TeamMember[]
   registeredTeams RegisteredTeam[]
-  User            User?            @relation(fields: [userId], references: [id])
-  userId          String?
 
   @@map("team")
 }

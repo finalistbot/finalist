@@ -1,68 +1,56 @@
-import { AssignedSlot, RegisteredTeam } from "@prisma/client";
+import { BRAND_COLOR, MAX_TEAM_SIZE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { Team } from "@prisma/client";
 import { EmbedBuilder } from "discord.js";
-import { BRAND_COLOR } from "@/lib/constants";
 
-export async function registeredTeamDetailsEmbed(
-  team: RegisteredTeam,
-  assignedSlot: AssignedSlot | null = null,
-) {
-  const members = await prisma.registeredTeamMember.findMany({
-    where: { registeredTeamId: team.id },
+export default async function teamDetailsEmbed(team: Team) {
+  const teamMembers = await prisma.teamMember.findMany({
+    where: { teamId: team.id },
   });
-  members.sort((a, b) => a.position - b.position);
+  const captain = teamMembers.find((m) => m.role === "CAPTAIN");
+  const members = teamMembers.filter((m) => m.role === "MEMBER");
+  const substitutes = teamMembers.filter((m) => m.role === "SUBSTITUTE");
 
-  const captain = members.find((m) => m.role === "CAPTAIN")!;
-  const mainMembers =
-    members
-      .filter((m) => m.role != "SUBSTITUTE")
-      .map((m) => `<@${m.userId}>`)
-      .join("\n") || "None";
+  // Build member lists
+  let description = "";
+  if (captain) {
+    description += `**Captain:**\n<@${captain.userId}> - ${captain.ingameName}\n\n`;
+  }
 
-  const substitutes =
-    members
-      .filter((m) => m.role === "SUBSTITUTE")
-      .map((m) => `<@${m.userId}>`)
-      .join("\n") || "None";
+  if (members.length > 0) {
+    description += `**Members:** (${members.length})\n`;
+    members.forEach((member, index) => {
+      description += `${index + 1}. <@${member.userId}> - ${member.ingameName}\n`;
+    });
+    description += "\n";
+  }
 
-  const registeredAt = team.createdAt
-    ? `<t:${Math.floor(new Date(team.createdAt).getTime() / 1000)}:F>`
-    : "Not registered";
+  if (substitutes.length > 0) {
+    description += `**Substitutes:** (${substitutes.length})\n`;
+    substitutes.forEach((sub, index) => {
+      description += `${index + 1}. <@${sub.userId}> - ${sub.ingameName}\n`;
+    });
+  }
 
   const embed = new EmbedBuilder()
-    .setColor(BRAND_COLOR)
-    .setTitle(`🛡️ Team: ${team.name} (ID: ${team.id})`)
-    .setAuthor({
-      name: "Scrim Team Details",
-      iconURL: "https://i.postimg.cc/dVJBqmqv/Finalist.png",
-    })
-    .setThumbnail("https://i.postimg.cc/dVJBqmqv/Finalist.png")
-    .setDescription(
-      `**Scrim:** ${
-        team.scrimId || "Not assigned"
-      }\n**Registered:** ${registeredAt}`,
-    )
+    .setTitle(`${team.name}${team.tag ? ` [${team.tag}]` : ""}`)
+    .setColor(team.banned ? 0xff0000 : BRAND_COLOR)
+    .setDescription(description || "No members found.")
     .addFields(
+      { name: "Team Code", value: `\`${team.code}\``, inline: true },
       {
-        name: "👑 Captain",
-        value: `<@${captain.userId}>`,
+        name: "Total Members",
+        value: `${teamMembers.length}/${MAX_TEAM_SIZE}`,
         inline: true,
       },
-      { name: "👤 Members", value: mainMembers, inline: true },
-      { name: "🟡 Substitutes", value: substitutes, inline: true },
       {
-        name: "🎟️ Assigned Slot",
-        value: assignedSlot
-          ? `Slot Number: ${assignedSlot.slotNumber}`
-          : "No slot assigned",
-        inline: false,
-      },
+        name: "Status",
+        value: team.banned ? "🚫 Banned" : "✅ Active",
+        inline: true,
+      }
     )
-    .setTimestamp(new Date(team.createdAt))
-    .setFooter({
-      text: "Last updated",
-      iconURL: "https://i.postimg.cc/dVJBqmqv/Finalist.png",
-    });
+    .setFooter({ text: `Team ID: ${team.id}` })
+    .setTimestamp();
 
   return embed;
 }

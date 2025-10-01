@@ -1,10 +1,15 @@
 import { Event } from "@/base/classes/event";
+import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
   Interaction,
   CacheType,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  Embed,
+  EmbedBuilder,
 } from "discord.js";
 export default class ShowRegistrationSelectMenu extends Event<"interactionCreate"> {
   event = "interactionCreate" as const;
@@ -49,20 +54,25 @@ export default class ShowRegistrationSelectMenu extends Event<"interactionCreate
       });
       return;
     }
+    const embed = new EmbedBuilder()
+      .setTitle("Register for Scrim")
+      .setDescription("Select a team to register for the scrim:")
+      .setColor(BRAND_COLOR);
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
       new StringSelectMenuBuilder()
-        .setCustomId(`register_with_team`)
+        .setCustomId(`select_team_for_registration`)
         .setPlaceholder("Select a team to register")
         .addOptions(
           teams.map((team) => ({
             label: team.name,
             description: `Register ${team.name} for the scrim`,
             value: team.id.toString(),
-          })),
-        ),
+          }))
+        )
     );
     await interaction.editReply({
       content: "Select a team to register for the scrim:",
+      embeds: [embed],
       components: [row],
     });
   }
