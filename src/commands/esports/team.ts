@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { isUserBanned, isNotBanned } from "@/checks/banned";
 import { ensureUser } from "@/database";
+import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { randomString } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
@@ -11,6 +12,8 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+
+const MAX_TEAM_SIZE = 10;
 
 export default class TeamCommand extends Command {
   data = new SlashCommandBuilder()
@@ -498,7 +501,7 @@ export default class TeamCommand extends Command {
     });
 
     await interaction.reply({
-      content: `Member <@${memberId}> has been kicked from the team..`,
+      content: `Member <@${memberId}> has been kicked from the team.`,
       flags: "Ephemeral",
     });
   }
@@ -520,6 +523,9 @@ export default class TeamCommand extends Command {
 
     const team = await prisma.team.findUnique({
       where: { code: teamCode, guildId: interaction.guildId! },
+      include: {
+        teamMembers: true,
+      },
     });
 
     if (!team) {
@@ -539,7 +545,17 @@ export default class TeamCommand extends Command {
 
     if (existingMember) {
       await interaction.reply({
-        content: "You are already in a team for this scrim.",
+        content: "You are already in this team.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
+    // Check team size limit
+    const currentTeamSize = team.teamMembers.length;
+    if (currentTeamSize >= MAX_TEAM_SIZE) {
+      await interaction.reply({
+        content: `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`,
         flags: ["Ephemeral"],
       });
       return;
@@ -599,7 +615,7 @@ export default class TeamCommand extends Command {
     if (teamMember.role === "CAPTAIN") {
       await interaction.reply({
         content:
-          "You cannot leave the team as you are the captain. Please disband the team!!",
+          "You cannot leave the team as you are the captain. Please disband the team!",
         flags: "Ephemeral",
       });
       return;
@@ -617,35 +633,108 @@ export default class TeamCommand extends Command {
 
   async teamInfo(interaction: ChatInputCommandInteraction) {
     const teamId = interaction.options.getInteger("team", true);
-    const teamMember = await prisma.teamMember.findFirst({
+
+    const team = await prisma.team.findFirst({
       where: {
-        teamId,
-        userId: interaction.user.id,
-        team: { guildId: interaction.guildId! },
+        id: teamId,
+        guildId: interaction.guildId!,
+        teamMembers: {
+          some: { userId: interaction.user.id },
+        },
       },
-      include: { team: true },
+      include: {
+        teamMembers: {
+          include: {
+            user: true,
+          },
+          orderBy: {
+            position: "asc",
+          },
+        },
+        registeredTeams: {
+          include: {
+            scrim: { select: { name: true, id: true, stage: true } },
+          },
+        },
+      },
     });
 
-    if (!teamMember) {
+    if (!team) {
       await interaction.reply({
-        content: "You are not part of this team.",
+        content: "You are not part of this team or the team does not exist.",
         flags: "Ephemeral",
       });
       return;
     }
 
-    // const embed = await registeredTeamDetailsEmbed(team);
-    // FIXME: implement team details embed
-    const embed = new EmbedBuilder();
+    // Separate members by role
+    const captain = team.teamMembers.find((m) => m.role === "CAPTAIN");
+    const members = team.teamMembers.filter((m) => m.role === "MEMBER");
+    const substitutes = team.teamMembers.filter((m) => m.role === "SUBSTITUTE");
+
+    // Build member lists
+    let description = "";
+    if (captain) {
+      description += `**Captain:**\n<@${captain.userId}> - ${captain.ingameName}\n\n`;
+    }
+
+    if (members.length > 0) {
+      description += `**Members:** (${members.length})\n`;
+      members.forEach((member, index) => {
+        description += `${index + 1}. <@${member.userId}> - ${member.ingameName}\n`;
+      });
+      description += "\n";
+    }
+
+    if (substitutes.length > 0) {
+      description += `**Substitutes:** (${substitutes.length})\n`;
+      substitutes.forEach((sub, index) => {
+        description += `${index + 1}. <@${sub.userId}> - ${sub.ingameName}\n`;
+      });
+    }
+
+    if (team.registeredTeams.length > 0) {
+      // NOTE: DO we need to show stage here?
+      const scrimNames = team.registeredTeams
+        .map(
+          (rt) =>
+            `${rt.scrim.name} (ID: ${rt.scrim.id}) - Stage: ${rt.scrim.stage}`,
+        )
+        .join("\n");
+      description += `**Registered for Scrims:**\n ${scrimNames}\n`;
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle(`${team.name}${team.tag ? ` [${team.tag}]` : ""}`)
+      .setColor(team.banned ? 0xff0000 : BRAND_COLOR)
+      .setDescription(description || "No members found.")
+      .addFields(
+        { name: "Team Code", value: `\`${team.code}\``, inline: true },
+        {
+          name: "Total Members",
+          value: `${team.teamMembers.length}/${MAX_TEAM_SIZE}`,
+          inline: true,
+        },
+        {
+          name: "Status",
+          value: team.banned ? "🚫 Banned" : "✅ Active",
+          inline: true,
+        },
+      )
+      .setFooter({ text: `Team ID: ${team.id}` })
+      .setTimestamp();
+
     await interaction.reply({
       embeds: [embed],
       flags: "Ephemeral",
     });
   }
+
   async addMember(interaction: ChatInputCommandInteraction) {
     const teamId = interaction.options.getInteger("team", true);
     const member = interaction.options.getUser("member", true);
-    const ign = interaction.options.getString("ign") || null;
+    const ign = interaction.options.getString("ign", true);
+
     if (member.bot) {
       await interaction.reply({
         content: "You cannot add a bot as a team member.",
@@ -653,11 +742,15 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
         guildId: interaction.guildId!,
         teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
+      },
+      include: {
+        teamMembers: true,
       },
     });
 
@@ -665,6 +758,16 @@ export default class TeamCommand extends Command {
       await interaction.reply({
         content:
           "You are not the captain of this team or the team does not exist.",
+        flags: "Ephemeral",
+      });
+      return;
+    }
+
+    // Check team size limit
+    const currentTeamSize = team.teamMembers.length;
+    if (currentTeamSize >= MAX_TEAM_SIZE) {
+      await interaction.reply({
+        content: `Your team has reached the maximum size of ${MAX_TEAM_SIZE} players.`,
         flags: "Ephemeral",
       });
       return;
@@ -680,6 +783,7 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         userId: member.id,
@@ -694,10 +798,12 @@ export default class TeamCommand extends Command {
       });
       return;
     }
+
     await ensureUser(member);
     const memberCount = await prisma.teamMember.count({
       where: { teamId: team.id },
     });
+
     await prisma.teamMember.create({
       data: {
         teamId: team.id,
@@ -707,17 +813,19 @@ export default class TeamCommand extends Command {
         position: memberCount,
       },
     });
+
     await interaction.reply({
-      content: `User <@${member.id}> has been added to your team **${team.name}**!`,
+      content: `User <@${member.id}> has been added to your team **${team.name}**! (${currentTeamSize + 1}/${MAX_TEAM_SIZE})`,
       flags: "Ephemeral",
     });
   }
+
   async autocomplete(interaction: AutocompleteInteraction) {
     const subcommand = interaction.options.getSubcommand();
     let choices: { name: string; value: number | string }[] = [];
+
     switch (subcommand) {
       case "disband":
-      case "kick":
       case "leave":
       case "info":
       case "add": {
@@ -726,7 +834,9 @@ export default class TeamCommand extends Command {
           where: {
             guildId: interaction.guildId!,
             teamMembers: { some: { userId: interaction.user.id } },
-            name: { contains: focusedValue, mode: "insensitive" },
+            name: focusedValue
+              ? { contains: focusedValue, mode: "insensitive" }
+              : {},
           },
           take: 25,
         });
@@ -737,26 +847,52 @@ export default class TeamCommand extends Command {
         break;
       }
       case "kick": {
-        const teamId = interaction.options.getInteger("team");
-        if (!teamId) break;
-        const focusedValue = interaction.options.getFocused();
-        const members = await prisma.teamMember.findMany({
-          where: {
-            teamId,
-            user: {
+        const focusedOption = interaction.options.getFocused(true);
+
+        if (focusedOption.name === "team") {
+          const focusedValue = interaction.options.getFocused();
+          const teams = await prisma.team.findMany({
+            where: {
+              guildId: interaction.guildId!,
+              teamMembers: {
+                some: {
+                  userId: interaction.user.id,
+                  role: "CAPTAIN",
+                },
+              },
               name: { contains: focusedValue, mode: "insensitive" },
             },
-          },
-          include: { user: true },
-          take: 25,
-        });
-        choices = members.map((member) => ({
-          name: member.user.name,
-          value: member.userId,
-        }));
+            take: 25,
+          });
+          choices = teams.map((team) => ({
+            name: team.name,
+            value: team.id,
+          }));
+        } else if (focusedOption.name === "member") {
+          const teamId = interaction.options.getInteger("team");
+          if (!teamId) break;
+
+          const focusedValue = interaction.options.getFocused();
+          const members = await prisma.teamMember.findMany({
+            where: {
+              teamId,
+              role: { not: "CAPTAIN" },
+              user: {
+                name: { contains: focusedValue, mode: "insensitive" },
+              },
+            },
+            include: { user: true },
+            take: 25,
+          });
+          choices = members.map((member) => ({
+            name: `${member.user.name} (${member.ingameName})`,
+            value: member.userId,
+          }));
+        }
         break;
       }
     }
+
     await interaction.respond(choices);
   }
 }
