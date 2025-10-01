@@ -1,18 +1,18 @@
 import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
 import { Message, TextChannel } from "discord.js";
 import { prepareManageParticipantsComponent } from "../components/manage-participants-components";
-import { registeredTeamDetailsEmbed } from "../embeds/team-details";
+import { registeredTeamDetailsEmbed } from "../embeds/registered-team-details";
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
 
 async function sendTeamDetails(
   channel: TextChannel,
   team: RegisteredTeam,
-  assignedSlot: AssignedSlot | null = null,
+  assignedSlot: AssignedSlot | null = null
 ) {
   const components = await prepareManageParticipantsComponent(
     team,
-    assignedSlot,
+    assignedSlot
   );
   const embed = registeredTeamDetailsEmbed(team, assignedSlot);
 
@@ -30,12 +30,12 @@ async function sendTeamDetails(
 export async function editRegisteredTeamDetails(
   scrim: Scrim,
   team: RegisteredTeam,
-  client: BracketClient,
+  client: BracketClient
 ) {
   const guild = client.guilds.cache.get(scrim.guildId);
   if (!guild) return;
   const participantsChannel = guild.channels.cache.get(
-    scrim.participantsChannelId,
+    scrim.participantsChannelId
   ) as TextChannel;
   if (!participantsChannel) return;
   let message: Message;
@@ -50,7 +50,7 @@ export async function editRegisteredTeamDetails(
     const embed = await registeredTeamDetailsEmbed(team, assignedSlot);
     const components = await prepareManageParticipantsComponent(
       team,
-      assignedSlot || undefined,
+      assignedSlot || undefined
     );
     await message.edit({ embeds: [embed], components });
   }

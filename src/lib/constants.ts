@@ -17,3 +17,4 @@ export const popularTimeZones = [
   { label: "Japan (Tokyo)", value: "Asia/Tokyo" },
   { label: "Australia (Sydney)", value: "Australia/Sydney" },
 ];
+export const MAX_TEAM_SIZE = 10;
