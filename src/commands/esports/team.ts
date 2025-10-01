@@ -651,6 +651,11 @@ export default class TeamCommand extends Command {
             position: "asc",
           },
         },
+        registeredTeams: {
+          include: {
+            scrim: { select: { name: true, id: true, stage: true } },
+          },
+        },
       },
     });
 
@@ -668,30 +673,41 @@ export default class TeamCommand extends Command {
     const substitutes = team.teamMembers.filter((m) => m.role === "SUBSTITUTE");
 
     // Build member lists
-    let membersText = "";
+    let description = "";
     if (captain) {
-      membersText += `**Captain:**\n<@${captain.userId}> - ${captain.ingameName}\n\n`;
+      description += `**Captain:**\n<@${captain.userId}> - ${captain.ingameName}\n\n`;
     }
 
     if (members.length > 0) {
-      membersText += `**Members:** (${members.length})\n`;
+      description += `**Members:** (${members.length})\n`;
       members.forEach((member, index) => {
-        membersText += `${index + 1}. <@${member.userId}> - ${member.ingameName}\n`;
+        description += `${index + 1}. <@${member.userId}> - ${member.ingameName}\n`;
       });
-      membersText += "\n";
+      description += "\n";
     }
 
     if (substitutes.length > 0) {
-      membersText += `**Substitutes:** (${substitutes.length})\n`;
+      description += `**Substitutes:** (${substitutes.length})\n`;
       substitutes.forEach((sub, index) => {
-        membersText += `${index + 1}. <@${sub.userId}> - ${sub.ingameName}\n`;
+        description += `${index + 1}. <@${sub.userId}> - ${sub.ingameName}\n`;
       });
+    }
+
+    if (team.registeredTeams.length > 0) {
+      // NOTE: DO we need to show stage here?
+      const scrimNames = team.registeredTeams
+        .map(
+          (rt) =>
+            `${rt.scrim.name} (ID: ${rt.scrim.id}) - Stage: ${rt.scrim.stage}`,
+        )
+        .join("\n");
+      description += `**Registered for Scrims:**\n ${scrimNames}\n`;
     }
 
     const embed = new EmbedBuilder()
       .setTitle(`${team.name}${team.tag ? ` [${team.tag}]` : ""}`)
       .setColor(team.banned ? 0xff0000 : BRAND_COLOR)
-      .setDescription(membersText || "No members found.")
+      .setDescription(description || "No members found.")
       .addFields(
         { name: "Team Code", value: `\`${team.code}\``, inline: true },
         {
