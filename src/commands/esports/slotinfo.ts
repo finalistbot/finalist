@@ -12,7 +12,7 @@ import {
 
 export default class SlotlistInfo extends Command {
   data = new SlashCommandBuilder()
-    .setName("slot-info")
+    .setName("slotinfo")
     .setDescription("Get information about a specific slot")
     .addUserOption((option) =>
       option
@@ -21,11 +21,11 @@ export default class SlotlistInfo extends Command {
         .setRequired(true),
     );
   info = {
-    name: "slot-info",
+    name: "slotinfo",
     description: "Get information about a specific slot.",
     longDescription:
       "Retrieve detailed information about a specific slot in a scrim, including the user assigned to the slot, their team, and role.",
-    usageExamples: ["/slot-info user:@username"],
+    usageExamples: ["/slotinfo user:@username"],
     category: "Esports",
     options: [
       {

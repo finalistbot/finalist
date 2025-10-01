@@ -8,7 +8,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class FillSlotsCommand extends Command {
   data = new SlashCommandBuilder()
-    .setName("fill-slots")
+    .setName("fillslots")
     .setDescription("Fill remaining slots for a scrim")
     .addStringOption((option) =>
       option
@@ -22,15 +22,15 @@ export default class FillSlotsCommand extends Command {
     );
 
   info: CommandInfo = {
-    name: "fill-slots",
+    name: "fillslots",
     description: "Fill remaining slots for a scrim.",
     category: "Esports",
     longDescription:
       "Fill remaining slots for a scrim in the admin channel. This is useful for quickly filling up a scrim with random players or normal queue players.",
     usageExamples: [
-      "/fill-slots filling-method:Normal",
-      "/fill-slots filling-method:Random",
-      "(in scrim admin channel) /fill-slots filling-method:Normal",
+      "/fillslots filling-method:Normal",
+      "/fillslots filling-method:Random",
+      "(in scrim admin channel) /fillslots filling-method:Normal",
     ],
     options: [
       {
