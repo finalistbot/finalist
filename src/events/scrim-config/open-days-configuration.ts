@@ -1,7 +1,7 @@
 import { Event } from "@/base/classes/event";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, suppress } from "@/lib/utils";
 import { Scrim } from "@prisma/client";
 import {
   Interaction,
@@ -113,5 +113,6 @@ export default class OpenDaysConfiguration extends Event<"interactionCreate"> {
 
     await interaction.deferUpdate();
     await this.updateConfiguration(interaction, scrimId);
+    await suppress(this.client.scrimService.updateScrimConfigMessage(scrim));
   }
 }
