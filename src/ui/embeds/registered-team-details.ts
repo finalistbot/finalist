@@ -5,7 +5,7 @@ import { BRAND_COLOR } from "@/lib/constants";
 
 export async function registeredTeamDetailsEmbed(
   team: RegisteredTeam,
-  assignedSlot: AssignedSlot | null = null,
+  assignedSlot: AssignedSlot | null = null
 ) {
   const members = await prisma.registeredTeamMember.findMany({
     where: { registeredTeamId: team.id },
@@ -13,16 +13,21 @@ export async function registeredTeamDetailsEmbed(
   members.sort((a, b) => a.position - b.position);
 
   const captain = members.find((m) => m.role === "CAPTAIN")!;
+
+  // format helpers
+  const formatMember = (m: (typeof members)[number]) =>
+    `<@${m.userId}>${m.ingameName ? ` - ${m.ingameName}` : ""}`;
+
   const mainMembers =
     members
-      .filter((m) => m.role != "SUBSTITUTE")
-      .map((m) => `<@${m.userId}>`)
+      .filter((m) => m.role !== "SUBSTITUTE" && m.role !== "CAPTAIN")
+      .map((m, i) => `${i + 1}. ${formatMember(m)}`)
       .join("\n") || "None";
 
   const substitutes =
     members
       .filter((m) => m.role === "SUBSTITUTE")
-      .map((m) => `<@${m.userId}>`)
+      .map((m, i) => `${i + 1}. ${formatMember(m)}`)
       .join("\n") || "None";
 
   const registeredAt = team.createdAt
@@ -40,23 +45,23 @@ export async function registeredTeamDetailsEmbed(
     .setDescription(
       `**Scrim:** ${
         team.scrimId || "Not assigned"
-      }\n**Registered:** ${registeredAt}`,
+      }\n**Registered:** ${registeredAt}`
     )
     .addFields(
       {
         name: "👑 Captain",
-        value: `<@${captain.userId}>`,
-        inline: true,
+        value: formatMember(captain),
+        inline: false,
       },
-      { name: "👤 Members", value: mainMembers, inline: true },
-      { name: "🟡 Substitutes", value: substitutes, inline: true },
+      { name: "👤 Members", value: mainMembers, inline: false },
+      { name: "🟡 Substitutes", value: substitutes, inline: false },
       {
         name: "🎟️ Assigned Slot",
         value: assignedSlot
           ? `Slot Number: ${assignedSlot.slotNumber}`
           : "No slot assigned",
         inline: false,
-      },
+      }
     )
     .setTimestamp(new Date(team.createdAt))
     .setFooter({
