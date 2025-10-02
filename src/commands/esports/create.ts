@@ -109,7 +109,7 @@ export default class CreateScrim extends Command {
       minPlayersPerTeam: settings.minPlayersPerTeam ?? 4,
       maxPlayersPerTeam: settings.maxPlayersPerTeam ?? 4,
       maxSubstitutePerTeam: settings.maxSubstitutePerTeam ?? 0,
-      autoSlotList: settings.autoSlotList ?? false,
+      autoSlotList: settings.autoSlotList ?? true,
       autoCloseRegistration: settings.autoCloseRegistration ?? true,
     };
   }

@@ -72,11 +72,6 @@ export default class ScrimDelete extends Command {
         });
       }
     }
-    if (([Stage.ONGOING, Stage.COMPLETED] as Stage[]).includes(scrim.stage)) {
-      return await interaction.editReply({
-        content: `Scrim with ID ${scrim.id} is already ${scrim.stage.toLowerCase()} and cannot be deleted.`,
-      });
-    }
     const deletableChannels = [
       scrim.adminChannelId,
       scrim.registrationChannelId,

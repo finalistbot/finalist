@@ -1,4 +1,4 @@
-import { BracketError, CheckFailure } from "@/base/classes/error";
+import { BracketError } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
@@ -38,9 +38,9 @@ export default class StartRegistrationButtonHandler extends Event<"interactionCr
       return;
     }
 
-    if (scrim.stage != Stage.CONFIGURATION) {
+    if (scrim.stage == Stage.REGISTRATION) {
       await interaction.editReply({
-        content: `Scrim with ID ${scrimId} is not in the configuration stage.`,
+        content: `Registration for scrim with ID ${scrimId} is already open.`,
       });
       return;
     }

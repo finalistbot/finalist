@@ -27,27 +27,15 @@ model GuildConfig {
 }
 
 enum Stage {
-  CONFIGURATION
+  IDLE
   REGISTRATION
-  SLOT_ALLOCATION
-  ONGOING
+  CLOSED
   COMPLETED
-  CANCELED
 }
 
 enum AutoCleanType {
   CHANNELS
   ROLES
-}
-
-enum OpenDays {
-  SUNDAY
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
 }
 
 model User {
@@ -83,10 +71,10 @@ model Scrim {
   discordCategoryId     String          @map("discord_category_id")
   adminChannelId        String          @map("admin_channel_id")
   adminConfigMessageId  String?         @map("admin_config_message_id")
-  stage                 Stage           @default(CONFIGURATION) @map("stage")
+  stage                 Stage           @default(IDLE) @map("stage")
   autoCloseRegistration Boolean         @default(true) @map("auto_close_registration")
   autoCleanTypes        AutoCleanType[] @map("auto_clean_types")
-  openDays              OpenDays[]      @map("open_days")
+  openDays              Int[]           @map("open_days")
 
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
