@@ -3,7 +3,11 @@ import { Service } from "@/base/classes/service";
 import { slotsToTable } from "@/commands/esports/slotlist";
 import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
-import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
+import {
+  BRAND_COLOR,
+  DAYS_OF_WEEK,
+  SCRIM_REGISTRATION_START,
+} from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp, suppress } from "@/lib/utils";
@@ -378,6 +382,13 @@ export class ScrimService extends Service {
             `**Auto-Close:** ${
               scrim.autoCloseRegistration ? "✅ Enabled" : "❌ Disabled"
             }`,
+            "**Open Days:** " +
+              (scrim.openDays.length > 0
+                ? scrim.openDays
+                    .sort((a, b) => a - b)
+                    .map((d) => DAYS_OF_WEEK[d])
+                    .join(", ")
+                : "Only once"),
           ].join("\n"),
           inline: false,
         },
