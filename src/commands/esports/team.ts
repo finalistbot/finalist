@@ -467,63 +467,11 @@ export default class TeamCommand extends Command {
     let isSubstitute = interaction.options.getBoolean("substitute") ?? false;
     const ign = interaction.options.getString("ign", true);
 
-    const team = await prisma.team.findUnique({
-      where: { code: teamCode, guildId: interaction.guildId! },
-      include: {
-        teamMembers: true,
-      },
-    });
-
-    if (!team) {
-      await interaction.reply({
-        content: "Invalid team code.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-
-    const existingMember = await prisma.teamMember.findFirst({
-      where: {
-        userId: interaction.user.id,
-        teamId: team.id,
-      },
-    });
-
-    if (existingMember) {
-      await interaction.reply({
-        content: "You are already in this team.",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-
-    // Check team size limit
-    const currentTeamSize = team.teamMembers.length;
-    if (currentTeamSize >= MAX_TEAM_SIZE) {
-      await interaction.reply({
-        content: `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`,
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-
-    const role = isSubstitute ? "SUBSTITUTE" : "MEMBER";
-
-    await ensureUser(interaction.user);
-    const memberCount = await prisma.teamMember.count({
-      where: { teamId: team.id },
-    });
-
-    await prisma.teamMember.create({
-      data: {
-        teamId: team.id,
-        userId: interaction.user.id,
-        role,
-        ingameName: ign,
-        position: memberCount,
-      },
-    });
-
+    const team = await this.client.teamManageService.joinTeam(
+      interaction.user,
+      interaction.guildId!,
+      { teamCode, ign, substitute: isSubstitute }
+    );
     await interaction.reply({
       content:
         `You have joined the team **${team.name}**!` +

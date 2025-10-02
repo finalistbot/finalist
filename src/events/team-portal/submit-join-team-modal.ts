@@ -4,9 +4,14 @@ import { Interaction } from "discord.js";
 import { prisma } from "@/lib/prisma";
 import { MAX_TEAM_SIZE } from "@/lib/constants";
 import { ensureUser } from "@/database";
+import { TeamRole } from "@prisma/client";
 const JoinTeamSchema = z.object({
   code: z.string().length(8),
   ign: z.string().min(3).max(100),
+  substitute: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
 });
 
 export default class GlobalJoinTeamModalSubmit extends Event<"interactionCreate"> {
@@ -17,6 +22,7 @@ export default class GlobalJoinTeamModalSubmit extends Event<"interactionCreate"
     const rawBody = {
       code: interaction.fields.getTextInputValue("join_team_code"),
       ign: interaction.fields.getTextInputValue("join_team_ign"),
+      substitute: interaction.fields.getTextInputValue("join_team_substitute"),
     };
     await interaction.deferReply({ flags: ["Ephemeral"] });
     const parsed = JoinTeamSchema.safeParse(rawBody);
@@ -28,56 +34,17 @@ export default class GlobalJoinTeamModalSubmit extends Event<"interactionCreate"
       });
       return;
     }
-    const data = parsed.data;
 
-    const team = await prisma.team.findUnique({
-      where: { code: data.code, guildId: interaction.guildId! },
-      include: { teamMembers: true },
-    });
-    if (!team) {
-      await interaction.editReply({
-        content: `No team found with the provided code.`,
-      });
-      return;
-    }
-
-    const existingMember = await prisma.teamMember.findFirst({
-      where: {
-        userId: interaction.user.id,
-        teamId: team.id,
-      },
-    });
-
-    if (existingMember) {
-      await interaction.editReply({
-        content: "You are already in this team.",
-      });
-      return;
-    }
-
-    // Check team size limit
-    const currentTeamSize = team.teamMembers.length;
-    if (currentTeamSize >= MAX_TEAM_SIZE) {
-      await interaction.reply({
-        content: `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`,
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
-
-    await ensureUser(interaction.user);
-    const memberCount = await prisma.teamMember.count({
-      where: { teamId: team.id },
-    });
-
-    await prisma.teamMember.create({
-      data: {
-        userId: interaction.user.id,
-        ingameName: data.ign,
-        teamId: team.id,
-        position: memberCount + 1,
-      },
-    });
+    const normalized = {
+      teamCode: parsed.data.code,
+      ign: parsed.data.ign,
+      substitute: parsed.data.substitute ?? false,
+    };
+    const team = await this.client.teamManageService.joinTeam(
+      interaction.user,
+      interaction.guildId!,
+      normalized
+    );
     await interaction.editReply({
       content: `You have successfully joined the team **${team.name}**!`,
     });

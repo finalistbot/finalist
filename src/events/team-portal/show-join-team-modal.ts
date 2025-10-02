@@ -31,6 +31,19 @@ function createTeamModal() {
           .setPlaceholder("Enter your in-game name")
           .setRequired(true)
       )
+    ),
+    rows.push(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId("join_team_substitute")
+          .setLabel("Substitute (true/false)")
+          .setStyle(1)
+          .setMinLength(4)
+          .setMaxLength(5)
+          .setPlaceholder("Are you joining as a substitute? (true/false)")
+          .setRequired(false)
+          .setValue("false")
+      )
     ));
 
   return new ModalBuilder()

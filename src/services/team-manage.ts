@@ -1,11 +1,12 @@
 import { TeamRole } from "@prisma/client";
 import { ScrimService } from "./scrim";
-import { Guild, Interaction } from "discord.js";
+import { Guild, Interaction, User } from "discord.js";
 import { prisma } from "@/lib/prisma";
 import { BracketError } from "@/base/classes/error";
 import { ensureUser } from "@/database";
 import { randomString } from "@/lib/utils";
 import { isUserBanned } from "@/checks/banned";
+import { MAX_TEAM_SIZE } from "@/lib/constants";
 
 type CreateTeamData = {
   teamName: string;
@@ -18,11 +19,7 @@ type JoinTeamData = {
   substitute?: boolean;
 };
 export class TeamManageService extends ScrimService {
-  async createTeam(
-    user: Interaction["user"],
-    guildId: Guild["id"],
-    parsed: CreateTeamData
-  ) {
+  async createTeam(user: User, guildId: string, parsed: CreateTeamData) {
     const isBanned = await isUserBanned(guildId, user.id);
     if (isBanned) {
       throw new BracketError("You are banned from creating or joining teams.");
@@ -76,5 +73,51 @@ export class TeamManageService extends ScrimService {
       },
     });
     return newTeam;
+  }
+  async joinTeam(user: User, guildId: string, data: JoinTeamData) {
+    const team = await prisma.team.findUnique({
+      where: { code: data.teamCode, guildId: guildId! },
+      include: { teamMembers: true },
+    });
+    if (!team) {
+      throw new BracketError("Invalid team code. Please try again.");
+    }
+
+    const existingMember = await prisma.teamMember.findFirst({
+      where: {
+        userId: user.id,
+        teamId: team.id,
+      },
+    });
+
+    if (existingMember) {
+      throw new BracketError("You are already in this team.");
+    }
+
+    // Check team size limit
+    const currentTeamSize = team.teamMembers.length;
+    if (currentTeamSize >= MAX_TEAM_SIZE) {
+      throw new BracketError(
+        `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`
+      );
+    }
+
+    await ensureUser(user);
+    const memberCount = await prisma.teamMember.count({
+      where: { teamId: team.id },
+    });
+
+    const role = data.substitute ? TeamRole.SUBSTITUTE : TeamRole.MEMBER;
+
+    await prisma.teamMember.create({
+      data: {
+        userId: user.id,
+        ingameName: data.ign,
+        teamId: team.id,
+        position: memberCount + 1,
+        role: role,
+      },
+    });
+    return team;
   }
 }
