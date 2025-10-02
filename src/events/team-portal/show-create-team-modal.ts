@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { Event } from "@/base/classes/event";
 
-function globalTeamConfigModel() {
+function CreateTeamModal() {
   const rows: ActionRowBuilder<TextInputBuilder>[] = [];
   rows.push(
     new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -14,7 +14,7 @@ function globalTeamConfigModel() {
         .setCustomId("team_name")
         .setLabel("Team Name")
         .setStyle(1)
-        .setMinLength(1)
+        .setMinLength(2)
         .setMaxLength(100)
         .setPlaceholder("Enter your global team name")
         .setRequired(true)
@@ -26,7 +26,7 @@ function globalTeamConfigModel() {
         .setCustomId("team_ign")
         .setLabel("In-Game Name")
         .setStyle(1)
-        .setMinLength(0)
+        .setMinLength(3)
         .setMaxLength(100)
         .setPlaceholder("Enter your in-game name")
         .setRequired(true)
@@ -36,9 +36,9 @@ function globalTeamConfigModel() {
     new ActionRowBuilder<TextInputBuilder>().addComponents(
       new TextInputBuilder()
         .setCustomId("team_tag")
-        .setLabel("tag Name")
+        .setLabel("Tag Name")
         .setStyle(1)
-        .setMinLength(0)
+        .setMinLength(2)
         .setMaxLength(100)
         .setPlaceholder("Set your team tag")
         .setRequired(false)
@@ -56,7 +56,7 @@ export default class ShowGlobalTeamModel extends Event<"interactionCreate"> {
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;
     if (interaction.customId !== "show_create_team_modal") return;
-    const modal = globalTeamConfigModel();
+    const modal = CreateTeamModal();
     await interaction.showModal(modal);
   }
 }

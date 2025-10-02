@@ -9,7 +9,7 @@ import { ensureUser } from "@/database";
 
 const TeamConfigSchema = z.object({
   teamName: z.string().min(2).max(32),
-  ign: z.string().max(100),
+  ign: z.string().min(3).max(100),
   tag: z.string().max(10).optional(),
 });
 
@@ -86,7 +86,7 @@ export default class GlobalTeamModelSubmit extends Event<"interactionCreate"> {
       },
     });
     await interaction.editReply({
-      content: `Your team **${data.teamName}** has been created! Share this code with others to let them join your team: **${teamCode}**`,
+      content: `Your team **${data.teamName}** has been created! Share this code with others to let them join your team:\` **${teamCode}**\``,
     });
   }
 }
