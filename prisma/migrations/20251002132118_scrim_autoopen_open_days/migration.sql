@@ -6,6 +6,10 @@
 
 */
 -- AlterEnum
+UPDATE "public"."scrim"
+SET "stage" = 'IDLE'
+WHERE "stage" IN ('CONFIGURATION', 'SLOT_ALLOCATION', 'ONGOING', 'CANCELED');
+
 BEGIN;
 CREATE TYPE "public"."Stage_new" AS ENUM ('IDLE', 'REGISTRATION', 'CLOSED', 'COMPLETED');
 ALTER TABLE "public"."scrim" ALTER COLUMN "stage" DROP DEFAULT;
