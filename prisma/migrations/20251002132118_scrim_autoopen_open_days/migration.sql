@@ -11,19 +11,40 @@ SET "stage" = 'IDLE'
 WHERE "stage" IN ('CONFIGURATION', 'SLOT_ALLOCATION', 'ONGOING', 'CANCELED');
 
 BEGIN;
+
+-- Create the new enum first
 CREATE TYPE "public"."Stage_new" AS ENUM ('IDLE', 'REGISTRATION', 'CLOSED', 'COMPLETED');
+
+-- Drop default to safely alter
 ALTER TABLE "public"."scrim" ALTER COLUMN "stage" DROP DEFAULT;
-ALTER TABLE "public"."scrim" ALTER COLUMN "stage" TYPE "public"."Stage_new" USING ("stage"::text::"public"."Stage_new");
+
+-- Safely cast old values to new enum (map all old values to 'IDLE')
+ALTER TABLE "public"."scrim" ALTER COLUMN "stage" TYPE "public"."Stage_new"
+USING (
+  CASE "stage"
+    WHEN 'CONFIGURATION' THEN 'IDLE'::text::"public"."Stage_new"
+    WHEN 'SLOT_ALLOCATION' THEN 'IDLE'::text::"public"."Stage_new"
+    WHEN 'ONGOING' THEN 'IDLE'::text::"public"."Stage_new"
+    WHEN 'CANCELED' THEN 'IDLE'::text::"public"."Stage_new"
+    ELSE "stage"::text::"public"."Stage_new"
+  END
+);
+
+-- Replace old enum
 ALTER TYPE "public"."Stage" RENAME TO "Stage_old";
 ALTER TYPE "public"."Stage_new" RENAME TO "Stage";
 DROP TYPE "public"."Stage_old";
+
+-- Set default
 ALTER TABLE "public"."scrim" ALTER COLUMN "stage" SET DEFAULT 'IDLE';
+
 COMMIT;
 
 -- AlterTable
-ALTER TABLE "public"."scrim" ALTER COLUMN "stage" SET DEFAULT 'IDLE',
-DROP COLUMN "open_days",
-ADD COLUMN     "open_days" INTEGER[];
+ALTER TABLE "public"."scrim"
+  ALTER COLUMN "stage" SET DEFAULT 'IDLE',
+  DROP COLUMN IF EXISTS "open_days",
+  ADD COLUMN "open_days" INTEGER[];
 
 -- DropEnum
-DROP TYPE "public"."OpenDays";
+DROP TYPE IF EXISTS "public"."OpenDays";
