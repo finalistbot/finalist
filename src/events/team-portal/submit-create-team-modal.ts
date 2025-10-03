@@ -42,7 +42,7 @@ export default class TeamModelSubmit extends Event<"interactionCreate"> {
       normalized
     );
     await interaction.editReply({
-      content: `Team "${team.name}" created successfully! Your team code is: \`${team.code}\`. Share this code with your teammates to join your team.`,
+      content: `Team **${team.name}** created successfully! Your team code is: \`${team.code}\`. Share this code with your teammates to join your team.`,
     });
   }
 }
