@@ -1,13 +1,12 @@
 import { TeamRole } from "@prisma/client";
 import { ScrimService } from "./scrim";
-import { Guild, Interaction, User } from "discord.js";
+import { Guild, User } from "discord.js";
 import { prisma } from "@/lib/prisma";
 import { BracketError } from "@/base/classes/error";
 import { ensureUser } from "@/database";
 import { randomString } from "@/lib/utils";
 import { isUserBanned } from "@/checks/banned";
 import { MAX_TEAM_SIZE } from "@/lib/constants";
-import th from "zod/v4/locales/th.js";
 
 type CreateTeamData = {
   teamName: string;

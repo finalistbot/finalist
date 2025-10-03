@@ -1,6 +1,5 @@
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { Stage } from "@prisma/client";
 import { Interaction } from "discord.js";
 
 export default class SubmitKickMember extends Event<"interactionCreate"> {

@@ -1,10 +1,6 @@
 import z from "zod";
 import { Event } from "@/base/classes/event";
 import { Interaction } from "discord.js";
-import { prisma } from "@/lib/prisma";
-import { MAX_TEAM_SIZE } from "@/lib/constants";
-import { ensureUser } from "@/database";
-import { TeamRole } from "@prisma/client";
 const JoinTeamSchema = z.object({
   code: z.string().length(8),
   ign: z.string().min(3).max(100),

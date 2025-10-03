@@ -1,5 +1,4 @@
 import { Event } from "@/base/classes/event";
-import { prisma } from "@/lib/prisma";
 import { Interaction } from "discord.js";
 
 export default class SubmitDisbandTeamSelection extends Event<"interactionCreate"> {
