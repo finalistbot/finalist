@@ -1,4 +1,5 @@
 import { Event } from "@/base/classes/event";
+import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import {
   ActionRowBuilder,
@@ -29,7 +30,8 @@ export default class ShowKickTeamMemberSelection extends Event<"interactionCreat
     }
     const embed = new EmbedBuilder()
       .setTitle("Kick Team Member")
-      .setDescription("Select a member to kick from the team");
+      .setDescription("Select a member to kick from the team")
+      .setColor(BRAND_COLOR);
     const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId(`kick_member_selection:${teamId}`)

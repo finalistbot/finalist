@@ -26,6 +26,7 @@ export default class SubmitKickMember extends Event<"interactionCreate"> {
       await interaction.editReply({
         content:
           "You are not a captain of this team or the team does not exist in this server.",
+        embeds: [],
         components: [],
       });
       return;
@@ -33,6 +34,7 @@ export default class SubmitKickMember extends Event<"interactionCreate"> {
     if (team.banned) {
       await interaction.editReply({
         content: "This team is banned and cannot kick members.",
+        embeds: [],
         components: [],
       });
       return;
@@ -43,6 +45,7 @@ export default class SubmitKickMember extends Event<"interactionCreate"> {
     if (!teamMember) {
       await interaction.editReply({
         content: "This user is not a member of the team.",
+        embeds: [],
         components: [],
       });
       return;
@@ -50,6 +53,7 @@ export default class SubmitKickMember extends Event<"interactionCreate"> {
     if (teamMember.role === "CAPTAIN") {
       await interaction.editReply({
         content: "You cannot kick a captain from the team.",
+        embeds: [],
         components: [],
       });
       return;
