@@ -39,7 +39,7 @@ export default class GlobalJoinTeamModalSubmit extends Event<"interactionCreate"
     const team = await this.client.teamManageService.joinTeam(
       interaction.user,
       interaction.guildId!,
-      normalized
+      normalized,
     );
     await interaction.editReply({
       content: `You have successfully joined the team **${team.name}**!`,

@@ -14,7 +14,7 @@ export default class SubmitDisbandTeamSelection extends Event<"interactionCreate
     const team = await this.client.teamManageService.disbandTeam(
       interaction.guild,
       teamId,
-      interaction.user.id
+      interaction.user.id,
     );
 
     await interaction.editReply({

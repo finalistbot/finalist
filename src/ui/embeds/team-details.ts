@@ -47,7 +47,7 @@ export default async function teamDetailsEmbed(team: Team) {
         name: "Status",
         value: team.banned ? "🚫 Banned" : "✅ Active",
         inline: true,
-      }
+      },
     )
     .setFooter({ text: `Team ID: ${team.id}` })
     .setTimestamp();

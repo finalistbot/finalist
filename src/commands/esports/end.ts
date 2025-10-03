@@ -22,7 +22,7 @@ export default class EndScrim extends Command {
         .setName("scrim")
         .setDescription("Scrim to end")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     );
   info: CommandInfo = {
     name: "end",
@@ -95,7 +95,7 @@ export default class EndScrim extends Command {
       scrims.map((scrim) => ({
         name: `${scrim.id}: ${scrim.name}`,
         value: scrim.id,
-      }))
+      })),
     );
   }
 }

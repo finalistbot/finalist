@@ -19,7 +19,7 @@ export default class TeamPortalCommand extends Command {
         .setName("channel")
         .setDescription("Channel to post the team portal")
         .setRequired(true)
-        .addChannelTypes(0, 5)
+        .addChannelTypes(0, 5),
     );
   info: CommandInfo = {
     name: "teamportal",
@@ -66,7 +66,7 @@ export default class TeamPortalCommand extends Command {
     const embed = new EmbedBuilder()
       .setTitle("Team Portal")
       .setDescription(
-        "Welcome to the Team Portal! Here you can create and manage your teams for various esports tournaments and events. Use the buttons below to get started."
+        "Welcome to the Team Portal! Here you can create and manage your teams for various esports tournaments and events. Use the buttons below to get started.",
       )
       .setColor(BRAND_COLOR);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -81,7 +81,7 @@ export default class TeamPortalCommand extends Command {
       new ButtonBuilder()
         .setLabel("Join Team")
         .setStyle(ButtonStyle.Secondary)
-        .setCustomId(`show_join_team_model`)
+        .setCustomId(`show_join_team_model`),
     );
     await channel.send({ embeds: [embed], components: [row] });
     await interaction.editReply({

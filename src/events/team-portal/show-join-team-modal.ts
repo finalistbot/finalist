@@ -17,8 +17,8 @@ function createTeamModal() {
         .setMinLength(6)
         .setMaxLength(8)
         .setPlaceholder("Enter the 6 character team code")
-        .setRequired(true)
-    )
+        .setRequired(true),
+    ),
   ),
     rows.push(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -29,8 +29,8 @@ function createTeamModal() {
           .setMinLength(3)
           .setMaxLength(100)
           .setPlaceholder("Enter your in-game name")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
     ),
     rows.push(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -42,8 +42,8 @@ function createTeamModal() {
           .setMaxLength(5)
           .setPlaceholder("Are you joining as a substitute? (true/false)")
           .setRequired(false)
-          .setValue("false")
-      )
+          .setValue("false"),
+      ),
     ));
 
   return new ModalBuilder()

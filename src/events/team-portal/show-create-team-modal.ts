@@ -17,8 +17,8 @@ function CreateTeamModal() {
         .setMinLength(2)
         .setMaxLength(100)
         .setPlaceholder("Enter your global team name")
-        .setRequired(true)
-    )
+        .setRequired(true),
+    ),
   );
   rows.push(
     new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -29,8 +29,8 @@ function CreateTeamModal() {
         .setMinLength(3)
         .setMaxLength(100)
         .setPlaceholder("Enter your in-game name")
-        .setRequired(true)
-    )
+        .setRequired(true),
+    ),
   );
   rows.push(
     new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -41,8 +41,8 @@ function CreateTeamModal() {
         .setMinLength(2)
         .setMaxLength(100)
         .setPlaceholder("Set your team tag")
-        .setRequired(false)
-    )
+        .setRequired(false),
+    ),
   );
 
   return new ModalBuilder()

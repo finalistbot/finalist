@@ -35,7 +35,7 @@ export default class TeamSelectHandler extends Event<"interactionCreate"> {
       new ButtonBuilder()
         .setCustomId(`register_team_for_registration:${team.id}`)
         .setLabel("Register Team")
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
     );
 
     await interaction.editReply({

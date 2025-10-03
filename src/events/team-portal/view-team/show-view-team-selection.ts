@@ -43,8 +43,8 @@ export default class ShowViemTeamSelection extends Event<"interactionCreate"> {
             label: team.name,
             description: `Register ${team.name} for the scrim`,
             value: team.id.toString(),
-          }))
-        )
+          })),
+        ),
     );
 
     await interaction.editReply({ embeds: [embed], components: [row] });

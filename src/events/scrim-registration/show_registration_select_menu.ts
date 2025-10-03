@@ -67,8 +67,8 @@ export default class ShowRegistrationSelectMenu extends Event<"interactionCreate
             label: team.name,
             description: `Register ${team.name} for the scrim`,
             value: team.id.toString(),
-          }))
-        )
+          })),
+        ),
     );
     await interaction.editReply({
       content: "Select a team to register for the scrim:",

@@ -45,8 +45,8 @@ export default class ShowDisbandTeamSelection extends Event<"interactionCreate">
             label: team.name,
             description: `Team with ${team.teamMembers.length} members`,
             value: team.id.toString(),
-          }))
-        )
+          })),
+        ),
     );
     await interaction.editReply({ embeds: [embed], components: [row] });
   }

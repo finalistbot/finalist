@@ -41,8 +41,8 @@ export default class ShowKickTeamMemberSelection extends Event<"interactionCreat
             label: member.user.name,
             description: `Kick ${member.user.name} from the team`,
             value: member.userId,
-          }))
-        )
+          })),
+        ),
     );
     await interaction.editReply({
       embeds: [embed],

@@ -37,7 +37,7 @@ export class TeamManageService extends ScrimService {
     });
     if (existing) {
       throw new BracketError(
-        `A team with the name **${parsed.teamName}** already exists. Please choose a different name.`
+        `A team with the name **${parsed.teamName}** already exists. Please choose a different name.`,
       );
     }
     const captainTeamsCount = await prisma.team.count({
@@ -51,7 +51,7 @@ export class TeamManageService extends ScrimService {
 
     if (captainTeamsCount >= maxTeamsPerCaptain) {
       throw new BracketError(
-        `You have reached the maximum number of teams (${maxTeamsPerCaptain}) you can create as a captain.`
+        `You have reached the maximum number of teams (${maxTeamsPerCaptain}) you can create as a captain.`,
       );
     }
     const teamCode = randomString(8);
@@ -98,7 +98,7 @@ export class TeamManageService extends ScrimService {
     const currentTeamSize = team.teamMembers.length;
     if (currentTeamSize >= MAX_TEAM_SIZE) {
       throw new BracketError(
-        `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`
+        `This team has reached the maximum size of ${MAX_TEAM_SIZE} players.`,
       );
     }
 
@@ -135,7 +135,7 @@ export class TeamManageService extends ScrimService {
     });
     if (!team) {
       throw new BracketError(
-        "The selected team does not exist or you are not a captain of the team."
+        "The selected team does not exist or you are not a captain of the team.",
       );
     }
     if (team.banned) {
@@ -146,7 +146,7 @@ export class TeamManageService extends ScrimService {
     });
     if (registeredIn > 0) {
       throw new BracketError(
-        "You cannot disband a team that is registered for a scrim. Please contact staff for assistance."
+        "You cannot disband a team that is registered for a scrim. Please contact staff for assistance.",
       );
     }
 
