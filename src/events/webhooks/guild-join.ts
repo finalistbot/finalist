@@ -20,6 +20,7 @@ export default class GuildJoin extends Event<"guildCreate"> {
     if (!this.webhookClient) return;
 
     try {
+      const owner = await guild.fetchOwner();
       const embed = new EmbedBuilder()
         .setTitle("📥 Joined a Guild")
         .setColor(Colors.Green)
@@ -27,6 +28,10 @@ export default class GuildJoin extends Event<"guildCreate"> {
         .addFields(
           { name: "Guild Name", value: guild.name, inline: true },
           { name: "Guild ID", value: guild.id, inline: true },
+          {
+            name: "Owner",
+            value: `${owner.user.username} (${owner.id})`,
+          },
           {
             name: "Members",
             value: guild.memberCount.toString(),

@@ -22,10 +22,10 @@ export default class HelpCommand extends Command {
       option
         .setName("name")
         .setDescription(
-          "Get help for a specific command, subcommand, or category."
+          "Get help for a specific command, subcommand, or category.",
         )
         .setRequired(false)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     );
   info: CommandInfo = {
     name: "help",
@@ -66,13 +66,13 @@ export default class HelpCommand extends Command {
       const command = CommandRegistory.getCommand(commandName.toLowerCase());
       if (command && command.info?.subcommands) {
         const subcommand = command.info.subcommands.find(
-          (sub) => sub.name.toLowerCase() === subcommandName.toLowerCase()
+          (sub) => sub.name.toLowerCase() === subcommandName.toLowerCase(),
         );
         if (subcommand) {
           return await this.sendSubcommandHelp(
             interaction,
             command,
-            subcommand
+            subcommand,
           );
         }
       }
@@ -98,8 +98,8 @@ export default class HelpCommand extends Command {
       new Set(
         CommandRegistory.getAllCommands()
           .map((cmd) => cmd.info?.category)
-          .filter(Boolean)
-      )
+          .filter(Boolean),
+      ),
     );
 
     await interaction.reply({
@@ -131,7 +131,7 @@ export default class HelpCommand extends Command {
         .setTitle("📚 Command Help")
         .setDescription(
           `Showing **${allCommands.length}** available commands\n\n` +
-            `💡 Use \`/help name:command\` for detailed information`
+            `💡 Use \`/help name:command\` for detailed information`,
         )
         .setColor(BRAND_COLOR)
         .setFooter({
@@ -180,7 +180,7 @@ export default class HelpCommand extends Command {
           .setCustomId("last")
           .setLabel("Last ⏭️")
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1)
+          .setDisabled(page === totalPages - 1),
       );
       return row;
     };
@@ -258,7 +258,7 @@ export default class HelpCommand extends Command {
             .setCustomId("last")
             .setLabel("Last ⏭️")
             .setStyle(ButtonStyle.Secondary)
-            .setDisabled(true)
+            .setDisabled(true),
         );
 
         const currentEmbed = EmbedBuilder.from(message.embeds[0]!).setFooter({
@@ -277,7 +277,7 @@ export default class HelpCommand extends Command {
 
   async sendCommandHelp(
     interaction: ChatInputCommandInteraction,
-    command: Command
+    command: Command,
   ) {
     if (!command.info) {
       return interaction.reply({
@@ -369,7 +369,7 @@ export default class HelpCommand extends Command {
   async sendSubcommandHelp(
     interaction: ChatInputCommandInteraction,
     command: Command,
-    subcommand: any
+    subcommand: any,
   ) {
     if (!command.info) {
       return interaction.reply({
@@ -430,7 +430,7 @@ export default class HelpCommand extends Command {
 
   async sendCategoryHelp(
     interaction: ChatInputCommandInteraction,
-    category: CommandCategory
+    category: CommandCategory,
   ) {
     const commands = CommandRegistory.getCommandsByCategory(category.name)
       .filter((cmd) => cmd.info)
@@ -450,7 +450,7 @@ export default class HelpCommand extends Command {
         .setTitle(`${emoji} ${category.name} Commands`)
         .setDescription(
           `**${commands.length}** commands in this category\n\n` +
-            `💡 Use \`/help name:command\` for detailed information`
+            `💡 Use \`/help name:command\` for detailed information`,
         )
         .setColor(BRAND_COLOR)
         .setFooter({
@@ -513,7 +513,7 @@ export default class HelpCommand extends Command {
           .setCustomId("cat_last")
           .setLabel("Last ⏭️")
           .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1)
+          .setDisabled(page === totalPages - 1),
       );
       return row;
     };
@@ -578,14 +578,14 @@ export default class HelpCommand extends Command {
       new Set(
         CommandRegistory.getAllCommands()
           .map((cmd) => cmd.info?.category)
-          .filter((cat): cat is string => Boolean(cat))
-      )
+          .filter((cat): cat is string => Boolean(cat)),
+      ),
     );
     const allOptions = [...allCommands, ...categories];
     const filtered = allOptions
       .filter(
         (option): option is string =>
-          typeof option === "string" && option.toLowerCase().includes(focused)
+          typeof option === "string" && option.toLowerCase().includes(focused),
       )
       .slice(0, 25)
       .map((option) => ({

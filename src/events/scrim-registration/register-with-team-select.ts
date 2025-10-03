@@ -43,7 +43,7 @@ export default class RegisterWithTeamSelect extends Event<"interactionCreate"> {
     const embed = new EmbedBuilder()
       .setTitle("✅ Team Registered")
       .setDescription(
-        `Team **${registeredTeam.name}** has been successfully registered for the scrim!`
+        `Team **${registeredTeam.name}** has been successfully registered for the scrim!`,
       )
       .setColor(BRAND_COLOR);
 
