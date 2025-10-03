@@ -22,7 +22,7 @@ export default class ShowManageTeamEmbed extends Event<"interactionCreate"> {
       .setColor(BRAND_COLOR);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId("kick_member")
+        .setCustomId("show_kick_member_team_selection")
         .setLabel("Kick Member")
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
@@ -30,7 +30,7 @@ export default class ShowManageTeamEmbed extends Event<"interactionCreate"> {
         .setLabel("View Team")
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId("disband_team")
+        .setCustomId("show_disband_team_selection")
         .setLabel("Disband Team")
         .setStyle(ButtonStyle.Danger)
     );

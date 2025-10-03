@@ -51,7 +51,7 @@ function CreateTeamModal() {
     .addComponents(...rows);
 }
 
-export default class ShowGlobalTeamModel extends Event<"interactionCreate"> {
+export default class ShowTeamModel extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isButton()) return;

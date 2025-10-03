@@ -7,7 +7,7 @@ const TeamConfigSchema = z.object({
   tag: z.string().max(10).optional(),
 });
 
-export default class GlobalTeamModelSubmit extends Event<"interactionCreate"> {
+export default class TeamModelSubmit extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
     if (!interaction.isModalSubmit()) return;
