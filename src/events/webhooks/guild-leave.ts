@@ -27,6 +27,7 @@ export default class GuildLeave extends Event<"guildDelete"> {
         .addFields(
           { name: "Guild Name", value: guild.name, inline: true },
           { name: "Guild ID", value: guild.id, inline: true },
+          { name: "Owner", value: guild.ownerId ? guild.ownerId : "Unknown" },
           {
             name: "Members",
             value: guild.memberCount.toString(),
