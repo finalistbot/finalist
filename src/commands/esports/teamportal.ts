@@ -75,6 +75,10 @@ export default class TeamPortalCommand extends Command {
         .setStyle(ButtonStyle.Success)
         .setCustomId(`show_create_team_modal`),
       new ButtonBuilder()
+        .setLabel("Manage Teams")
+        .setStyle(ButtonStyle.Primary)
+        .setCustomId(`show_manage_teams`),
+      new ButtonBuilder()
         .setLabel("Join Team")
         .setStyle(ButtonStyle.Secondary)
         .setCustomId(`show_join_team_model`)

@@ -2,12 +2,11 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   Interaction,
 } from "discord.js";
 import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
-import { BRAND_COLOR } from "@/lib/constants";
+
 import teamDetailsEmbed from "@/ui/embeds/team-details";
 
 export default class TeamSelectHandler extends Event<"interactionCreate"> {
@@ -29,12 +28,6 @@ export default class TeamSelectHandler extends Event<"interactionCreate"> {
       await interaction.editReply({ content: "Team not found." });
       return;
     }
-
-    const members =
-      team.teamMembers
-        .filter((m) => m.role !== "SUBSTITUTE")
-        .map((m) => `<@${m.userId}> (${m.role})`)
-        .join("\n") || "None";
 
     const embed = await teamDetailsEmbed(team);
 

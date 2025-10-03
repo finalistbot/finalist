@@ -33,7 +33,7 @@ export default class GlobalTeamModelSubmit extends Event<"interactionCreate"> {
     }
     const normalized = {
       ...parsed.data,
-      tag: parsed.data.tag ?? null,
+      tag: parsed.data.tag ?? "",
     };
 
     const team = await this.client.teamManageService.createTeam(
