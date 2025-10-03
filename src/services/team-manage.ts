@@ -7,6 +7,7 @@ import { ensureUser } from "@/database";
 import { randomString } from "@/lib/utils";
 import { isUserBanned } from "@/checks/banned";
 import { MAX_TEAM_SIZE } from "@/lib/constants";
+import th from "zod/v4/locales/th.js";
 
 type CreateTeamData = {
   teamName: string;
@@ -117,6 +118,41 @@ export class TeamManageService extends ScrimService {
         position: memberCount + 1,
         role: role,
       },
+    });
+    return team;
+  }
+  async disbandTeam(guild: Guild, teamId: number, userId: string) {
+    const isBanned = await isUserBanned(guild.id, userId);
+    if (isBanned) {
+      throw new BracketError("You are banned from creating or joining teams.");
+    }
+    const team = await prisma.team.findFirst({
+      where: {
+        id: teamId,
+        guildId: guild.id,
+        teamMembers: { some: { userId: userId, role: "CAPTAIN" } },
+      },
+      include: { teamMembers: true },
+    });
+    if (!team) {
+      throw new BracketError(
+        "The selected team does not exist or you are not a captain of the team."
+      );
+    }
+    if (team.banned) {
+      throw new BracketError("You cannot disband a team that is banned.");
+    }
+    const registeredIn = await prisma.registeredTeam.count({
+      where: { teamId: team.id },
+    });
+    if (registeredIn > 0) {
+      throw new BracketError(
+        "You cannot disband a team that is registered for a scrim. Please contact staff for assistance."
+      );
+    }
+
+    await prisma.team.delete({
+      where: { id: team.id },
     });
     return team;
   }

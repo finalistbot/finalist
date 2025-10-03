@@ -345,51 +345,19 @@ export default class TeamCommand extends Command {
       { teamName, ign, tag }
     );
     await interaction.editReply({
-      content: `Team "${team.name}" created successfully! Your team code is: \`${team.code}\`. Share this code with your teammates to join your team.`,
+      content: `Team **${team.name}** created successfully! Your team code is: \`${team.code}\`. Share this code with your teammates to join your team.`,
     });
   }
 
   async disbandTeam(interaction: ChatInputCommandInteraction) {
     const teamId = interaction.options.getInteger("team", true);
-    const team = await prisma.team.findUnique({
-      where: {
-        id: teamId,
-        guildId: interaction.guildId!,
-        teamMembers: { some: { role: "CAPTAIN", userId: interaction.user.id } },
-      },
-    });
-    if (!team) {
-      await interaction.reply({
-        content:
-          "You are not the captain of this team or the team does not exist.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    if (team.banned) {
-      await interaction.reply({
-        content: "You cannot disband a team that is banned.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-    const registeredIn = await prisma.registeredTeam.count({
-      where: { teamId: team.id },
-    });
-    if (registeredIn > 0) {
-      await interaction.reply({
-        content:
-          "You cannot disband a team that is registered for a scrim. Please contact staff for assistance.",
-        flags: "Ephemeral",
-      });
-      return;
-    }
-
-    await prisma.team.delete({
-      where: { id: teamId },
-    });
+    const team = await this.client.teamManageService.disbandTeam(
+      interaction.guild!,
+      teamId,
+      interaction.user.id
+    );
     await interaction.reply({
-      content: "Team disbanded successfully.",
+      content: `The team **${team.name}** has been disbanded.`,
       flags: "Ephemeral",
     });
   }
