@@ -76,19 +76,34 @@ export default class TeamPortalCommand extends Command {
     await interaction.deferReply({ flags: "Ephemeral" });
 
     const embed = new EmbedBuilder()
-      .setTitle("Team Portal")
+      .setColor(BRAND_COLOR)
+      .setTitle("🏆 Team Portal")
       .setDescription(
-        "Welcome to the Team Portal! Here you can create and manage your teams for various esports tournaments and events. Use the buttons below to get started."
+        [
+          "Welcome to the **Team Portal**!",
+          "",
+          "Here you can create and manage your teams for upcoming **esports tournaments** and **events**.",
+          "",
+          "✨ Use the buttons below to get started:",
+          "- ➕ Create a new team",
+          "- 👥 Manage your existing team",
+          "- 🔍 Join an available team",
+        ].join("\n")
       )
-      .setColor(BRAND_COLOR);
+      .setImage("https://i.ibb.co/F4ZVSzQQ/Banner.png")
+      .setThumbnail(
+        "https://images-ext-1.discordapp.net/external/_UijtMhz2hbKZ0ipU8Cg517p6vOGgYHYE5CgezQmuTA/https/i.ibb.co/1Ytxb4LJ/Finalist.png?format=webp&quality=lossless"
+      )
+      .setFooter({ text: "Powered by Finalist" })
+      .setTimestamp();
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel("Create Team")
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Success)
         .setCustomId(`show_create_team_modal`),
       new ButtonBuilder()
         .setLabel("Manage Teams")
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Secondary)
         .setCustomId(`show_manage_team_options`),
       new ButtonBuilder()
         .setLabel("Join Team")

@@ -30,13 +30,13 @@ export default class ShowManageTeamEmbed extends Event<"interactionCreate"> {
         .setLabel("View Team")
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId(`submit_disband_team_selection:${teamId}`)
-        .setLabel("Disband Team")
-        .setStyle(ButtonStyle.Danger),
-      new ButtonBuilder()
         .setLabel("Leave Team")
         .setStyle(ButtonStyle.Danger)
-        .setCustomId(`submit_team_leave_selection:${teamId}`)
+        .setCustomId(`submit_team_leave_selection:${teamId}`),
+      new ButtonBuilder()
+        .setCustomId(`submit_disband_team_selection:${teamId}`)
+        .setLabel("Disband Team")
+        .setStyle(ButtonStyle.Danger)
     );
     await interaction.editReply({ embeds: [embed], components: [row] });
   }

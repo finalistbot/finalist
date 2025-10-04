@@ -1,6 +1,7 @@
 import z from "zod";
 import { Event } from "@/base/classes/event";
 import { Interaction } from "discord.js";
+import { BracketError } from "@/base/classes/error";
 const JoinTeamSchema = z.object({
   code: z.string().length(8),
   ign: z.string().min(3).max(100),
@@ -36,11 +37,24 @@ export default class GlobalJoinTeamModalSubmit extends Event<"interactionCreate"
       ign: parsed.data.ign,
       substitute: parsed.data.substitute ?? false,
     };
-    const team = await this.client.teamManageService.joinTeam(
-      interaction.user,
-      interaction.guildId!,
-      normalized,
-    );
+    let team;
+    try {
+      team = await this.client.teamManageService.joinTeam(
+        interaction.user,
+        interaction.guildId!,
+        normalized
+      );
+    } catch (e) {
+      if (e instanceof BracketError) {
+        await interaction.editReply({
+          content: e.message,
+          embeds: [],
+          components: [],
+        });
+        return;
+      }
+      throw e;
+    }
     await interaction.editReply({
       content: `You have successfully joined the team **${team.name}**!`,
     });
