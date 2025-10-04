@@ -53,7 +53,7 @@ export default class EndScrim extends Command {
     });
     if (!scrim) throw new BracketError("Scrim not found");
 
-    if (scrim.stage in ([Stage.COMPLETED, Stage.CANCELED] as const))
+    if (scrim.stage == Stage.COMPLETED)
       throw new BracketError("This scrim has already been ended");
     await prisma.scrim.update({
       where: { id: scrim.id },
@@ -74,7 +74,10 @@ export default class EndScrim extends Command {
     let scrims: { id: number; name: string }[] = [];
     if (search.length < 1) {
       scrims = await prisma.scrim.findMany({
-        where: { guildId: interaction.guildId, stage: Stage.ONGOING },
+        where: {
+          guildId: interaction.guildId,
+          stage: { not: Stage.COMPLETED },
+        },
         take: 25,
         select: { id: true, name: true },
       });

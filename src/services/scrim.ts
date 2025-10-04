@@ -3,12 +3,18 @@ import { Service } from "@/base/classes/service";
 import { slotsToTable } from "@/commands/esports/slotlist";
 import { getFirstAvailableSlot } from "@/database";
 import { queue } from "@/lib/bullmq";
-import { BRAND_COLOR, SCRIM_REGISTRATION_START } from "@/lib/constants";
+import {
+  BRAND_COLOR,
+  DAYS_OF_WEEK,
+  SCRIM_REGISTRATION_START,
+} from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
+import * as dateFns from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -24,12 +30,14 @@ export class ScrimService extends Service {
       `${SCRIM_REGISTRATION_START}:${scrim.id}`,
     );
     if (existingJob) {
-      await existingJob.remove();
+      try {
+        await existingJob.remove();
+      } catch {}
       logger.info(
         `Existing registration open job for scrim ${scrim.id} removed`,
       );
     }
-    if (scrim.stage != "CONFIGURATION") {
+    if (scrim.stage != "IDLE") {
       logger.warn(
         `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`,
       );
@@ -54,10 +62,49 @@ export class ScrimService extends Service {
       )} seconds`,
     );
   }
+  async scheduleAutoCleanup(scrim: Scrim) {}
   async openRegistration(scrim: Scrim) {
     if (scrim.stage == "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is already in registration stage`);
       throw new BracketError("Scrim is already in registration stage.");
+    }
+    await this.scheduleAutoCleanup(scrim);
+
+    // Clear all older teams/slots if any
+    await prisma.registeredTeam.deleteMany({
+      where: { scrimId: scrim.id },
+    });
+
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { id: scrim.guildId },
+    });
+
+    let timezone = guildConfig?.timezone || "UTC";
+
+    const zonedDate = toZonedTime(new Date(), timezone);
+    const dayOfWeek = dateFns.getDay(zonedDate);
+    let daysToAdd = 1;
+    if (scrim.openDays.length > 0) {
+      while (true) {
+        const checkDay = (dayOfWeek + daysToAdd) % 7;
+        if (scrim.openDays.includes(checkDay)) {
+          break;
+        }
+        daysToAdd++;
+      }
+    }
+    if (daysToAdd > 0) {
+      let registrationStartTime = fromZonedTime(
+        dateFns.addDays(zonedDate, daysToAdd),
+        timezone,
+      );
+      scrim = await prisma.scrim.update({
+        where: { id: scrim.id },
+        data: {
+          registrationStartTime,
+        },
+      });
+      await this.scheduleRegistrationStart(scrim);
     }
 
     let channel;
@@ -91,7 +138,7 @@ export class ScrimService extends Service {
 
     await prisma.scrim.update({
       where: { id: scrim.id },
-      data: { stage: "REGISTRATION" },
+      data: { stage: "REGISTRATION", registrationEndedTime: null },
     });
     logger.info(`Scrim ${scrim.id} moved to registration stage`);
     await this.updateScrimConfigMessage(scrim);
@@ -127,7 +174,7 @@ export class ScrimService extends Service {
     // Update Scrim Stageto Ongoing
     await prisma.scrim.update({
       where: { id: scrim.id },
-      data: { stage: "SLOT_ALLOCATION" },
+      data: { stage: "CLOSED" },
     });
     logger.info(`Scrim ${scrim.id} moved to slot allocation stage`);
     await this.updateScrimConfigMessage(scrim);
@@ -232,8 +279,7 @@ export class ScrimService extends Service {
     }
   }
   private getScrimConfigComponents(scrim: Scrim) {
-    const canConfigure =
-      scrim.stage === Stage.CONFIGURATION || scrim.stage === Stage.REGISTRATION;
+    const canConfigure = true;
     const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`show_team_config_modal:${scrim.id}`)
@@ -268,6 +314,13 @@ export class ScrimService extends Service {
         .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!canConfigure),
+
+      new ButtonBuilder()
+        .setCustomId(`open_days_config_show:${scrim.id}`)
+        .setLabel("Set Open Days")
+        .setEmoji("📅")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!canConfigure),
     );
 
     const startRegistrationButton = new ButtonBuilder()
@@ -275,7 +328,7 @@ export class ScrimService extends Service {
       .setLabel("Start Registration")
       .setEmoji("▶️")
       .setStyle(ButtonStyle.Success)
-      .setDisabled(scrim.stage !== Stage.CONFIGURATION);
+      .setDisabled(scrim.stage == Stage.REGISTRATION);
 
     // TODO: Add Pause Registration Button, requires a new stage "PAUSED"
 
@@ -329,6 +382,13 @@ export class ScrimService extends Service {
             `**Auto-Close:** ${
               scrim.autoCloseRegistration ? "✅ Enabled" : "❌ Disabled"
             }`,
+            "**Open Days:** " +
+              (scrim.openDays.length > 0
+                ? scrim.openDays
+                    .sort((a, b) => a - b)
+                    .map((d) => DAYS_OF_WEEK[d])
+                    .join(", ")
+                : "Only once"),
           ].join("\n"),
           inline: false,
         },
