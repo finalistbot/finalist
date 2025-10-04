@@ -1,6 +1,7 @@
 import { EventLogger } from "@/services/event-logger";
 import { RoleManageService } from "@/services/role-manage";
 import { ScrimService } from "@/services/scrim";
+import { TeamManageService } from "@/services/team-manage";
 import { createWorker } from "@/workers/worker";
 import { Worker } from "bullmq";
 import { Client, ClientOptions } from "discord.js";
@@ -9,6 +10,7 @@ export class BracketClient extends Client {
   public ownerIds: Set<string>;
   public scrimService: ScrimService;
   public rolemanageService: RoleManageService;
+  public teamManageService: TeamManageService;
   public worker: Worker;
   public eventLogger: EventLogger;
 
@@ -17,6 +19,7 @@ export class BracketClient extends Client {
     this.ownerIds = new Set(extra?.ownerIds);
     this.scrimService = new ScrimService(this);
     this.rolemanageService = new RoleManageService(this);
+    this.teamManageService = new TeamManageService(this);
     this.worker = createWorker(this);
     this.eventLogger = new EventLogger(this);
   }

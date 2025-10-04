@@ -1,0 +1,53 @@
+import { Event } from "@/base/classes/event";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import {
+  ActionRowBuilder,
+  EmbedBuilder,
+  Interaction,
+  StringSelectMenuBuilder,
+} from "discord.js";
+
+export default class ShowKickTeamMemberSelection extends Event<"interactionCreate"> {
+  event = "interactionCreate" as const;
+  async execute(interaction: Interaction<"cached">) {
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith("show_member_to_kick_selection:"))
+      return;
+    if (!interaction.inGuild()) return;
+    await interaction.deferUpdate();
+
+    const teamId = parseInt(interaction.customId.split(":")[1]!);
+    const members = await prisma.teamMember.findMany({
+      where: { teamId },
+      include: { user: true },
+    });
+    if (members.length === 0) {
+      await interaction.editReply({
+        content: "This team has no members to kick.",
+        components: [],
+      });
+      return;
+    }
+    const embed = new EmbedBuilder()
+      .setTitle("Kick Team Member")
+      .setDescription("Select a member to kick from the team")
+      .setColor(BRAND_COLOR);
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`kick_member_selection:${teamId}`)
+        .setPlaceholder("Select a member to kick")
+        .addOptions(
+          members.map((member) => ({
+            label: member.user.name,
+            description: `Kick ${member.user.name} from the team`,
+            value: member.userId,
+          }))
+        )
+    );
+    await interaction.editReply({
+      embeds: [embed],
+      components: [row],
+    });
+  }
+}
