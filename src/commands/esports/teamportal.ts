@@ -1,5 +1,7 @@
 import { Command } from "@/base/classes/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
+import { suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import {
   ActionRowBuilder,
@@ -19,7 +21,7 @@ export default class TeamPortalCommand extends Command {
         .setName("channel")
         .setDescription("Channel to post the team portal")
         .setRequired(true)
-        .addChannelTypes(0, 5),
+        .addChannelTypes(0, 5)
     );
   info: CommandInfo = {
     name: "teamportal",
@@ -38,11 +40,20 @@ export default class TeamPortalCommand extends Command {
     ],
   };
   async execute(interaction: ChatInputCommandInteraction<"cached">) {
+    const isAdmin = await suppress(isScrimAdmin(interaction), false);
+    if (!isAdmin) {
+      await interaction.reply({
+        content: "You do not have permission to use this command.",
+        flags: ["Ephemeral"],
+      });
+      return;
+    }
+
     const channel = interaction.options.getChannel("channel", true);
     if (!channel.isTextBased()) {
       await interaction.reply({
         content: "Please select a text-based channel.",
-        ephemeral: true,
+        flags: ["Ephemeral"],
       });
       return;
     }
@@ -63,16 +74,17 @@ export default class TeamPortalCommand extends Command {
       return;
     }
     await interaction.deferReply({ flags: "Ephemeral" });
+
     const embed = new EmbedBuilder()
       .setTitle("Team Portal")
       .setDescription(
-        "Welcome to the Team Portal! Here you can create and manage your teams for various esports tournaments and events. Use the buttons below to get started.",
+        "Welcome to the Team Portal! Here you can create and manage your teams for various esports tournaments and events. Use the buttons below to get started."
       )
       .setColor(BRAND_COLOR);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel("Create Team")
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Primary)
         .setCustomId(`show_create_team_modal`),
       new ButtonBuilder()
         .setLabel("Manage Teams")
@@ -82,6 +94,10 @@ export default class TeamPortalCommand extends Command {
         .setLabel("Join Team")
         .setStyle(ButtonStyle.Secondary)
         .setCustomId(`show_join_team_model`),
+      new ButtonBuilder()
+        .setLabel("Leave Team")
+        .setStyle(ButtonStyle.Danger)
+        .setCustomId(`show_team_leave_selection`)
     );
     await channel.send({ embeds: [embed], components: [row] });
     await interaction.editReply({

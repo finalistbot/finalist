@@ -1,21 +1,21 @@
 import { BracketError } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { Interaction } from "discord.js";
+import th from "zod/v4/locales/th.js";
 
-export default class SubmitDisbandTeamSelection extends Event<"interactionCreate"> {
+export default class SubmitTeamLeaveSelection extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
-  async execute(interaction: Interaction<"cached">) {
+  async execute(interaction: Interaction) {
     if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "submit_disband_team_selection") return;
-    if (!interaction.inGuild()) return;
+    if (interaction.customId !== "submit_team_leave_selection") return;
+
     await interaction.deferUpdate();
 
     const teamId = parseInt(interaction.values[0]!);
-
     let team;
     try {
-      team = await this.client.teamManageService.disbandTeam(
-        interaction.guild,
+      team = await this.client.teamManageService.leaveTeam(
+        interaction.guild!,
         teamId,
         interaction.user
       );
@@ -30,9 +30,8 @@ export default class SubmitDisbandTeamSelection extends Event<"interactionCreate
       }
       throw e;
     }
-
     await interaction.editReply({
-      content: `The team **${team.name}** has been disbanded.`,
+      content: ``,
       embeds: [],
       components: [],
     });
