@@ -89,15 +89,11 @@ export default class TeamPortalCommand extends Command {
       new ButtonBuilder()
         .setLabel("Manage Teams")
         .setStyle(ButtonStyle.Primary)
-        .setCustomId(`show_manage_teams`),
+        .setCustomId(`show_manage_team_options`),
       new ButtonBuilder()
         .setLabel("Join Team")
         .setStyle(ButtonStyle.Secondary)
-        .setCustomId(`show_join_team_model`),
-      new ButtonBuilder()
-        .setLabel("Leave Team")
-        .setStyle(ButtonStyle.Danger)
-        .setCustomId(`show_team_leave_selection`)
+        .setCustomId(`show_join_team_model`)
     );
     await channel.send({ embeds: [embed], components: [row] });
     await interaction.editReply({

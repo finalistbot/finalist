@@ -1,6 +1,6 @@
 import { BracketError } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
-import { prisma } from "@/lib/prisma";
+
 import { Interaction } from "discord.js";
 
 export default class SubmitKickMember extends Event<"interactionCreate"> {

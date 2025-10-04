@@ -5,12 +5,13 @@ import { Interaction } from "discord.js";
 export default class SubmitDisbandTeamSelection extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction<"cached">) {
-    if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "submit_disband_team_selection") return;
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith("submit_disband_team_selection:"))
+      return;
     if (!interaction.inGuild()) return;
     await interaction.deferUpdate();
 
-    const teamId = parseInt(interaction.values[0]!);
+    const teamId = parseInt(interaction.customId.split(":")[1]!);
 
     let team;
     try {

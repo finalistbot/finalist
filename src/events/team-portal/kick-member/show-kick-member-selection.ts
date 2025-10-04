@@ -11,12 +11,13 @@ import {
 export default class ShowKickTeamMemberSelection extends Event<"interactionCreate"> {
   event = "interactionCreate" as const;
   async execute(interaction: Interaction<"cached">) {
-    if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "show_kick_member_selection") return;
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith("show_member_to_kick_selection:"))
+      return;
     if (!interaction.inGuild()) return;
     await interaction.deferUpdate();
 
-    const teamId = parseInt(interaction.values[0]!);
+    const teamId = parseInt(interaction.customId.split(":")[1]!);
     const members = await prisma.teamMember.findMany({
       where: { teamId },
       include: { user: true },
@@ -41,8 +42,8 @@ export default class ShowKickTeamMemberSelection extends Event<"interactionCreat
             label: member.user.name,
             description: `Kick ${member.user.name} from the team`,
             value: member.userId,
-          })),
-        ),
+          }))
+        )
     );
     await interaction.editReply({
       embeds: [embed],

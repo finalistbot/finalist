@@ -6,12 +6,13 @@ import th from "zod/v4/locales/th.js";
 export default class SubmitTeamLeaveSelection extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction) {
-    if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "submit_team_leave_selection") return;
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith("submit_team_leave_selection:"))
+      return;
 
     await interaction.deferUpdate();
 
-    const teamId = parseInt(interaction.values[0]!);
+    const teamId = parseInt(interaction.customId.split(":")[1]!);
     let team;
     try {
       team = await this.client.teamManageService.leaveTeam(
@@ -31,7 +32,7 @@ export default class SubmitTeamLeaveSelection extends Event<"interactionCreate">
       throw e;
     }
     await interaction.editReply({
-      content: ``,
+      content: `You have successfully ${team.name} left the team.`,
       embeds: [],
       components: [],
     });

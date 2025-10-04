@@ -6,10 +6,10 @@ import teamDetailsEmbed from "@/ui/embeds/team-details";
 export default class ShowTeam extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   async execute(interaction: Interaction<"cached">) {
-    if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== "view_team_selection") return;
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith("show_team_info:")) return;
     await interaction.deferUpdate();
-    const teamId = parseInt(interaction.values[0]!);
+    const teamId = parseInt(interaction.customId.split(":")[1]!);
     const team = await prisma.team.findUnique({
       where: { id: teamId, guildId: interaction.guildId! },
       include: { teamMembers: true },
