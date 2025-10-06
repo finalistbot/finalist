@@ -1,5 +1,11 @@
 import { Command, CommandRegistory } from "@/base/classes/command";
-import { BRAND_COLOR } from "@/lib/constants";
+import {
+  botInviteLink,
+  BRAND_COLOR,
+  documentationLink,
+  supportServerLink,
+  youtubeChannelLink,
+} from "@/lib/constants";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandCategory, CommandInfo } from "@/types/command";
 import {
@@ -10,7 +16,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
-  Interaction,
   AutocompleteInteraction,
 } from "discord.js";
 
@@ -47,6 +52,55 @@ export default class HelpCommand extends Command {
       },
     ],
   };
+
+  generateButtons(page: number, totalPages: number) {
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId("first")
+        .setLabel("⏮️ First")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId("prev")
+        .setLabel("◀️ Previous")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId("page_indicator")
+        .setLabel(`${page + 1}/${totalPages}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId("next")
+        .setLabel("Next ▶️")
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(page === totalPages - 1),
+      new ButtonBuilder()
+        .setCustomId("last")
+        .setLabel("Last ⏭️")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === totalPages - 1),
+    );
+    const linksRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel("Support Server")
+        .setStyle(ButtonStyle.Link)
+        .setURL(supportServerLink),
+      new ButtonBuilder()
+        .setLabel("Invite Me")
+        .setStyle(ButtonStyle.Link)
+        .setURL(botInviteLink),
+      new ButtonBuilder()
+        .setLabel("Documentation")
+        .setStyle(ButtonStyle.Link)
+        .setURL(documentationLink),
+      new ButtonBuilder()
+        .setLabel("Tutorials")
+        .setStyle(ButtonStyle.Link)
+        .setURL(youtubeChannelLink),
+    );
+    return [row, linksRow];
+  }
 
   async execute(interaction: ChatInputCommandInteraction) {
     const query = interaction.options.getString("name");
@@ -154,40 +208,10 @@ export default class HelpCommand extends Command {
       return embed;
     };
 
-    const generateButtons = (page: number) => {
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId("first")
-          .setLabel("⏮️ First")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("prev")
-          .setLabel("◀️ Previous")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("page_indicator")
-          .setLabel(`${page + 1}/${totalPages}`)
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("next")
-          .setLabel("Next ▶️")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === totalPages - 1),
-        new ButtonBuilder()
-          .setCustomId("last")
-          .setLabel("Last ⏭️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1),
-      );
-      return row;
-    };
-
     const interactionResponse = await interaction.reply({
       embeds: [generateEmbed(currentPage)],
-      components: totalPages > 1 ? [generateButtons(currentPage)] : [],
+      components:
+        totalPages > 1 ? this.generateButtons(currentPage, totalPages) : [],
       withResponse: true,
     });
     const message = interactionResponse.resource?.message!;
@@ -226,7 +250,7 @@ export default class HelpCommand extends Command {
 
       await buttonInteraction.update({
         embeds: [generateEmbed(currentPage)],
-        components: [generateButtons(currentPage)],
+        components: this.generateButtons(currentPage, totalPages),
       });
     });
 
@@ -487,40 +511,10 @@ export default class HelpCommand extends Command {
       return embed;
     };
 
-    const generateButtons = (page: number) => {
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId("cat_first")
-          .setLabel("⏮️ First")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("cat_prev")
-          .setLabel("◀️ Previous")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === 0),
-        new ButtonBuilder()
-          .setCustomId("cat_page")
-          .setLabel(`${page + 1}/${totalPages}`)
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(true),
-        new ButtonBuilder()
-          .setCustomId("cat_next")
-          .setLabel("Next ▶️")
-          .setStyle(ButtonStyle.Primary)
-          .setDisabled(page === totalPages - 1),
-        new ButtonBuilder()
-          .setCustomId("cat_last")
-          .setLabel("Last ⏭️")
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(page === totalPages - 1),
-      );
-      return row;
-    };
-
     const interactionResponse = await interaction.reply({
       embeds: [generateEmbed(currentPage)],
-      components: totalPages > 1 ? [generateButtons(currentPage)] : [],
+      components:
+        totalPages > 1 ? this.generateButtons(currentPage, totalPages) : [],
       withResponse: true,
     });
     const message = interactionResponse.resource?.message!;
@@ -558,7 +552,7 @@ export default class HelpCommand extends Command {
 
       await buttonInteraction.update({
         embeds: [generateEmbed(currentPage)],
-        components: [generateButtons(currentPage)],
+        components: this.generateButtons(currentPage, totalPages),
       });
     });
 
