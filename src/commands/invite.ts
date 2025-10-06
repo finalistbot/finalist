@@ -22,7 +22,7 @@ export default class InviteCommand extends Command {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const botInviteUrl = `https://discord.com/oauth2/authorize?client_id=${this.client.user!.id}&scope=bot%20applications.commands&permissions=8`;
-    const discordInviteURL = "https://discord.gg/yCdASUuQ";
+    const discordInviteURL = "https://discord.gg/j4ykJrEMxT";
     const embed = new EmbedBuilder()
       .setTitle("🔗 Invite Me!")
       .setDescription("Manage scrims in your Discord server with Finalist Bot!")
@@ -36,7 +36,7 @@ export default class InviteCommand extends Command {
       new ButtonBuilder()
         .setLabel("💬 Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL(discordInviteURL),
+        .setURL(discordInviteURL)
     );
     await interaction.reply({
       embeds: [embed],
