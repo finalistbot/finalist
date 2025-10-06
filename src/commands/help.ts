@@ -53,18 +53,18 @@ export default class HelpCommand extends Command {
     ],
   };
 
-  generateButtons(page: number, totalPages: number) {
+  generateButtons(page: number, totalPages: number, disabled: boolean = false) {
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId("first")
         .setLabel("⏮️ First")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page === 0),
+        .setDisabled(page === 0 || disabled),
       new ButtonBuilder()
         .setCustomId("prev")
         .setLabel("◀️ Previous")
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(page === 0),
+        .setDisabled(page === 0 || disabled),
       new ButtonBuilder()
         .setCustomId("page_indicator")
         .setLabel(`${page + 1}/${totalPages}`)
@@ -74,12 +74,12 @@ export default class HelpCommand extends Command {
         .setCustomId("next")
         .setLabel("Next ▶️")
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(page === totalPages - 1),
+        .setDisabled(page === totalPages - 1 || disabled),
       new ButtonBuilder()
         .setCustomId("last")
         .setLabel("Last ⏭️")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(page === totalPages - 1),
+        .setDisabled(page === totalPages - 1 || disabled),
     );
     const linksRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -256,34 +256,7 @@ export default class HelpCommand extends Command {
 
     collector.on("end", async () => {
       try {
-        // Disable all buttons instead of removing them
-        const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId("first")
-            .setLabel("⏮️ First")
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(true),
-          new ButtonBuilder()
-            .setCustomId("prev")
-            .setLabel("◀️ Previous")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true),
-          new ButtonBuilder()
-            .setCustomId("page_indicator")
-            .setLabel(`${currentPage + 1}/${totalPages}`)
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(true),
-          new ButtonBuilder()
-            .setCustomId("next")
-            .setLabel("Next ▶️")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true),
-          new ButtonBuilder()
-            .setCustomId("last")
-            .setLabel("Last ⏭️")
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(true),
-        );
+        const components = this.generateButtons(currentPage, totalPages, true);
 
         const currentEmbed = EmbedBuilder.from(message.embeds[0]!).setFooter({
           text: `Page ${currentPage + 1} of ${totalPages} • Buttons timed out`,
@@ -291,7 +264,7 @@ export default class HelpCommand extends Command {
 
         await message.edit({
           embeds: [currentEmbed],
-          components: [disabledRow],
+          components,
         });
       } catch (error) {
         // Message was likely deleted
