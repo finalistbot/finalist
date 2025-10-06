@@ -29,7 +29,7 @@ export const DAYS_OF_WEEK = [
   "Saturday",
 ];
 
-export const supportServerLink = "https://discord.gg/yCdASUuQ";
+export const supportServerLink = "https://discord.gg/j4ykJrEMxT";
 export const botInviteLink =
   "https://discord.com/oauth2/authorize?client_id=1394372945949757501&permissions=1099780320368&integration_type=0&scope=bot";
 export const documentationLink =
