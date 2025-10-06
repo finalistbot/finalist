@@ -1,50 +1,41 @@
 /*
   Warnings:
-
   - The values [CONFIGURATION,SLOT_ALLOCATION,ONGOING,CANCELED] on the enum `Stage` will be removed. If these variants are still used in the database, this will fail.
   - The `open_days` column on the `scrim` table would be dropped and recreated. This will lead to data loss if there is data in the column.
-
 */
--- AlterEnum
-UPDATE "public"."scrim"
-SET "stage" = 'IDLE'
-WHERE "stage" IN ('CONFIGURATION', 'SLOT_ALLOCATION', 'ONGOING', 'CANCELED');
 
-BEGIN;
-
--- Create the new enum first
+-- Step 1: Create new enum type with desired values
 CREATE TYPE "public"."Stage_new" AS ENUM ('IDLE', 'REGISTRATION', 'CLOSED', 'COMPLETED');
 
--- Drop default to safely alter
+-- Step 2: Drop default temporarily to allow type change
 ALTER TABLE "public"."scrim" ALTER COLUMN "stage" DROP DEFAULT;
 
--- Safely cast old values to new enum (map all old values to 'IDLE')
-ALTER TABLE "public"."scrim" ALTER COLUMN "stage" TYPE "public"."Stage_new"
-USING (
-  CASE "stage"
-    WHEN 'CONFIGURATION' THEN 'IDLE'::text::"public"."Stage_new"
-    WHEN 'SLOT_ALLOCATION' THEN 'IDLE'::text::"public"."Stage_new"
-    WHEN 'ONGOING' THEN 'IDLE'::text::"public"."Stage_new"
-    WHEN 'CANCELED' THEN 'IDLE'::text::"public"."Stage_new"
-    ELSE "stage"::text::"public"."Stage_new"
-  END
-);
+-- Step 3: Change column type to new enum, mapping old values to new ones
+ALTER TABLE "public"."scrim" 
+  ALTER COLUMN "stage" TYPE "public"."Stage_new" 
+  USING (
+    CASE "stage"::text
+      WHEN 'CONFIGURATION' THEN 'IDLE'
+      WHEN 'SLOT_ALLOCATION' THEN 'IDLE'
+      WHEN 'ONGOING' THEN 'IDLE'
+      WHEN 'CANCELED' THEN 'IDLE'
+      ELSE "stage"::text
+    END
+  )::"public"."Stage_new";
 
--- Replace old enum
-ALTER TYPE "public"."Stage" RENAME TO "Stage_old";
+-- Step 4: Drop old enum type
+DROP TYPE "public"."Stage";
+
+-- Step 5: Rename new enum to original name
 ALTER TYPE "public"."Stage_new" RENAME TO "Stage";
-DROP TYPE "public"."Stage_old";
 
--- Set default
-ALTER TABLE "public"."scrim" ALTER COLUMN "stage" SET DEFAULT 'IDLE';
+-- Step 6: Restore default value
+ALTER TABLE "public"."scrim" ALTER COLUMN "stage" SET DEFAULT 'IDLE'::"public"."Stage";
 
-COMMIT;
-
--- AlterTable
+-- Step 7: AlterTable - Change open_days from enum to integer array
 ALTER TABLE "public"."scrim"
-  ALTER COLUMN "stage" SET DEFAULT 'IDLE',
   DROP COLUMN IF EXISTS "open_days",
   ADD COLUMN "open_days" INTEGER[];
 
--- DropEnum
+-- Step 8: DropEnum - Remove OpenDays enum if it exists
 DROP TYPE IF EXISTS "public"."OpenDays";

@@ -28,3 +28,10 @@ export const DAYS_OF_WEEK = [
   "Friday",
   "Saturday",
 ];
+
+export const supportServerLink = "https://discord.gg/yCdASUuQ";
+export const botInviteLink =
+  "https://discord.com/oauth2/authorize?client_id=1394372945949757501&permissions=1099780320368&integration_type=0&scope=bot";
+export const documentationLink =
+  "https://finalistbot.github.io/docs/getting-started/";
+export const youtubeChannelLink = "https://www.youtube.com/@finalistbot";

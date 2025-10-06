@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { Command } from "@/base/classes/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { BRAND_COLOR } from "@/lib/constants";
+import { BRAND_COLOR, botInviteLink, supportServerLink } from "@/lib/constants";
 import { CommandInfo } from "@/types/command";
 
 export default class InviteCommand extends Command {
@@ -21,8 +21,6 @@ export default class InviteCommand extends Command {
   };
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const botInviteUrl = `https://discord.com/oauth2/authorize?client_id=${this.client.user!.id}&scope=bot%20applications.commands&permissions=8`;
-    const discordInviteURL = "https://discord.gg/yCdASUuQ";
     const embed = new EmbedBuilder()
       .setTitle("🔗 Invite Me!")
       .setDescription("Manage scrims in your Discord server with Finalist Bot!")
@@ -32,11 +30,11 @@ export default class InviteCommand extends Command {
       new ButtonBuilder()
         .setLabel("➕ Invite Me")
         .setStyle(ButtonStyle.Link)
-        .setURL(botInviteUrl),
+        .setURL(botInviteLink),
       new ButtonBuilder()
         .setLabel("💬 Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL(discordInviteURL),
+        .setURL(supportServerLink),
     );
     await interaction.reply({
       embeds: [embed],
