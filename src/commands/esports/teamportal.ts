@@ -1,6 +1,7 @@
 import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
-import { BRAND_COLOR } from "@/lib/constants";
+import { BRAND_COLOR, ImageUrl, ThumbnailUrl } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
 import {
@@ -75,6 +76,10 @@ export default class TeamPortalCommand extends Command {
     }
     await interaction.deferReply({ flags: "Ephemeral" });
 
+    const data = await prisma.guildConfig.findFirst({
+      where: { id: interaction.guildId },
+    });
+
     const embed = new EmbedBuilder()
       .setColor(BRAND_COLOR)
       .setTitle("🏆 Team Portal")
@@ -90,10 +95,8 @@ export default class TeamPortalCommand extends Command {
           "- 🔍 Join an available team",
         ].join("\n")
       )
-      .setImage("https://i.ibb.co/F4ZVSzQQ/Banner.png")
-      .setThumbnail(
-        "https://images-ext-1.discordapp.net/external/_UijtMhz2hbKZ0ipU8Cg517p6vOGgYHYE5CgezQmuTA/https/i.ibb.co/1Ytxb4LJ/Finalist.png?format=webp&quality=lossless"
-      )
+      .setImage(data?.bannerUrl || ImageUrl)
+      .setThumbnail(data?.logoUrl || ThumbnailUrl)
       .setFooter({ text: "Powered by Finalist" })
       .setTimestamp();
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(

@@ -35,3 +35,6 @@ export const botInviteLink =
 export const documentationLink =
   "https://finalistbot.github.io/docs/getting-started/";
 export const youtubeChannelLink = "https://www.youtube.com/@finalistbot";
+export const ThumbnailUrl =
+  "https://images-ext-1.discordapp.net/external/_UijtMhz2hbKZ0ipU8Cg517p6vOGgYHYE5CgezQmuTA/https/i.ibb.co/1Ytxb4LJ/Finalist.png?format=webp&quality=lossless";
+export const ImageUrl = "https://i.ibb.co/F4ZVSzQQ/Banner.png";
