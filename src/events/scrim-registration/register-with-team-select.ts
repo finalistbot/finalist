@@ -35,7 +35,11 @@ export default class RegisterWithTeamSelect extends Event<"interactionCreate"> {
       registeredTeam = await this.client.scrimService.registerTeam(scrim, team);
     } catch (error) {
       if (error instanceof BracketError) {
-        await interaction.editReply({ content: error.message });
+        await interaction.editReply({
+          content: error.message,
+          embeds: [],
+          components: [],
+        });
       }
       throw error;
     }
@@ -43,7 +47,7 @@ export default class RegisterWithTeamSelect extends Event<"interactionCreate"> {
     const embed = new EmbedBuilder()
       .setTitle("✅ Team Registered")
       .setDescription(
-        `Team **${registeredTeam.name}** has been successfully registered for the scrim!`,
+        `Team **${registeredTeam.name}** has been successfully registered for the scrim!`
       )
       .setColor(BRAND_COLOR);
 

@@ -217,6 +217,10 @@ export class TeamManageService extends ScrimService {
     teamId: number,
     memberToKick: string
   ) {
+    const isBanned = await isUserBanned(guild.id, user.id);
+    if (isBanned) {
+      throw new BracketError("You are banned from creating or joining teams.");
+    }
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
