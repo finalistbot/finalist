@@ -3,11 +3,7 @@ import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  SlashCommandBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class BrandingCommand extends Command {
   data = new SlashCommandBuilder()
@@ -61,18 +57,12 @@ export default class BrandingCommand extends Command {
     }
     const logo = interaction.options.getAttachment("file");
     const banner = interaction.options.getAttachment("banner");
-    if (!logo && !banner) {
-      await interaction.reply({
-        content: "Please provide at least one file (logo or banner).",
-        flags: ["Ephemeral"],
-      });
-      return;
-    }
+
     await prisma.guildConfig.update({
       where: { id: interaction.guildId },
       data: {
-        logoUrl: logo?.url || "",
-        bannerUrl: banner?.url || "",
+        logoUrl: logo?.url || null,
+        bannerUrl: banner?.url || null,
       },
     });
     await interaction.reply({
