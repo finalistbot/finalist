@@ -17,7 +17,7 @@ export default class RegisterTeam extends Command {
         .setName("team")
         .setDescription("The team you want to register")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     );
   info: CommandInfo = {
     name: "registerteam",
@@ -54,18 +54,10 @@ export default class RegisterTeam extends Command {
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
-    let registeredTeam;
-    try {
-      registeredTeam = await this.client.scrimService.registerTeam(scrim, team);
-    } catch (e) {
-      if (e instanceof BracketError) {
-        return interaction.editReply({
-          content: e.message,
-          embeds: [],
-          components: [],
-        });
-      }
-    }
+    const registeredTeam = await this.client.scrimService.registerTeam(
+      scrim,
+      team,
+    );
     await interaction.editReply({
       content: `Team **${registeredTeam!.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
     });
@@ -97,7 +89,7 @@ export default class RegisterTeam extends Command {
           name = `[${team.tag}] ${name}`;
         }
         return { name, value: team.id };
-      })
+      }),
     );
   }
 }
