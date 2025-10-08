@@ -5,6 +5,7 @@ import config from "./config";
 import logger from "./lib/logger";
 import { getHandlerFiles } from "./lib/fs";
 import { CommandRegistory } from "./base/classes/command";
+import { IdentityInteractionRegistry } from "./base/classes/identity-interaction";
 
 function registerEvent(filePath: string) {
   import(path.resolve(filePath)).then((mod) => {
@@ -55,8 +56,31 @@ function registerCommands() {
   handlerFiles.forEach((file) => registerCommand(file));
 }
 
+function registerIdentityInteraction(filePath: string) {
+  import(path.resolve(filePath)).then((mod) => {
+    try {
+      const IdentityInteraction = mod.default?.default || mod.default;
+      const interaction = new IdentityInteraction();
+      IdentityInteractionRegistry.register(interaction);
+      logger.info(`Loaded identity interaction ${interaction.id}`);
+    } catch (error) {
+      logger.error(
+        `Error loading identity interaction at ${filePath}: ${error}`,
+      );
+      return;
+    }
+  });
+}
+
+function registerIdentityInteractions() {
+  const handlerFilesPath = path.join(__dirname, "interactions");
+  const handlerFiles = getHandlerFiles(handlerFilesPath);
+  handlerFiles.forEach((file) => registerIdentityInteraction(file));
+}
+
 registerEvents();
 registerCommands();
+registerIdentityInteractions();
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
