@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
 import { prisma } from "@/lib/prisma";
 import { CommandInfo } from "@/types/command";
 import {
@@ -16,7 +17,7 @@ export default class RegisterTeam extends Command {
         .setName("team")
         .setDescription("The team you want to register")
         .setRequired(true)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
   info: CommandInfo = {
     name: "registerteam",
@@ -53,12 +54,20 @@ export default class RegisterTeam extends Command {
     const scrim = await prisma.scrim.findFirst({
       where: { registrationChannelId: interaction.channelId },
     });
-    const registeredTeam = await this.client.scrimService.registerTeam(
-      scrim,
-      team,
-    );
+    let registeredTeam;
+    try {
+      registeredTeam = await this.client.scrimService.registerTeam(scrim, team);
+    } catch (e) {
+      if (e instanceof BracketError) {
+        return interaction.editReply({
+          content: e.message,
+          embeds: [],
+          components: [],
+        });
+      }
+    }
     await interaction.editReply({
-      content: `Team **${registeredTeam.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
+      content: `Team **${registeredTeam!.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
     });
   }
 
@@ -88,7 +97,7 @@ export default class RegisterTeam extends Command {
           name = `[${team.tag}] ${name}`;
         }
         return { name, value: team.id };
-      }),
+      })
     );
   }
 }
