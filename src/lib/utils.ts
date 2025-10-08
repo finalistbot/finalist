@@ -1,6 +1,8 @@
 import { InteractionCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
 import { Interaction } from "discord.js";
+import { redlock } from "./redlock";
+import Redlock from "redlock";
 
 export function randomString(length: number): string {
   const chars =
@@ -22,7 +24,7 @@ export function mentionUser(userId: string): string {
 
 export async function suppress<T>(
   promise: Promise<T> | T,
-  defaultValue: T | null = null,
+  defaultValue: T | null = null
 ): Promise<T | null> {
   try {
     return await promise;
@@ -33,7 +35,7 @@ export async function suppress<T>(
 
 export function parseIdFromString(
   event: string,
-  pos: number = 1,
+  pos: number = 1
 ): number | undefined {
   const split = event.split(":");
   if (split.length < pos + 1) return undefined;

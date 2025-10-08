@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { redlock } from "@/lib/redlock";
 import { discordTimestamp, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
@@ -636,65 +637,85 @@ export class ScrimService extends Service {
         }`
       );
     }
+
     if (!scrim) {
       throw new BracketError(
         "This channel is not set up for team registration"
       );
     }
-    if (scrim.stage != Stage.REGISTRATION) {
-      throw new BracketError(
-        "This scrim is not currently open for registration"
-      );
-    }
+    const lock = await redlock.acquire(
+      [`scrim_register_team_${scrim.id}`],
+      5000
+    );
+    try {
+      scrim = await prisma.scrim.findUnique({
+        where: { id: scrim.id },
+      });
+      if (!scrim) {
+        throw new BracketError(
+          "This channel is not set up for team registration"
+        );
+      }
+      if (scrim.stage != Stage.REGISTRATION) {
+        throw new BracketError(
+          "This scrim is not currently open for registration"
+        );
+      }
+      const existing = await prisma.registeredTeam.findUnique({
+        where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
+      });
 
-    const existing = await prisma.registeredTeam.findUnique({
-      where: { scrimId_teamId: { scrimId: scrim.id, teamId: team.id } },
-    });
+      if (existing) {
+        throw new BracketError("This team is already registered for the scrim");
+      }
+      const teamMembers = await prisma.teamMember.findMany({
+        where: { teamId: team.id },
+      });
+      const mainPlayers = teamMembers.filter((tm) => tm.role != "SUBSTITUTE");
+      const subPlayers = teamMembers.filter((tm) => tm.role === "SUBSTITUTE");
+      if (mainPlayers.length < scrim.minPlayersPerTeam) {
+        throw new BracketError(
+          `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`
+        );
+      }
+      if (mainPlayers.length > scrim.maxPlayersPerTeam) {
+        throw new BracketError(
+          `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`
+        );
+      }
+      if (subPlayers.length > scrim.maxSubstitutePerTeam) {
+        throw new BracketError(
+          `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`
+        );
+      }
 
-    if (existing) {
-      throw new BracketError("This team is already registered for the scrim");
-    }
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { teamId: team.id },
-    });
-    const mainPlayers = teamMembers.filter((tm) => tm.role != "SUBSTITUTE");
-    const subPlayers = teamMembers.filter((tm) => tm.role === "SUBSTITUTE");
-    if (mainPlayers.length < scrim.minPlayersPerTeam) {
-      throw new BracketError(
-        `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`
-      );
-    }
-    if (mainPlayers.length > scrim.maxPlayersPerTeam) {
-      throw new BracketError(
-        `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`
-      );
-    }
-    if (subPlayers.length > scrim.maxSubstitutePerTeam) {
-      throw new BracketError(
-        `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`
-      );
-    }
-    const registeredTeam = await prisma.registeredTeam.create({
-      data: {
-        name: team.name,
-        scrimId: scrim.id,
-        teamId: team.id,
-        registeredTeamMembers: {
-          create: teamMembers.map((tm) => ({
-            userId: tm.userId,
-            role: tm.role,
-            ingameName: tm.ingameName,
-            position: tm.position,
-          })),
+      const registeredTeam = await prisma.registeredTeam.create({
+        data: {
+          name: team.name,
+          scrimId: scrim.id,
+          teamId: team.id,
+          registeredTeamMembers: {
+            create: teamMembers.map((tm) => ({
+              userId: tm.userId,
+              role: tm.role,
+              ingameName: tm.ingameName,
+              position: tm.position,
+            })),
+          },
         },
-      },
-    });
-    const client = this.client;
-    async function assignSlotThenSend(scrim: Scrim) {
-      await client.scrimService.assignTeamSlot(scrim, registeredTeam);
-      await editRegisteredTeamDetails(scrim, registeredTeam, client);
+      });
+      const client = this.client;
+      async function assignSlotThenSend(scrim: Scrim) {
+        await client.scrimService.assignTeamSlot(scrim, registeredTeam);
+        await editRegisteredTeamDetails(scrim, registeredTeam, client);
+      }
+      suppress(assignSlotThenSend(scrim));
+      return registeredTeam;
+    } catch (error) {
+      throw error;
+    } finally {
+      // @ts-ignore
+      await lock.release().catch(() => {});
     }
-    suppress(assignSlotThenSend(scrim));
-    return registeredTeam;
   }
 }
