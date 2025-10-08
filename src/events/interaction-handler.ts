@@ -11,7 +11,7 @@ export default class InteractionHandler extends Event<"interactionCreate"> {
     let type: IdentityInteractionType;
     if (interaction.isModalSubmit()) type = "modal";
     else if (interaction.isButton()) type = "button";
-    else if (interaction.isSelectMenu()) type = "select";
+    else if (interaction.isStringSelectMenu()) type = "string_select";
     else return;
     const customId = interaction.customId.split(":")[0];
     if (!customId) return;
