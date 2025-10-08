@@ -1,4 +1,5 @@
 import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
 import { prisma } from "@/lib/prisma";
 import { CommandInfo } from "@/types/command";
 import {
@@ -58,7 +59,7 @@ export default class RegisterTeam extends Command {
       team,
     );
     await interaction.editReply({
-      content: `Team **${registeredTeam.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
+      content: `Team **${registeredTeam!.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
     });
   }
 

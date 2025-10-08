@@ -27,26 +27,26 @@ export class ScrimService extends Service {
   async scheduleRegistrationStart(scrim: Scrim) {
     // Cancel Existing Job if any
     const existingJob = await queue.getJob(
-      `${SCRIM_REGISTRATION_START}:${scrim.id}`,
+      `${SCRIM_REGISTRATION_START}:${scrim.id}`
     );
     if (existingJob) {
       try {
         await existingJob.remove();
       } catch {}
       logger.info(
-        `Existing registration open job for scrim ${scrim.id} removed`,
+        `Existing registration open job for scrim ${scrim.id} removed`
       );
     }
     if (scrim.stage != "IDLE") {
       logger.warn(
-        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`,
+        `Scrim ${scrim.id} is not in configuration stage, skipping scheduling registration start`
       );
       return;
     }
     const delay = scrim.registrationStartTime.getTime() - Date.now();
     if (delay <= 0) {
       logger.info(
-        `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`,
+        `Registration start time for scrim ${scrim.id} is in the past, opening registration immediately`
       );
       await this.openRegistration(scrim);
       return;
@@ -54,12 +54,12 @@ export class ScrimService extends Service {
     await queue.add(
       SCRIM_REGISTRATION_START,
       { scrimId: scrim.id },
-      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` },
+      { delay, jobId: `${SCRIM_REGISTRATION_START}:${scrim.id}` }
     );
     logger.info(
       `Registration open job for scrim ${scrim.id} queued to run in ${Math.round(
-        delay / 1000,
-      )} seconds`,
+        delay / 1000
+      )} seconds`
     );
   }
   async scheduleAutoCleanup(scrim: Scrim) {}
@@ -96,7 +96,7 @@ export class ScrimService extends Service {
     if (daysToAdd > 0) {
       let registrationStartTime = fromZonedTime(
         dateFns.addDays(zonedDate, daysToAdd),
-        timezone,
+        timezone
       );
       scrim = await prisma.scrim.update({
         where: { id: scrim.id },
@@ -110,14 +110,14 @@ export class ScrimService extends Service {
     let channel;
     try {
       channel = (await this.client.channels.fetch(
-        scrim.registrationChannelId,
+        scrim.registrationChannelId
       )) as TextChannel;
     } catch (error) {
       logger.error(
-        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`
       );
       throw new BracketError(
-        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted?`,
+        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted?`
       );
     }
 
@@ -129,10 +129,10 @@ export class ScrimService extends Service {
       });
     } catch (error) {
       logger.error(
-        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`
       );
       throw new BracketError(
-        `Can't update permissions for registration channel <#${scrim.registrationChannelId}>. Maybe I don't have permission to do so?`,
+        `Can't update permissions for registration channel <#${scrim.registrationChannelId}>. Maybe I don't have permission to do so?`
       );
     }
 
@@ -156,13 +156,13 @@ export class ScrimService extends Service {
             new ButtonBuilder()
               .setLabel("Register Team")
               .setStyle(ButtonStyle.Primary)
-              .setCustomId(`show_registration_select_menu`),
+              .setCustomId(`show_registration_select_menu`)
           ),
         ],
       });
     } catch (error) {
       logger.error(
-        `Failed to send registration open message in channel <#${scrim.registrationChannelId}> for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to send registration open message in channel <#${scrim.registrationChannelId}> for scrim ${scrim.id}: ${(error as Error).message}`
       );
     }
   }
@@ -181,14 +181,14 @@ export class ScrimService extends Service {
     let channel;
     try {
       channel = (await this.client.channels.fetch(
-        scrim.registrationChannelId,
+        scrim.registrationChannelId
       )) as TextChannel;
     } catch (error) {
       logger.error(
-        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to fetch registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`
       );
       throw new BracketError(
-        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted? or I don't have access to it.`,
+        `Can't find registration channel <#${scrim.registrationChannelId}>. Maybe it was deleted? or I don't have access to it.`
       );
     }
     try {
@@ -199,10 +199,10 @@ export class ScrimService extends Service {
       });
     } catch (error) {
       logger.error(
-        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to update permissions for registration channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`
       );
       throw new BracketError(
-        `Can't update permissions for registration channel ${scrim.registrationChannelId}. Maybe I don't have permission to do so?`,
+        `Can't update permissions for registration channel ${scrim.registrationChannelId}. Maybe I don't have permission to do so?`
       );
     }
 
@@ -216,7 +216,7 @@ export class ScrimService extends Service {
       });
     } catch (error) {
       logger.error(
-        `Failed to send registration close message in channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`,
+        `Failed to send registration close message in channel ${scrim.registrationChannelId} for scrim ${scrim.id}: ${(error as Error).message}`
       );
     }
     if (scrim.autoSlotList) {
@@ -239,14 +239,14 @@ export class ScrimService extends Service {
       const table = slotsToTable(details);
 
       const registerChannel = (await this.client.channels.fetch(
-        scrim.registrationChannelId,
+        scrim.registrationChannelId
       )) as TextChannel;
       const logsChannel = (await this.client.channels.fetch(
-        scrim.logsChannelId,
+        scrim.logsChannelId
       )) as TextChannel;
       if (!registerChannel?.isTextBased() && !logsChannel?.isTextBased()) {
         logger.error(
-          `Registration channel ${scrim.registrationChannelId} or participants channel ${scrim.participantsChannelId} not found or not text-based for scrim ${scrim.id}`,
+          `Registration channel ${scrim.registrationChannelId} or participants channel ${scrim.participantsChannelId} not found or not text-based for scrim ${scrim.id}`
         );
         return;
       }
@@ -273,7 +273,7 @@ export class ScrimService extends Service {
         logger.error(
           `Failed to send slotlist embed in channel ${scrim.registrationChannelId} or ${scrim.participantsChannelId} for scrim ${scrim.id}: ${
             (error as Error).message
-          }`,
+          }`
         );
       }
     }
@@ -298,7 +298,7 @@ export class ScrimService extends Service {
       new ButtonBuilder()
         .setCustomId(`toggle_scrim_slotlist_mode:${scrim.id}`)
         .setLabel(
-          scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist",
+          scrim.autoSlotList ? "Use Manual Slotlist" : "Use Auto Slotlist"
         )
         .setEmoji(scrim.autoSlotList ? "📝" : "⚡")
         .setStyle(ButtonStyle.Secondary)
@@ -309,7 +309,7 @@ export class ScrimService extends Service {
         .setLabel(
           scrim.autoCloseRegistration
             ? "Disable Auto-Close"
-            : "Enable Auto-Close",
+            : "Enable Auto-Close"
         )
         .setEmoji(scrim.autoCloseRegistration ? "🚫" : "✅")
         .setStyle(ButtonStyle.Secondary)
@@ -320,7 +320,7 @@ export class ScrimService extends Service {
         .setLabel("Set Open Days")
         .setEmoji("📅")
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!canConfigure),
+        .setDisabled(!canConfigure)
     );
 
     const startRegistrationButton = new ButtonBuilder()
@@ -339,7 +339,7 @@ export class ScrimService extends Service {
         .setLabel("Close Registration")
         .setEmoji("⏹️")
         .setStyle(ButtonStyle.Danger)
-        .setDisabled(scrim.stage !== Stage.REGISTRATION),
+        .setDisabled(scrim.stage !== Stage.REGISTRATION)
     );
     return [row1, row2];
   }
@@ -396,7 +396,7 @@ export class ScrimService extends Service {
           name: "🎯 Slotlist Mode",
           value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
           inline: false,
-        },
+        }
       )
       .setFooter({
         text: "Configuration locks once the registration opens.",
@@ -408,7 +408,7 @@ export class ScrimService extends Service {
     const channel = await this.client.channels.fetch(scrim.adminChannelId);
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
       logger.error(
-        `Admin channel ${scrim.adminChannelId} not found or not text-based`,
+        `Admin channel ${scrim.adminChannelId} not found or not text-based`
       );
       return;
     }
@@ -433,14 +433,14 @@ export class ScrimService extends Service {
         message = await channel.messages.fetch(scrim.adminConfigMessageId);
       } catch (error) {
         logger.error(
-          `Failed to fetch admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id}: ${(error as Error).message}`,
+          `Failed to fetch admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id}: ${(error as Error).message}`
         );
         message = null;
       }
     }
     if (!message) {
       logger.warn(
-        `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`,
+        `Admin config message ${scrim.adminConfigMessageId} for scrim ${scrim.id} not found, creating a new one`
       );
       const newMessage = await channel.send({ embeds: [embed], components });
       await prisma.scrim.update({
@@ -470,13 +470,13 @@ export class ScrimService extends Service {
     }
     if (!scrim.autoCloseRegistration) {
       logger.info(
-        `Scrim ${scrim.id} does not have auto-close registration enabled`,
+        `Scrim ${scrim.id} does not have auto-close registration enabled`
       );
       return false;
     }
     if (scrimWithTeamLength._count.registeredTeams >= scrim.maxTeams) {
       logger.info(
-        `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`,
+        `Scrim ${scrim.id} has reached max teams (${scrim.maxTeams})`
       );
       return true;
     }
@@ -497,18 +497,18 @@ export class ScrimService extends Service {
     try {
       if (!team.messageId) return;
       const channel = await this.client.channels.fetch(
-        scrim.participantsChannelId,
+        scrim.participantsChannelId
       );
       if (!channel || !channel.isTextBased() || channel.isDMBased()) {
         logger.error(
-          `Participants channel ${scrim.participantsChannelId} not found or not text-based`,
+          `Participants channel ${scrim.participantsChannelId} not found or not text-based`
         );
         return;
       }
       const message = await channel.messages.fetch(team.messageId);
       if (!message) {
         logger.error(
-          `Team message with ID ${team.messageId} not found in channel ${channel.id}`,
+          `Team message with ID ${team.messageId} not found in channel ${channel.id}`
         );
         return;
       }
@@ -522,7 +522,7 @@ export class ScrimService extends Service {
     scrim: Scrim,
     team: RegisteredTeam,
     slotNumber: number = -1,
-    force: boolean = false,
+    force: boolean = false
   ) {
     const teamMembers = await prisma.teamMember.findMany({
       where: { teamId: team.id },
@@ -541,7 +541,7 @@ export class ScrimService extends Service {
       scrim.autoSlotList || reservedSlot || slotNumber != -1 || force;
     if (!performAutoSlot) {
       logger.info(
-        `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`,
+        `Scrim ${scrim.id} is not in auto slotlist mode and team ${team.id} does not have a reserved slot`
       );
       return;
     }
@@ -577,7 +577,7 @@ export class ScrimService extends Service {
     });
     if (!assigned) {
       logger.warn(
-        `Team ${team.id} does not have an assigned slot in scrim ${scrim.id}`,
+        `Team ${team.id} does not have an assigned slot in scrim ${scrim.id}`
       );
       return;
     }
@@ -626,19 +626,24 @@ export class ScrimService extends Service {
   async registerTeam(scrim?: Scrim | null, team?: Team | null) {
     if (!team) {
       throw new BracketError(
-        "Team not found or you do not have permission to register this team",
+        "Team not found or you do not have permission to register this team"
       );
     }
     if (team.banned) {
       throw new BracketError(
         `Your team is banned from participating in scrims.${
           team.banReason ? ` Reason: ${team.banReason}` : ""
-        }`,
+        }`
       );
     }
     if (!scrim) {
       throw new BracketError(
-        "This channel is not set up for team registration",
+        "This channel is not set up for team registration"
+      );
+    }
+    if (scrim.stage != Stage.REGISTRATION) {
+      throw new BracketError(
+        "This scrim is not currently open for registration"
       );
     }
 
@@ -656,17 +661,17 @@ export class ScrimService extends Service {
     const subPlayers = teamMembers.filter((tm) => tm.role === "SUBSTITUTE");
     if (mainPlayers.length < scrim.minPlayersPerTeam) {
       throw new BracketError(
-        `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`,
+        `Your team does not have enough main players to register. Minimum required is ${scrim.minPlayersPerTeam}.`
       );
     }
     if (mainPlayers.length > scrim.maxPlayersPerTeam) {
       throw new BracketError(
-        `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`,
+        `Your team has too many main players to register. Maximum allowed is ${scrim.maxPlayersPerTeam}.`
       );
     }
     if (subPlayers.length > scrim.maxSubstitutePerTeam) {
       throw new BracketError(
-        `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`,
+        `Your team has too many substitutes to register. Maximum allowed is ${scrim.maxSubstitutePerTeam}.`
       );
     }
     const registeredTeam = await prisma.registeredTeam.create({

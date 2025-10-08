@@ -20,6 +20,8 @@ model GuildConfig {
   adminRoleId     String?  @map("admin_role_id")
   teamsPerCaptain Int      @default(1) @map("teams_per_captain")
   timezone        String?  @map("timezone")
+  logoUrl         String?  @map("logo_url")
+  bannerUrl       String?  @map("banner_url")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
