@@ -17,7 +17,7 @@ function registerEvent(filePath: string) {
           await event.execute(...args);
         } catch (err) {
           logger.error(
-            `Error executing event ${event.event.toString()}: ${err}`,
+            `Error executing event ${event.event.toString()}: ${err}`
           );
         }
       });
@@ -60,12 +60,12 @@ function registerIdentityInteraction(filePath: string) {
   import(path.resolve(filePath)).then((mod) => {
     try {
       const IdentityInteraction = mod.default?.default || mod.default;
-      const interaction = new IdentityInteraction();
+      const interaction = new IdentityInteraction(client);
       IdentityInteractionRegistry.register(interaction);
       logger.info(`Loaded identity interaction ${interaction.id}`);
     } catch (error) {
       logger.error(
-        `Error loading identity interaction at ${filePath}: ${error}`,
+        `Error loading identity interaction at ${filePath}: ${error}`
       );
       return;
     }
