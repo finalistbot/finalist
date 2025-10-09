@@ -47,9 +47,9 @@ function CreateTeamModal() {
         .setTextInputComponent(
           new TextInputBuilder()
             .setCustomId("team_tag")
-            .setStyle(TextInputStyle.Short)
+            .setStyle(1)
             .setMinLength(1)
-            .setMaxLength(100)
+            .setMaxLength(50)
             .setPlaceholder("Set your team tag")
             .setRequired(false)
         )
