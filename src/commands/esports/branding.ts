@@ -11,7 +11,7 @@ export default class BrandingCommand extends Command {
     .setDescription("set branding for your scrim")
     .addAttachmentOption((option) =>
       option
-        .setName("file")
+        .setName("logo")
         .setDescription("Upload your branding logo")
         .setRequired(false)
     )
@@ -20,19 +20,26 @@ export default class BrandingCommand extends Command {
         .setName("banner")
         .setDescription("Upload your branding banner")
         .setRequired(false)
+    )
+    .addAttachmentOption((option) =>
+      option
+        .setName("avatar")
+        .setDescription("Choose an avatar for the bot")
+        .setRequired(false)
     );
+
   info?: CommandInfo = {
     name: "branding",
     description: "Set branding for your scrim.",
     longDescription:
-      "Allows admins to set custom branding for their scrims, including logos and banners.",
+      "Allows admins to set custom branding for their scrims, including logos, banner and bot avatar.",
     usageExamples: [
-      "/branding file:<upload your logo> banner:<upload your banner>",
+      "/branding file:<upload your logo> banner:<upload your banner> avatar:<upload bot avatar>",
     ],
     category: "Esports",
     options: [
       {
-        name: "file",
+        name: "logo",
         description: "Upload your branding logo",
         type: "ATTACHMENT",
         required: false,
@@ -40,6 +47,12 @@ export default class BrandingCommand extends Command {
       {
         name: "banner",
         description: "Upload your branding banner",
+        type: "ATTACHMENT",
+        required: false,
+      },
+      {
+        name: "avatar",
+        description: "Choose an avatar for the bot",
         type: "ATTACHMENT",
         required: false,
       },
@@ -51,12 +64,14 @@ export default class BrandingCommand extends Command {
     if (!isAdmin) {
       await interaction.reply({
         content: "You do not have permission to use this command.",
-        flags: ["Ephemeral"],
+        flags: "Ephemeral",
       });
       return;
     }
-    const logo = interaction.options.getAttachment("file");
+    await interaction.deferReply({ flags: "Ephemeral" });
+    const logo = interaction.options.getAttachment("logo");
     const banner = interaction.options.getAttachment("banner");
+    const avatar = interaction.options.getAttachment("avatar");
 
     await prisma.guildConfig.update({
       where: { id: interaction.guildId },
@@ -65,9 +80,13 @@ export default class BrandingCommand extends Command {
         bannerUrl: banner?.url || null,
       },
     });
-    await interaction.reply({
+    // FIXME: Unexpected error in command branding: DiscordAPIError[10062]: Unknown interaction
+
+    if (avatar) {
+      await interaction.guild.members.editMe({ avatar: avatar.url });
+    }
+    await interaction.editReply({
       content: "Branding updated successfully!",
-      flags: ["Ephemeral"],
     });
   }
 }
