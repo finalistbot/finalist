@@ -80,11 +80,15 @@ export default class BrandingCommand extends Command {
         bannerUrl: banner?.url || null,
       },
     });
-    // FIXME: Unexpected error in command branding: DiscordAPIError[10062]: Unknown interaction
+
+    await interaction.editReply({
+      content: "Branding updated successfully!",
+    });
 
     if (avatar) {
       await interaction.guild.members.editMe({ avatar: avatar.url });
     }
+
     await interaction.editReply({
       content: "Branding updated successfully!",
     });

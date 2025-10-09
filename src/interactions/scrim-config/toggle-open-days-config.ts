@@ -14,7 +14,7 @@ import {
 } from "discord.js";
 
 export default class OpenDaysConfiguration extends IdentityInteraction<"button"> {
-  id = "open_days_configuration_toggle";
+  id = "open_days_config_toggle";
   type = "button" as const;
 
   async execute(interaction: ButtonInteraction) {
