@@ -29,24 +29,24 @@ export default class TeamCommand extends Command {
             .setName("name")
             .setDescription("The name of the team")
             .setRequired(true)
-            .setMinLength(3)
-            .setMaxLength(50)
+            .setMinLength(2)
+            .setMaxLength(100)
         )
         .addStringOption((option) =>
           option
             .setName("ign")
             .setDescription("Your in-game name")
             .setRequired(true)
-            .setMinLength(3)
-            .setMaxLength(30)
+            .setMinLength(2)
+            .setMaxLength(100)
         )
         .addStringOption((option) =>
           option
             .setName("tag")
             .setDescription("The tag of the team")
             .setRequired(false)
-            .setMinLength(2)
-            .setMaxLength(10)
+            .setMinLength(1)
+            .setMaxLength(50)
         )
     )
     .addSubcommand((subcommand) =>

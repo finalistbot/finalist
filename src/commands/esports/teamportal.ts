@@ -111,7 +111,7 @@ export default class TeamPortalCommand extends Command {
       new ButtonBuilder()
         .setLabel("Join Team")
         .setStyle(ButtonStyle.Secondary)
-        .setCustomId(`show_join_team_model`)
+        .setCustomId(`show_join_team_modal`)
     );
     await channel.send({ embeds: [embed], components: [row] });
     await interaction.editReply({
