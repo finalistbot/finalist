@@ -1,13 +1,10 @@
 import {
-  ActionRowBuilder,
   ButtonInteraction,
-  Interaction,
   LabelBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
@@ -33,6 +30,21 @@ const TimingConfigSchema = z.object({
     }
     return parsed;
   }),
+  autocleanTime: z.string().transform((val, ctx) => {
+    const parsed = dateFns.parse(val, "HH:mm", new Date());
+    const isValid = dateFns.isValid(parsed);
+    if (!isValid) {
+      ctx.addIssue({
+        code: "invalid_value",
+        expected: "valid time string",
+        received: "invalid time string",
+        values: [val],
+        message: "Invalid time format. Please use HH:MM (24-hour)",
+      });
+      return z.NEVER;
+    }
+    return parsed;
+  }),
 });
 
 async function timingConfigModal(scrim: Scrim) {
@@ -48,13 +60,15 @@ async function timingConfigModal(scrim: Scrim) {
     .setRequired(true)
     .setPlaceholder("e.g., 2024-12-31 15:30");
 
-  if (scrim.registrationStartTime) {
-    const zonedRegistrationTime = toZonedTime(
-      scrim.registrationStartTime,
-      guildConfig?.timezone || "UTC"
-    );
-    input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
-  }
+  const zonedRegistrationTime = toZonedTime(
+    scrim.registrationStartTime,
+    guildConfig?.timezone || "UTC",
+  );
+  const autocleanTime = toZonedTime(
+    scrim.autocleanTime,
+    guildConfig?.timezone || "UTC",
+  );
+  input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   return new ModalBuilder()
     .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
     .setTitle("Scrim Timing Configuration")
@@ -64,9 +78,26 @@ async function timingConfigModal(scrim: Scrim) {
         .setDescription(
           `Time when team registrations open. (Timezone: ${
             guildConfig?.timezone || "UTC"
-          })`
+          })`,
         )
-        .setTextInputComponent(input)
+        .setTextInputComponent(input),
+      new LabelBuilder()
+        .setLabel("Cleanup Time (HH:MM)")
+        .setDescription(
+          `Daily time to clean up old scrims. (Timezone: ${
+            guildConfig?.timezone || "UTC"
+          }) Leave blank to disable.`,
+        )
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId("autoCleanTime")
+            .setStyle(TextInputStyle.Short)
+            .setMinLength(5)
+            .setMaxLength(5)
+            .setRequired(false)
+            .setPlaceholder("e.g., 03:00")
+            .setValue(dateFns.format(autocleanTime, "HH:mm")),
+        ),
     );
 }
 
@@ -108,8 +139,9 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
 
     const rawBody = {
       registrationStartTime: modalSubmit.fields.getTextInputValue(
-        "registrationStartTime"
+        "registrationStartTime",
       ),
+      dailyAutoCleanTime: modalSubmit.fields.getTextInputValue("autoCleanTime"),
     };
 
     await modalSubmit.deferReply({ flags: "Ephemeral" });
@@ -129,7 +161,11 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
     const data = parsed.data;
     data.registrationStartTime = fromZonedTime(
       data.registrationStartTime,
-      guildConfig?.timezone || "UTC"
+      guildConfig?.timezone || "UTC",
+    );
+    data.autocleanTime = fromZonedTime(
+      data.autocleanTime,
+      guildConfig?.timezone || "UTC",
     );
     if (dateFns.isBefore(data.registrationStartTime, new Date())) {
       await modalSubmit.editReply({
@@ -137,18 +173,29 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
       });
       return;
     }
+    const fixedDate = new Date(0);
+    data.autocleanTime = dateFns.set(fixedDate, {
+      hours: dateFns.getHours(data.autocleanTime),
+      minutes: dateFns.getMinutes(data.autocleanTime),
+      seconds: 0,
+      milliseconds: 0,
+    });
     scrim = await prisma.scrim.update({
       where: {
         id: scrimId,
       },
       data: {
         registrationStartTime: data.registrationStartTime,
+        autocleanTime: data.autocleanTime,
       },
     });
     await modalSubmit.editReply({
       content: "Scrim timing configuration updated successfully.",
     });
-    await this.client.scrimService.scheduleRegistrationStart(scrim);
-    await this.client.scrimService.updateScrimConfigMessage(scrim);
+    await Promise.all([
+      this.client.scrimService.scheduleRegistrationStart(scrim),
+      this.client.scrimService.scheduleAutoCleanup(scrim),
+      this.client.scrimService.updateScrimConfigMessage(scrim),
+    ]);
   }
 }
