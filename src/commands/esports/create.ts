@@ -18,6 +18,7 @@ import { botHasPermissions } from "@/checks/permissions";
 import { ScrimSettings } from "@/types";
 import { BracketError } from "@/base/classes/error";
 import { filterPresets } from "@/database";
+import { fromZonedTime } from "date-fns-tz";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -244,6 +245,15 @@ export default class CreateScrim extends Command {
     }
 
     const settings = this.getScrimSettings(partialSettings);
+    const autocleanTime = fromZonedTime(
+      dateFns.set(new Date(0), {
+        hours: 4,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0,
+      }),
+      guildConfig?.timezone || "UTC",
+    );
 
     scrim = await prisma.scrim.create({
       data: {
@@ -257,6 +267,8 @@ export default class CreateScrim extends Command {
         registrationChannelId: registrationChannel.id,
         adminConfigMessageId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),
+        openDays: [0, 1, 2, 3, 4, 5, 6],
+        autocleanTime,
         ...settings,
       },
     });
