@@ -1,13 +1,10 @@
 import {
-  ActionRowBuilder,
   ButtonInteraction,
-  Interaction,
   LabelBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
@@ -33,6 +30,25 @@ const TimingConfigSchema = z.object({
     }
     return parsed;
   }),
+  dailyAutocleanTime: z
+    .string()
+    .optional()
+    .transform((val, ctx) => {
+      if (!val) return null;
+      const parsed = dateFns.parse(val, "HH:mm", new Date());
+      const isValid = dateFns.isValid(parsed);
+      if (!isValid) {
+        ctx.addIssue({
+          code: "invalid_value",
+          expected: "valid time string",
+          received: "invalid time string",
+          values: [val],
+          message: "Invalid time format. Please use HH:MM (24-hour)",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    }),
 });
 
 async function timingConfigModal(scrim: Scrim) {
@@ -51,7 +67,7 @@ async function timingConfigModal(scrim: Scrim) {
   if (scrim.registrationStartTime) {
     const zonedRegistrationTime = toZonedTime(
       scrim.registrationStartTime,
-      guildConfig?.timezone || "UTC"
+      guildConfig?.timezone || "UTC",
     );
     input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   }
@@ -64,9 +80,34 @@ async function timingConfigModal(scrim: Scrim) {
         .setDescription(
           `Time when team registrations open. (Timezone: ${
             guildConfig?.timezone || "UTC"
-          })`
+          })`,
         )
-        .setTextInputComponent(input)
+        .setTextInputComponent(input),
+      new LabelBuilder()
+        .setLabel("Daily Autoclean Time (HH:MM)")
+        .setDescription(
+          `Deletes messages and participant roles daily at this time. Leave blank to disable (single scrim)`,
+        )
+        .setTextInputComponent(
+          new TextInputBuilder()
+            .setCustomId("dailyAutocleanTime")
+            .setStyle(TextInputStyle.Short)
+            .setMinLength(5)
+            .setMaxLength(5)
+            .setRequired(false)
+            .setPlaceholder("e.g., 23:00")
+            .setValue(
+              scrim.autocleanTime
+                ? dateFns.format(
+                    toZonedTime(
+                      scrim.autocleanTime,
+                      guildConfig?.timezone || "UTC",
+                    ),
+                    "HH:mm",
+                  )
+                : "",
+            ),
+        ),
     );
 }
 
