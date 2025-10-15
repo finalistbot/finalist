@@ -444,7 +444,7 @@ export class ScrimService extends Service {
           name: "🧹 Auto-Clean",
           value: scrim.autocleanTime
             ? `Daily at ${dateFns.format(
-                fromZonedTime(
+                toZonedTime(
                   scrim.autocleanTime,
                   guildConfig?.timezone || "UTC",
                 ),
