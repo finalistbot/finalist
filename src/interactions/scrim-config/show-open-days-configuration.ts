@@ -1,9 +1,12 @@
+import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
+import { parseIdFromString, suppress } from "@/lib/utils";
 import { Scrim } from "@prisma/client";
 import {
+  Interaction,
+  CacheType,
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
@@ -26,8 +29,8 @@ export default class OpenDaysConfiguration extends IdentityInteraction<"button">
         .setStyle(
           scrim.openDays.includes(i)
             ? ButtonStyle.Success
-            : ButtonStyle.Secondary,
-        ),
+            : ButtonStyle.Secondary
+        )
     );
 
     const chunks: ButtonBuilder[][] = [];
@@ -36,7 +39,7 @@ export default class OpenDaysConfiguration extends IdentityInteraction<"button">
     }
 
     const actionRows = chunks.map((chunk) =>
-      new ActionRowBuilder<ButtonBuilder>().addComponents(chunk),
+      new ActionRowBuilder<ButtonBuilder>().addComponents(chunk)
     );
 
     return {
@@ -64,7 +67,7 @@ export default class OpenDaysConfiguration extends IdentityInteraction<"button">
 
   private async updateConfiguration(
     interaction: ButtonInteraction,
-    scrimId: number,
+    scrimId: number
   ) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: scrimId },
