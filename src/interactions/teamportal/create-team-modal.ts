@@ -29,7 +29,7 @@ function CreateTeamModal() {
             .setMinLength(2)
             .setMaxLength(100)
             .setPlaceholder("Enter your global team name")
-            .setRequired(true)
+            .setRequired(true),
         ),
       new LabelBuilder()
         .setLabel("In-Game Name")
@@ -40,7 +40,7 @@ function CreateTeamModal() {
             .setMinLength(3)
             .setMaxLength(100)
             .setPlaceholder("Enter your in-game name")
-            .setRequired(true)
+            .setRequired(true),
         ),
       new LabelBuilder()
         .setLabel("Tag Name")
@@ -51,8 +51,8 @@ function CreateTeamModal() {
             .setMinLength(1)
             .setMaxLength(50)
             .setPlaceholder("Set your team tag")
-            .setRequired(false)
-        )
+            .setRequired(false),
+        ),
     );
 }
 
@@ -71,7 +71,6 @@ export default class ShowTeamModel extends IdentityInteraction<"button"> {
       tag: modalSubmit.fields.getTextInputValue("team_tag"),
     };
     const parsed = TeamConfigSchema.safeParse(rawBody);
-    console.log(parsed);
     if (!parsed.success) {
       await interaction.editReply({
         content: `There was an error with your input: ${parsed.error.issues
@@ -89,7 +88,7 @@ export default class ShowTeamModel extends IdentityInteraction<"button"> {
       team = await this.client.teamManageService.createTeam(
         interaction.user,
         interaction.guildId!,
-        normalized
+        normalized,
       );
     } catch (e) {
       if (e instanceof BracketError) {

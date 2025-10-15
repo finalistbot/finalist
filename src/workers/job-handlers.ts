@@ -20,3 +20,18 @@ export class ScrimRegistrationHandler
     await this.scrimService.openRegistration(scrim);
   }
 }
+
+export class ScrimAutoCleanHandler implements JobHandler<{ scrimId: number }> {
+  constructor(private scrimService: ScrimService) {}
+  async handle(job: Job<{ scrimId: number }, any, string>): Promise<void> {
+    const { scrimId } = job.data;
+    const scrim = await prisma.scrim.findUnique({
+      where: { id: scrimId },
+    });
+    if (!scrim) {
+      logger.error(`Scrim with id ${scrimId} not found`);
+      return;
+    }
+    await this.scrimService.autoClean(scrim);
+  }
+}
