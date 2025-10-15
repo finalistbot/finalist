@@ -72,7 +72,7 @@ async function timingConfigModal(scrim: Scrim) {
     input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   }
   return new ModalBuilder()
-    .setCustomId(`dailyAutocleanTime:${scrim.id}`)
+    .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
     .setTitle("Scrim Timing Configuration")
     .addLabelComponents(
       new LabelBuilder()

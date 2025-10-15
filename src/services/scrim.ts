@@ -100,64 +100,54 @@ export class ScrimService extends Service {
       `Auto-clean job for scrim ${scrim.id} queued to run in ${Math.round(difference / 1000)} seconds`
     );
   }
+
   async autoClean(scrim: Scrim) {
+    const guild = await this.client.guilds.fetch(scrim.guildId);
+    if (!guild) {
+      logger.error(`Guild ${scrim.guildId} not found for scrim ${scrim.id}`);
+      return;
+    }
+
+    const channelIds = [
+      scrim.logsChannelId,
+      scrim.participantsChannelId,
+      scrim.registrationChannelId,
+    ];
     try {
-      const guild = await this.client.guilds.fetch(scrim.guildId);
-      if (!guild) {
-        logger.error(`Guild ${scrim.guildId} not found for scrim ${scrim.id}`);
-        return;
-      }
-
-      const channelIds = [
-        scrim.adminChannelId,
-        scrim.logsChannelId,
-        scrim.participantsChannelId,
-        scrim.registrationChannelId,
-      ];
-
       for (const id of channelIds) {
         if (!id) continue;
-        try {
-          const channel = await this.client.channels.fetch(id);
-          console.log(channel);
-          if (channel) {
-            await channel.delete(`Auto-clean of scrim ${scrim.id}`);
-            logger.info(`Deleted channel ${channel})`);
-          }
-        } catch (err) {
-          logger.warn(`Failed to delete channel ${id}: ${err}`);
+        const channel = await this.client.channels.fetch(id);
+
+        if (!channel || !channel.isTextBased() || channel.isDMBased()) {
+          continue;
         }
-      }
-      if (scrim.discordCategoryId) {
-        try {
-          const category = await this.client.channels.fetch(
-            scrim.discordCategoryId
-          );
-          if (category) {
-            await category.delete(`Auto-clean of scrim ${scrim.id}`);
-            logger.info(`Deleted category ${category})`);
-          }
-        } catch (err) {
-          logger.warn(
-            `Failed to delete category ${scrim.discordCategoryId}: ${err}`
-          );
-        }
-      }
-      if (scrim.participantRoleId) {
-        try {
-          const role = await guild.roles.fetch(scrim.participantRoleId);
-          if (role) {
-            await role.delete(`Auto-clean of scrim ${scrim.id}`);
-            logger.info(`Deleted role ${role.name} (${role.id})`);
-          }
-        } catch (err) {
-          logger.warn(
-            `Failed to delete role ${scrim.participantRoleId}: ${err}`
-          );
-        }
+
+        let fetched;
+        do {
+          fetched = await channel.messages.fetch({ limit: 100 });
+          if (fetched.size === 0) break;
+          await channel.bulkDelete(fetched, true);
+        } while (fetched.size > 0);
       }
     } catch (error) {
-      logger.error(`Error during auto-clean of scrim ${scrim.id}: ${error}`);
+      logger.error(
+        `Error during auto-clean for scrim ${scrim.id}: ${(error as Error).message}`
+      );
+    }
+
+    try {
+      const teams = await prisma.assignedSlot.findMany({
+        where: { scrimId: scrim.id },
+      });
+      for (const team of teams) {
+        if (!team.registeredTeamId) continue;
+
+        await this.client.rolemanageService.removeParticipantRoleFromTeam(team);
+      }
+    } catch (error) {
+      logger.error(
+        `Error removing participant roles during auto-clean for scrim ${scrim.id}: ${(error as Error).message}`
+      );
     }
   }
 
@@ -698,7 +688,8 @@ export class ScrimService extends Service {
     await prisma.assignedSlot.deleteMany({
       where: { scrimId: scrim.id, registeredTeamId: team.id },
     });
-    this.client.rolemanageService.removeParticipantRoleFromTeam(team);
+
+    this.client.rolemanageService.removeParticipantRoleFromTeam(assigned);
     this.client.eventLogger.logEvent("slotUnassigned", {
       team,
       unassignedSlot: assigned,

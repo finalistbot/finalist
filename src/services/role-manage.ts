@@ -1,6 +1,6 @@
 import { ScrimService } from "./scrim";
 import { Guild } from "discord.js";
-import { RegisteredTeam, Scrim, Team } from "@prisma/client";
+import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export class RoleManageService extends ScrimService {
@@ -21,11 +21,16 @@ export class RoleManageService extends ScrimService {
       },
     });
     for (const member of teamMembers) {
-      const guildMember = await guild.members.fetch(member.userId);
-      await guildMember.roles.add(role);
+      try {
+        const guildMember = await guild.members.fetch(member.userId);
+        if (!guildMember) continue;
+        await guildMember.roles.add(role);
+      } catch (err) {
+        console.warn(`Failed to add role to ${member.userId}:`, err);
+      }
     }
   }
-  async removeParticipantRoleFromTeam(team: RegisteredTeam) {
+  async removeParticipantRoleFromTeam(team: AssignedSlot) {
     const scrim = await prisma.scrim.findUnique({
       where: { id: team.scrimId },
     });
@@ -34,20 +39,24 @@ export class RoleManageService extends ScrimService {
     const guild = await this.client.guilds.fetch(scrim.guildId);
     if (!guild) throw new Error("Guild not found");
 
-    const role = guild.roles.cache.get(scrim.participantRoleId!);
-    // Dont need role removing if it doesnt exist
-    if (!role) return;
+    const role = await guild.roles.fetch(scrim.participantRoleId!);
+    if (!role) throw new Error("Role not found");
 
     const teamMembers = await prisma.registeredTeamMember.findMany({
       where: {
-        registeredTeam: { id: team.id, scrimId: scrim.id },
+        registeredTeamId: team.registeredTeamId,
+        registeredTeam: { scrimId: scrim.id },
       },
     });
     for (const member of teamMembers) {
-      const guildMember = await guild.members.fetch(member.userId);
-      if (!guildMember || !guildMember.roles.cache.has(role!.id)) continue;
+      try {
+        const guildMember = await guild.members.fetch(member.userId);
+        if (!guildMember || !guildMember.roles.cache.has(role.id)) continue;
 
-      await guildMember.roles.remove(role!);
+        await guildMember.roles.remove(role);
+      } catch (err) {
+        console.warn(`Failed to remove role from ${member.userId}:`, err);
+      }
     }
   }
 
