@@ -384,7 +384,10 @@ export class ScrimService extends Service {
     return [row1, row2];
   }
 
-  private getScrimConfigEmbed(scrim: Scrim) {
+  private async getScrimConfigEmbed(scrim: Scrim) {
+    const guildConfig = await prisma.guildConfig.findUnique({
+      where: { id: scrim.guildId },
+    });
     return new EmbedBuilder()
       .setTitle("⚙️ Scrim Configuration")
       .setColor(BRAND_COLOR)
@@ -437,6 +440,19 @@ export class ScrimService extends Service {
           value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
           inline: false,
         },
+        {
+          name: "🧹 Auto-Clean",
+          value: scrim.autocleanTime
+            ? `Daily at ${dateFns.format(
+                fromZonedTime(
+                  scrim.autocleanTime,
+                  guildConfig?.timezone || "UTC",
+                ),
+                "HH:mm",
+              )} (server time)`
+            : "❌ Disabled",
+          inline: false,
+        },
       )
       .setFooter({
         text: "Configuration locks once the registration opens.",
@@ -463,7 +479,7 @@ export class ScrimService extends Service {
     scrim = updatedScrim;
 
     const components = this.getScrimConfigComponents(scrim);
-    const embed = this.getScrimConfigEmbed(scrim);
+    const embed = await this.getScrimConfigEmbed(scrim);
     let message = null;
 
     if (!scrim.adminConfigMessageId) {
