@@ -67,12 +67,12 @@ async function timingConfigModal(scrim: Scrim) {
   if (scrim.registrationStartTime) {
     const zonedRegistrationTime = toZonedTime(
       scrim.registrationStartTime,
-      guildConfig?.timezone || "UTC",
+      guildConfig?.timezone || "UTC"
     );
     input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   }
   return new ModalBuilder()
-    .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
+    .setCustomId(`dailyAutocleanTime:${scrim.id}`)
     .setTitle("Scrim Timing Configuration")
     .addLabelComponents(
       new LabelBuilder()
@@ -80,13 +80,13 @@ async function timingConfigModal(scrim: Scrim) {
         .setDescription(
           `Time when team registrations open. (Timezone: ${
             guildConfig?.timezone || "UTC"
-          })`,
+          })`
         )
         .setTextInputComponent(input),
       new LabelBuilder()
         .setLabel("Daily Autoclean Time (HH:MM)")
         .setDescription(
-          `Deletes messages and participant roles daily at this time. Leave blank to disable (single scrim)`,
+          `Deletes messages and participant roles daily at this time. Leave blank to disable (single scrim)`
         )
         .setTextInputComponent(
           new TextInputBuilder()
@@ -101,13 +101,13 @@ async function timingConfigModal(scrim: Scrim) {
                 ? dateFns.format(
                     toZonedTime(
                       scrim.autocleanTime,
-                      guildConfig?.timezone || "UTC",
+                      guildConfig?.timezone || "UTC"
                     ),
-                    "HH:mm",
+                    "HH:mm"
                   )
-                : "",
-            ),
-        ),
+                : ""
+            )
+        )
     );
 }
 
@@ -149,7 +149,7 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
 
     const rawBody = {
       registrationStartTime: modalSubmit.fields.getTextInputValue(
-        "registrationStartTime",
+        "registrationStartTime"
       ),
       dailyAutocleanTime:
         modalSubmit.fields.getTextInputValue("dailyAutocleanTime"),
@@ -172,13 +172,13 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
     const data = parsed.data;
     data.registrationStartTime = fromZonedTime(
       data.registrationStartTime,
-      guildConfig?.timezone || "UTC",
+      guildConfig?.timezone || "UTC"
     );
     let autocleanTime = data.dailyAutocleanTime;
     if (autocleanTime) {
       autocleanTime = fromZonedTime(
         autocleanTime,
-        guildConfig?.timezone || "UTC",
+        guildConfig?.timezone || "UTC"
       );
       autocleanTime = dateFns.set(autocleanTime, {
         year: 1970,
