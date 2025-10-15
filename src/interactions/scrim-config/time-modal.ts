@@ -174,9 +174,19 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
       data.registrationStartTime,
       guildConfig?.timezone || "UTC",
     );
-    data.dailyAutocleanTime = data.dailyAutocleanTime
-      ? fromZonedTime(data.dailyAutocleanTime, guildConfig?.timezone || "UTC")
-      : null;
+    let autocleanTime = data.dailyAutocleanTime;
+    if (autocleanTime) {
+      autocleanTime = fromZonedTime(
+        autocleanTime,
+        guildConfig?.timezone || "UTC",
+      );
+      autocleanTime = dateFns.set(autocleanTime, {
+        year: 1970,
+        month: 0,
+        date: 1,
+      });
+    }
+
     if (dateFns.isBefore(data.registrationStartTime, new Date())) {
       await modalSubmit.editReply({
         content: "Registration start time must be in the future.",
@@ -189,13 +199,14 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
       },
       data: {
         registrationStartTime: data.registrationStartTime,
-        autocleanTime: data.dailyAutocleanTime,
+        autocleanTime,
       },
     });
     await modalSubmit.editReply({
       content: "Scrim timing configuration updated successfully.",
     });
     await this.client.scrimService.scheduleRegistrationStart(scrim);
+    await this.client.scrimService.scheduleAutoCleanup(scrim);
     await this.client.scrimService.updateScrimConfigMessage(scrim);
   }
 }

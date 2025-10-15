@@ -6,6 +6,7 @@ import { queue } from "@/lib/bullmq";
 import {
   BRAND_COLOR,
   DAYS_OF_WEEK,
+  SCRIM_AUTO_CLEAN,
   SCRIM_REGISTRATION_START,
 } from "@/lib/constants";
 import logger from "@/lib/logger";
@@ -62,8 +63,46 @@ export class ScrimService extends Service {
       )} seconds`,
     );
   }
-  async scheduleAutoCleanup(scrim: Scrim) {}
-  async autoClean(scrim: Scrim) {}
+  async scheduleAutoCleanup(scrim: Scrim) {
+    const job = await queue.getJob(`${SCRIM_AUTO_CLEAN}:${scrim.id}`);
+    if (job) {
+      try {
+        await job.remove();
+      } catch {}
+      logger.info(`Existing auto-clean job for scrim ${scrim.id} removed`);
+    }
+    const autocleanTime = scrim.autocleanTime;
+    if (!autocleanTime) {
+      logger.info(
+        `Scrim ${scrim.id} does not have auto-clean time set, skipping scheduling auto-clean`,
+      );
+      return;
+    }
+    const now = new Date();
+    const cleanHour = autocleanTime.getHours();
+    const cleanMinute = autocleanTime.getMinutes();
+    let target = dateFns.set(now, {
+      hours: cleanHour,
+      minutes: cleanMinute,
+      seconds: 0,
+      milliseconds: 0,
+    });
+    if (dateFns.isBefore(target, now)) {
+      target = dateFns.addDays(target, 1);
+    }
+    let difference = target.getTime() - now.getTime();
+    await queue.add(
+      SCRIM_AUTO_CLEAN,
+      { scrimId: scrim.id },
+      { delay: difference, jobId: `${SCRIM_AUTO_CLEAN}:${scrim.id}` },
+    );
+    logger.info(
+      `Auto-clean job for scrim ${scrim.id} queued to run in ${Math.round(difference / 1000)} seconds`,
+    );
+  }
+  async autoClean(scrim: Scrim) {
+    console.log("Auto-cleaning scrim", scrim.id);
+  }
   async openRegistration(scrim: Scrim) {
     if (scrim.stage == "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is already in registration stage`);

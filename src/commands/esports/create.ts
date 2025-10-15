@@ -274,6 +274,7 @@ export default class CreateScrim extends Command {
     });
     await this.client.scrimService.updateScrimConfigMessage(scrim);
     await this.client.scrimService.scheduleRegistrationStart(scrim);
+    await this.client.scrimService.scheduleAutoCleanup(scrim);
 
     await interaction.editReply({
       content: `Scrim created successfully!`,
