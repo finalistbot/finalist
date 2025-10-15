@@ -2,6 +2,7 @@ export const TIMEZONES = ["IST", "UTC"] as const;
 export const BRAND_COLOR = 0x8b47fb;
 
 export const SCRIM_REGISTRATION_START = "scrim_registration_start";
+export const SCRIM_AUTO_CLEAN = "scrim_auto_clean";
 
 export const popularTimeZones = [
   { label: "UTC", value: "UTC" },

@@ -63,6 +63,7 @@ export class ScrimService extends Service {
     );
   }
   async scheduleAutoCleanup(scrim: Scrim) {}
+  async autoClean(scrim: Scrim) {}
   async openRegistration(scrim: Scrim) {
     if (scrim.stage == "REGISTRATION") {
       logger.warn(`Scrim ${scrim.id} is already in registration stage`);
