@@ -449,7 +449,7 @@ export class ScrimService extends Service {
                   guildConfig?.timezone || "UTC",
                 ),
                 "HH:mm",
-              )} (server time)`
+              )}`
             : "❌ Disabled",
           inline: false,
         },
