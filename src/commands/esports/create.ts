@@ -31,7 +31,7 @@ export default class CreateScrim extends Command {
         .setDescription("Name of the scrim")
         .setRequired(true)
         .setMinLength(3)
-        .setMaxLength(50),
+        .setMaxLength(50)
     )
     .addStringOption((option) =>
       option
@@ -42,15 +42,15 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     )
     .addStringOption((option) =>
       option
         .setName("preset")
         .setDescription("Saved preset to use for the scrim")
         .setRequired(false)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
 
   info: CommandInfo = {
@@ -87,13 +87,13 @@ export default class CreateScrim extends Command {
       "ManageRoles",
       "SendMessages",
       "ViewChannel",
-      "ReadMessageHistory",
+      "ReadMessageHistory"
     ),
   ];
 
   async loadPreset(
     guildId: string,
-    presetName: string,
+    presetName: string
   ): Promise<Partial<ScrimSettings>> {
     const preset = await prisma.scrimPreset.findFirst({
       where: { guildId, name: presetName },
@@ -252,7 +252,7 @@ export default class CreateScrim extends Command {
         seconds: 0,
         milliseconds: 0,
       }),
-      guildConfig?.timezone || "UTC",
+      guildConfig?.timezone || "UTC"
     );
 
     scrim = await prisma.scrim.create({
@@ -290,7 +290,7 @@ export default class CreateScrim extends Command {
       presets.map((preset) => ({
         name: preset.name,
         value: preset.name,
-      })),
+      }))
     );
   }
 }
