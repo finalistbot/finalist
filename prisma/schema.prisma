@@ -50,6 +50,7 @@ model User {
   teamMembers           TeamMember[]
   bannedUsers           BannedUser[]
   reservedSlots         ReservedSlot[]
+  TournamentTeamMember  TournamentTeamMember[]
 
   @@map("user")
 }
@@ -100,8 +101,9 @@ model Team {
   guildId   String   @map("guild_id")
   tag       String?  @map("tag")
 
-  teamMembers     TeamMember[]
-  registeredTeams RegisteredTeam[]
+  teamMembers              TeamMember[]
+  registeredTeams          RegisteredTeam[]
+  TournamentRegisteredTeam TournamentRegisteredTeam[]
 
   @@map("team")
 }
@@ -230,4 +232,109 @@ model ScrimPreset {
 
   @@unique([guildId, name])
   @@map("scrim_preset")
+}
+
+model Tournament {
+  id                   Int         @id @default(autoincrement()) @map("id")
+  name                 String      @map("tournament_name")
+  guildId              String      @map("guild_id")
+  best_of              Int         @map("best_of")
+  bracketType          BracketType @map("bracket_type")
+  maxTeams             Int         @map("max_teams")
+  maxPlayersPerTeam    Int         @map("max_players_per_team")
+  minPlayersPerTeam    Int         @map("min_players_per_team")
+  maxSubstitutePerTeam Int         @map("max_substitute_per_team")
+  autoSlotList         Boolean     @default(true) @map("auto_slot_list")
+
+  registrationChannelId String    @map("registration_channel_id")
+  logsChannelId         String    @map("logs_channel_id")
+  resultChannelId       String    @map("result_channel_id")
+  participantsChannelId String    @map("participants_channel_id")
+  participantRoleId     String?   @map("participant_role_id")
+  discordCategoryId     String    @map("discord_category_id")
+  adminChannelId        String    @map("admin_channel_id")
+  chatChannelId         String    @map("chat_channel_id")
+  stage                 Stage     @default(IDLE) @map("stage")
+  registrationStartTime DateTime  @map("registration_start_time") @db.Timestamptz(6)
+  registrationEndedTime DateTime? @map("registration_ended_time") @db.Timestamptz(6)
+  autoCloseRegistration Boolean   @default(true) @map("auto_close_registration")
+  prizePool             Float?    @map("prize_pool")
+  rules                 String?   @map("rules")
+  description           String?   @map("description")
+
+  createdAt                DateTime                   @default(now()) @map("created_at")
+  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  TournamentRegisteredTeam TournamentRegisteredTeam[]
+  TournamentMatch          TournamentMatch[]
+}
+
+model TournamentRegisteredTeam {
+  id           Int      @id @default(autoincrement()) @map("id")
+  tournamentId Int      @map("tournament_id")
+  teamId       Int      @map("team_id")
+  name         String   @map("name")
+  messageId    String?  @map("message_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  team       Team                   @relation(fields: [teamId], references: [id])
+  tournament Tournament             @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  members    TournamentTeamMember[]
+  matchesAsA TournamentMatch[]      @relation("TeamA")
+  matchesAsB TournamentMatch[]      @relation("TeamB")
+  matchesWon TournamentMatch[]      @relation("WinnerTeam")
+
+  @@unique([tournamentId, teamId])
+  @@map("tournament_registered_team")
+}
+
+model TournamentTeamMember {
+  id               Int      @id @default(autoincrement()) @map("id")
+  tournamentTeamId Int      @map("tournament_team_id")
+  userId           String   @map("user_id")
+  ingameName       String?  @map("ingame_name")
+  role             TeamRole @default(MEMBER) @map("role")
+  position         Int      @default(0) @map("position")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user           User                     @relation(fields: [userId], references: [id])
+  tournamentTeam TournamentRegisteredTeam @relation(fields: [tournamentTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentTeamId, userId])
+  @@unique([tournamentTeamId, position])
+  @@map("tournament_team_member")
+}
+
+model TournamentMatch {
+  id           Int         @id @default(autoincrement()) @map("id")
+  tournamentId Int         @map("tournament_id")
+  round        Int         @map("round")
+  TeamAId      Int?        @map("teamA_id")
+  TeamBId      Int?        @map("teamB_id")
+  winnerTeamId Int?        @map("winner_team_id")
+  status       MatchStatus @default(SCHEDULED) @map("status")
+  scheduledAt  DateTime?   @map("scheduled_at") @db.Timestamptz(6)
+  completedAt  DateTime?   @map("completed_at") @db.Timestamptz(6)
+  matchResult  Json?       @map("match_result") @db.JsonB
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  tournament Tournament                @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  TeamA      TournamentRegisteredTeam? @relation("TeamA", fields: [TeamAId], references: [id])
+  TeamB      TournamentRegisteredTeam? @relation("TeamB", fields: [TeamBId], references: [id])
+  WinnerTeam TournamentRegisteredTeam? @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
+
+  @@map("tournament_match")
+}
+
+enum MatchStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum BracketType {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
 }
