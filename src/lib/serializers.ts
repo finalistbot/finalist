@@ -1,4 +1,4 @@
-import { Guild, GuildBasedChannel, Role } from "discord.js";
+import { Guild, GuildBasedChannel, Role } from 'discord.js'
 
 export function serializeRole(role: Role) {
   return {
@@ -8,7 +8,7 @@ export function serializeRole(role: Role) {
     hoist: role.hoist,
     position: role.position,
     permissions: role.permissions.bitfield,
-  };
+  }
 }
 
 export function serializeChannel(channel: GuildBasedChannel) {
@@ -16,7 +16,7 @@ export function serializeChannel(channel: GuildBasedChannel) {
     id: channel.id,
     name: channel.name,
     type: channel.type,
-  };
+  }
 }
 
 export function serializeGuild(guild: Guild) {
@@ -25,5 +25,5 @@ export function serializeGuild(guild: Guild) {
     name: guild.name,
     icon: guild.iconURL(),
     memberCount: guild.memberCount,
-  };
+  }
 }

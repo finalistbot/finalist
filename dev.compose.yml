@@ -7,10 +7,10 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: mydatabase
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   redis:
     image: redis:latest
     container_name: finalist-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
