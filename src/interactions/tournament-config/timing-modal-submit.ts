@@ -1,3 +1,3 @@
-import { TournamentTimingConfigModalSubmit } from './timing-modal'
+import { TournamentTimingConfigModalSubmit } from "./timing-modal";
 
-export default TournamentTimingConfigModalSubmit
+export default TournamentTimingConfigModalSubmit;

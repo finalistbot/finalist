@@ -1,46 +1,46 @@
-import { IdentityInteraction } from '@/base/classes/identity-interaction'
-import { BracketError } from '@/base/classes/error'
-import { prisma } from '@/lib/prisma'
-import { ButtonInteraction } from 'discord.js'
-import { parseIdFromString } from '@/lib/utils'
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { BracketError } from "@/base/classes/error";
+import { prisma } from "@/lib/prisma";
+import { ButtonInteraction } from "discord.js";
+import { parseIdFromString } from "@/lib/utils";
 
-export default class CloseTournamentRegistration extends IdentityInteraction<'button'> {
-  type = 'button' as const
-  id = 'close_tournament_registration'
+export default class CloseTournamentRegistration extends IdentityInteraction<"button"> {
+  type = "button" as const;
+  id = "close_tournament_registration";
 
   async execute(interaction: ButtonInteraction) {
-    await interaction.deferReply({ ephemeral: true })
+    await interaction.deferReply({ ephemeral: true });
 
-    const tournamentId = parseIdFromString(interaction.customId)
+    const tournamentId = parseIdFromString(interaction.customId);
     if (!tournamentId) {
-      await interaction.editReply({ content: 'Invalid tournament ID.' })
-      return
+      await interaction.editReply({ content: "Invalid tournament ID." });
+      return;
     }
 
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
-    })
+    });
 
     if (!tournament) {
       await interaction.editReply({
-        content: 'Tournament not found.',
-      })
-      return
+        content: "Tournament not found.",
+      });
+      return;
     }
 
     try {
-      await this.client.tournamentService.closeRegistration(tournament)
+      await this.client.tournamentService.closeRegistration(tournament);
       await interaction.editReply({
         content:
-          'Tournament registration has been closed. You can now generate the bracket.',
-      })
+          "Tournament registration has been closed. You can now generate the bracket.",
+      });
     } catch (error) {
       if (error instanceof BracketError) {
         await interaction.editReply({
           content: error.message,
-        })
+        });
       } else {
-        throw error
+        throw error;
       }
     }
   }

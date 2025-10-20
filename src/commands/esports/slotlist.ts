@@ -1,30 +1,30 @@
-import { Command } from '@/base/classes/command'
+import { Command } from "@/base/classes/command";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
-} from 'discord.js'
-import { prisma } from '@/lib/prisma'
-import { stringify as csvStringify } from 'csv-stringify/sync'
-import { table } from 'table'
-import { BRAND_COLOR } from '@/lib/constants'
-import { Scrim } from '@prisma/client'
-import { CommandInfo } from '@/types/command'
-import { isScrimAdmin } from '@/checks/scrim-admin'
-import { safeRunChecks } from '@/lib/utils'
+} from "discord.js";
+import { prisma } from "@/lib/prisma";
+import { stringify as csvStringify } from "csv-stringify/sync";
+import { table } from "table";
+import { BRAND_COLOR } from "@/lib/constants";
+import { Scrim } from "@prisma/client";
+import { CommandInfo } from "@/types/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { safeRunChecks } from "@/lib/utils";
 
 type SlotDetails = {
-  slotNumber: number
-  teamName: string
-  teamId: number
-  jumpUrl: string
-}
+  slotNumber: number;
+  teamName: string;
+  teamId: number;
+  jumpUrl: string;
+};
 
 function slotsToCSV(slots: SlotDetails[]) {
   return csvStringify(slots, {
     header: true,
-    columns: ['slotNumber', 'teamName', 'teamId', 'jumpUrl'],
-  })
+    columns: ["slotNumber", "teamName", "teamId", "jumpUrl"],
+  });
 }
 
 function slotsToHTML(slots: SlotDetails[]) {
@@ -39,7 +39,7 @@ function slotsToHTML(slots: SlotDetails[]) {
     </tr>
   `
     )
-    .join('\n')
+    .join("\n");
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -79,90 +79,90 @@ function slotsToHTML(slots: SlotDetails[]) {
     </table>
   </body>
   </html>
-  `
+  `;
 }
 export function slotsToEmbed(slotDetails: SlotDetails[], scrim: Scrim) {
   {
-    const chunkSize = 25
-    const chunks: SlotDetails[][] = []
+    const chunkSize = 25;
+    const chunks: SlotDetails[][] = [];
     for (let i = 0; i < slotDetails.length; i += chunkSize) {
-      chunks.push(slotDetails.slice(i, i + chunkSize))
+      chunks.push(slotDetails.slice(i, i + chunkSize));
     }
 
-    const embeds: EmbedBuilder[] = []
+    const embeds: EmbedBuilder[] = [];
     for (let i = 0; i < chunks.length; i++) {
       const embed = new EmbedBuilder().setColor(BRAND_COLOR).setFooter({
         text: `Page ${i + 1} of ${chunks.length} • Use /slotlist to export`,
-      })
+      });
       for (const line of chunks[i]!) {
         embed.addFields({
           name: `Slot #${line.slotNumber}`,
           value: `[${line.teamName}](${line.jumpUrl})`,
           inline: true,
-        })
+        });
       }
       if (i === 0) {
-        embed.setTitle(`${scrim.name} Slotlist`)
+        embed.setTitle(`${scrim.name} Slotlist`);
       }
-      embeds.push(embed)
+      embeds.push(embed);
     }
-    return embeds
+    return embeds;
   }
 }
 
 export function slotsToTable(slots: SlotDetails[]) {
   const data = [
-    ['Slot Number', 'Team Name', 'Team ID', 'Jump URL'],
+    ["Slot Number", "Team Name", "Team ID", "Jump URL"],
     ...slots.map((slot) => [
       slot.slotNumber,
       slot.teamName,
       slot.teamId,
       slot.jumpUrl,
     ]),
-  ]
-  return table(data)
+  ];
+  return table(data);
 }
 
 export default class SlotlistExport extends Command {
   data = new SlashCommandBuilder()
-    .setName('slotlist')
-    .setDescription('Send slotlist in current channel in specified format')
+    .setName("slotlist")
+    .setDescription("Send slotlist in current channel in specified format")
     .addStringOption((option) =>
       option
-        .setName('format')
-        .setDescription('The format to export the slotlist in')
+        .setName("format")
+        .setDescription("The format to export the slotlist in")
         .setRequired(false)
         .addChoices(
-          { name: 'Embedded', value: 'embed' },
-          { name: 'CSV', value: 'csv' },
-          { name: 'Table', value: 'table' },
-          { name: 'HTML', value: 'html' }
+          { name: "Embedded", value: "embed" },
+          { name: "CSV", value: "csv" },
+          { name: "Table", value: "table" },
+          { name: "HTML", value: "html" }
         )
-    )
+    );
 
   info: CommandInfo = {
-    name: 'slotlist',
-    description: 'Send slotlist in current channel in specified format.',
-    category: 'Esports',
+    name: "slotlist",
+    description: "Send slotlist in current channel in specified format.",
+    category: "Esports",
     longDescription:
-      'Send the slotlist for the scrim associated with the current admin channel. You can choose from several formats including embedded message, CSV, table, or HTML.',
+      "Send the slotlist for the scrim associated with the current admin channel. You can choose from several formats including embedded message, CSV, table, or HTML.",
     usageExamples: [
-      '/slotlist format:embed',
-      '/slotlist format:csv',
-      '(in scrim admin channel) /slotlist format:table',
+      "/slotlist format:embed",
+      "/slotlist format:csv",
+      "(in scrim admin channel) /slotlist format:table",
     ],
-  }
+  };
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ flags: 'Ephemeral' })
-    const checkResult = await safeRunChecks(interaction, isScrimAdmin)
+    await interaction.deferReply({ flags: "Ephemeral" });
+    const checkResult = await safeRunChecks(interaction, isScrimAdmin);
     if (!checkResult.success) {
       await interaction.editReply({
         content: checkResult.reason,
-      })
-      return
+      });
+      return;
     }
-    const format = interaction.options.getString('format') || 'embed'
+    const format = interaction.options.getString("format") || "embed";
 
     const scrim = await prisma.scrim.findFirst({
       where: {
@@ -178,20 +178,20 @@ export default class SlotlistExport extends Command {
             },
           },
           orderBy: {
-            slotNumber: 'asc',
+            slotNumber: "asc",
           },
         },
       },
-    })
+    });
 
     if (!scrim) {
       return interaction.editReply(
-        'This command can only be used in a scrim admin channel.'
-      )
+        "This command can only be used in a scrim admin channel."
+      );
     }
-    const slots = scrim.assignedSlots
+    const slots = scrim.assignedSlots;
     if (slots.length === 0) {
-      return interaction.editReply('No slots found.')
+      return interaction.editReply("No slots found.");
     }
     const slotDetails: SlotDetails[] = slots.map((slot) => ({
       slotNumber: slot.slotNumber,
@@ -199,34 +199,34 @@ export default class SlotlistExport extends Command {
       teamId: slot.registeredTeamId,
       jumpUrl: slot.registeredTeam.messageId
         ? `https://discord.com/channels/${interaction.guildId}/${scrim.participantsChannelId}/${slot.registeredTeam.messageId}`
-        : 'N/A',
-    }))
-    let message = ''
-    let attachmentName = ''
-    let attachmentData: string | Buffer
+        : "N/A",
+    }));
+    let message = "";
+    let attachmentName = "";
+    let attachmentData: string | Buffer;
     switch (format) {
-      case 'csv':
-        attachmentName = 'slotlist.csv'
-        attachmentData = slotsToCSV(slotDetails)
-        message = 'Here is the slotlist, you can view it in a spreadsheet.'
-        break
-      case 'html':
-        attachmentName = 'slotlist.html'
-        attachmentData = slotsToHTML(slotDetails)
-        message = 'Here is the slotlist, you can view it in a web browser.'
-        break
-      case 'embed':
-        const embeds = slotsToEmbed(slotDetails, scrim)
+      case "csv":
+        attachmentName = "slotlist.csv";
+        attachmentData = slotsToCSV(slotDetails);
+        message = "Here is the slotlist, you can view it in a spreadsheet.";
+        break;
+      case "html":
+        attachmentName = "slotlist.html";
+        attachmentData = slotsToHTML(slotDetails);
+        message = "Here is the slotlist, you can view it in a web browser.";
+        break;
+      case "embed":
+        const embeds = slotsToEmbed(slotDetails, scrim);
         return interaction.editReply({
-          content: 'Here is the slotlist:',
+          content: "Here is the slotlist:",
           embeds: embeds,
-        })
-      case 'table':
+        });
+      case "table":
       default:
-        attachmentName = 'slotlist.txt'
-        attachmentData = slotsToTable(slotDetails)
-        message = 'Here is the slotlist, you can view it in a text editor.'
-        break
+        attachmentName = "slotlist.txt";
+        attachmentData = slotsToTable(slotDetails);
+        message = "Here is the slotlist, you can view it in a text editor.";
+        break;
     }
     return interaction.editReply({
       content: message,
@@ -236,6 +236,6 @@ export default class SlotlistExport extends Command {
           name: attachmentName,
         },
       ],
-    })
+    });
   }
 }

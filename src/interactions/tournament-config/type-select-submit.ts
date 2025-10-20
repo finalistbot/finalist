@@ -1,3 +1,3 @@
-import { TournamentTypeSelectSubmit } from './type-select'
+import { TournamentTypeSelectSubmit } from "./type-select";
 
-export default TournamentTypeSelectSubmit
+export default TournamentTypeSelectSubmit;

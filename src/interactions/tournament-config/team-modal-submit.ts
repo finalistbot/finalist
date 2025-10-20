@@ -1,3 +1,3 @@
-import { TournamentTeamConfigModalSubmit } from './team-modal'
+import { TournamentTeamConfigModalSubmit } from "./team-modal";
 
-export default TournamentTeamConfigModalSubmit
+export default TournamentTeamConfigModalSubmit;

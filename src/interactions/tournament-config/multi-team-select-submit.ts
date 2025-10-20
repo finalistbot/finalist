@@ -1,3 +1,3 @@
-import { MultiTeamSelectSubmit } from './multi-team-select'
+import { MultiTeamSelectSubmit } from "./multi-team-select";
 
-export default MultiTeamSelectSubmit
+export default MultiTeamSelectSubmit;

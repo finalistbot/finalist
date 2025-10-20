@@ -1,5 +1,5 @@
-import { z } from 'zod'
-import 'dotenv/config'
+import { z } from "zod";
+import "dotenv/config";
 
 const schema = z.object({
   DB_NAME: z.string().optional(),
@@ -16,6 +16,6 @@ const schema = z.object({
   DEVELOPER_GUILD_ID: z.string().optional(),
 
   GUILD_LOGS_WEBHOOK_URL: z.url().optional(),
-})
+});
 
-export default schema.parse(process.env)
+export default schema.parse(process.env);

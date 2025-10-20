@@ -1,4 +1,4 @@
-import { BracketClient } from './client'
+import { BracketClient } from "./client";
 
 export abstract class Service {
   constructor(protected client: BracketClient) {}

@@ -1,11 +1,11 @@
-import { AssignedSlot, RegisteredTeam } from '@prisma/client'
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js'
+import { AssignedSlot, RegisteredTeam } from "@prisma/client";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 
 export async function prepareManageParticipantsComponent(
   team: RegisteredTeam,
   assignedSlot: AssignedSlot | null = null
 ) {
-  const assignSlotLabel = assignedSlot ? 'Reassign Slot' : 'Assign Slot'
+  const assignSlotLabel = assignedSlot ? "Reassign Slot" : "Assign Slot";
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(`assign_slot_modal:${team.id}`)
@@ -13,18 +13,18 @@ export async function prepareManageParticipantsComponent(
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId(`unassign_slot:${team.id}`)
-      .setLabel('Unassign Slot')
+      .setLabel("Unassign Slot")
       .setStyle(ButtonStyle.Danger)
       .setDisabled(!assignedSlot),
     new ButtonBuilder()
       .setCustomId(`kick_team:${team.id}`)
-      .setLabel('Kick Team')
+      .setLabel("Kick Team")
       .setStyle(ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId(`ban_team:${team.id}`)
-      .setLabel('Ban Team')
+      .setLabel("Ban Team")
       .setStyle(ButtonStyle.Danger)
-  )
+  );
 
-  return [row]
+  return [row];
 }
