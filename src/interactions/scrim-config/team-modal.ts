@@ -1,19 +1,17 @@
 import {
-  ActionRowBuilder,
   ButtonInteraction,
-  Interaction,
   LabelBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { Event } from "@/base/classes/event";
 import { prisma } from "@/lib/prisma";
 import { Scrim } from "@prisma/client";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import z from "zod";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { v4 as uuid4 } from "uuid";
 
 const TeamConfigSchema = z.object({
   maxTeams: z.coerce.number().min(2).max(999),
@@ -23,7 +21,7 @@ const TeamConfigSchema = z.object({
 });
 
 function teamConfigModal(
-  scrim: Scrim & { _count: { registeredTeams: number } }
+  scrim: Scrim & { _count: { registeredTeams: number } },
 ) {
   const canChangeMaxPlayersPerTeam = scrim._count.registeredTeams === 0;
   const rows = [];
@@ -31,7 +29,7 @@ function teamConfigModal(
     new LabelBuilder()
       .setLabel("Maximum Teams")
       .setDescription(
-        `Current: ${scrim.maxTeams}. The maximum number of teams that can register for this scrim.`
+        `Current: ${scrim.maxTeams}. The maximum number of teams that can register for this scrim.`,
       )
       .setTextInputComponent(
         new TextInputBuilder()
@@ -41,14 +39,14 @@ function teamConfigModal(
           .setMaxLength(3)
           .setValue(scrim.maxTeams.toString())
           .setPlaceholder("e.g., 25")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   );
   rows.push(
     new LabelBuilder()
       .setLabel("Minimum Players Per Team")
       .setDescription(
-        `Current: ${scrim.minPlayersPerTeam}. The minimum number of players required per team.`
+        `Current: ${scrim.minPlayersPerTeam}. The minimum number of players required per team.`,
       )
       .setTextInputComponent(
         new TextInputBuilder()
@@ -58,15 +56,15 @@ function teamConfigModal(
           .setMaxLength(2)
           .setValue(scrim.minPlayersPerTeam.toString())
           .setPlaceholder("e.g., 4")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   );
   if (canChangeMaxPlayersPerTeam) {
     rows.push(
       new LabelBuilder()
         .setLabel("Maximum Players Per Team")
         .setDescription(
-          `Current: ${scrim.maxPlayersPerTeam}. The maximum number of players allowed per team.`
+          `Current: ${scrim.maxPlayersPerTeam}. The maximum number of players allowed per team.`,
         )
         .setTextInputComponent(
           new TextInputBuilder()
@@ -76,15 +74,15 @@ function teamConfigModal(
             .setMaxLength(2)
             .setValue(scrim.maxPlayersPerTeam.toString())
             .setPlaceholder("e.g., 4")
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     );
   }
   rows.push(
     new LabelBuilder()
       .setLabel("Maximum Substitutes Per Team")
       .setDescription(
-        `Current: ${scrim.maxSubstitutePerTeam}. The maximum number of substitutes allowed per team.`
+        `Current: ${scrim.maxSubstitutePerTeam}. The maximum number of substitutes allowed per team.`,
       )
       .setTextInputComponent(
         new TextInputBuilder()
@@ -94,11 +92,10 @@ function teamConfigModal(
           .setMaxLength(2)
           .setValue(scrim.maxSubstitutePerTeam.toString())
           .setPlaceholder("e.g., 1")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   );
   return new ModalBuilder()
-    .setCustomId(`team_config_submit:${scrim.id}`)
     .setTitle("Team Configuration")
     .addLabelComponents(...rows);
 }
@@ -140,10 +137,14 @@ export default class ScrimTeamConfig extends IdentityInteraction<"button"> {
       ...scrim,
       _count: { registeredTeams: registeredTeamsCount },
     });
+    const modalId = uuid4();
+    modal.setCustomId(modalId);
     await interaction.showModal(modal);
 
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.customId === modalId && i.user.id === interaction.user.id,
     });
     await modalSubmit.deferReply({ flags: ["Ephemeral"] });
 
@@ -154,7 +155,7 @@ export default class ScrimTeamConfig extends IdentityInteraction<"button"> {
       maxPlayersPerTeam:
         modalSubmit.fields.getTextInputValue("maxPlayersPerTeam"),
       maxSubstitutePerTeam: modalSubmit.fields.getTextInputValue(
-        "maxSubstitutePerTeam"
+        "maxSubstitutePerTeam",
       ),
     };
 
