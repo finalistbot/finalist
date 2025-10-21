@@ -13,7 +13,7 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
-import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
+import { RegisteredTeam, Scrim, Stage, Team, Tournament } from "@prisma/client";
 import * as dateFns from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import {

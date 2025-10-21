@@ -2,6 +2,7 @@ import { EventLogger } from "@/services/event-logger";
 import { RoleManageService } from "@/services/role-manage";
 import { ScrimService } from "@/services/scrim";
 import { TeamManageService } from "@/services/team-manage";
+import TournamentService from "@/services/tournament";
 import { createWorker } from "@/workers/worker";
 import { Worker } from "bullmq";
 import { Client, ClientOptions } from "discord.js";
@@ -12,6 +13,7 @@ export class BracketClient extends Client {
   public rolemanageService: RoleManageService;
   public teamManageService: TeamManageService;
   public worker: Worker;
+  public tournamentService: TournamentService;
   public eventLogger: EventLogger;
 
   constructor(options: ClientOptions, extra?: { ownerIds?: string[] }) {
@@ -22,6 +24,7 @@ export class BracketClient extends Client {
     this.teamManageService = new TeamManageService(this);
     this.worker = createWorker(this);
     this.eventLogger = new EventLogger(this);
+    this.tournamentService = new TournamentService(this);
   }
 
   isOwner(userId: string): boolean {

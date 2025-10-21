@@ -14,7 +14,7 @@ import * as dateFns from "date-fns";
 
 export default class TournamentCreate extends Command {
   data = new SlashCommandBuilder()
-    .setName("tcreate")
+    .setName("create-tournament")
     .setDescription("Create a new tournament")
     .setContexts(InteractionContextType.Guild)
     .addStringOption((option) =>
@@ -26,7 +26,7 @@ export default class TournamentCreate extends Command {
         .setMaxLength(50)
     );
   info: CommandInfo = {
-    name: "tcreate",
+    name: "create-tournament",
     description: "Create a new tournament.",
     longDescription: "Create a new tournament with a specified name.",
     usageExamples: ["/tcreate name:My Tournament"],
@@ -150,8 +150,8 @@ export default class TournamentCreate extends Command {
         botOverwrites,
       ],
     });
-    const chatChannel = await category.children.create({
-      name: "chat",
+    const bracketChannel = await category.children.create({
+      name: "bracket",
       type: ChannelType.GuildText,
       permissionOverwrites: [
         {
@@ -191,7 +191,7 @@ export default class TournamentCreate extends Command {
         resultsChannelId: resultChannel.id,
         registrationChannelId: registrationChannel.id,
         participantsChannelId: participantsChannel.id,
-        chatChannelId: chatChannel.id,
+        bracketChannelId: bracketChannel.id,
         participantRoleId: "",
         registrationStartTime: dateFns.addDays(new Date(), 1),
         bracketType: BracketType.SINGLE_ELIMINATION,
@@ -202,6 +202,10 @@ export default class TournamentCreate extends Command {
         best_of: 3,
       },
     });
+    await this.client.tournamentService.updateTournamentConfigMessage(
+      tournament
+    );
+
     return interaction.editReply({
       content: `Tournament **${tournament.name}** has been created!`,
     });
