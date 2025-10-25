@@ -1,7 +1,8 @@
+import { Interaction } from "discord.js";
+
 import { InteractionCheck } from "@/base/classes/check";
 import { BracketClient } from "@/base/classes/client";
 import { CheckFailure } from "@/base/classes/error";
-import { Interaction } from "discord.js";
 
 export const checkIsBotOwner: InteractionCheck = async (
   interaction: Interaction

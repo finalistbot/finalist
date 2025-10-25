@@ -1,8 +1,9 @@
+import { ButtonInteraction } from "discord.js";
+
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { ButtonInteraction } from "discord.js";
 
 export default class KickTeam extends IdentityInteraction<"button"> {
   id = "kick_team";

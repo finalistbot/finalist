@@ -1,3 +1,12 @@
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  Routes,
+  SlashCommandBuilder,
+} from "discord.js";
+
+import { Scrim, Stage } from "@prisma/client";
+
 import { Command } from "@/base/classes/command";
 import { botHasPermissions } from "@/checks/permissions";
 import { isScrimAdmin } from "@/checks/scrim-admin";
@@ -5,13 +14,6 @@ import { rest } from "@/lib/discord-rest";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks, suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { Scrim, Stage } from "@prisma/client";
-import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
-  Routes,
-  SlashCommandBuilder,
-} from "discord.js";
 
 export default class ScrimDelete extends Command {
   data = new SlashCommandBuilder()

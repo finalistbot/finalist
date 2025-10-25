@@ -1,9 +1,11 @@
-import { BracketError } from "@/base/classes/error";
-import { Service } from "@/base/classes/service";
-import { queue } from "@/lib/bullmq";
-import { BRAND_COLOR, TOURNAMENT_REGISTRATION_START } from "@/lib/constants";
-import logger from "@/lib/logger";
-import { prisma } from "@/lib/prisma";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  TextChannel,
+} from "discord.js";
+
 import {
   Match,
   MatchStatus,
@@ -14,13 +16,13 @@ import {
   TournamentType,
 } from "@prisma/client";
 import * as dateFns from "date-fns";
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  TextChannel,
-} from "discord.js";
+
+import { BracketError } from "@/base/classes/error";
+import { Service } from "@/base/classes/service";
+import { queue } from "@/lib/bullmq";
+import { BRAND_COLOR, TOURNAMENT_REGISTRATION_START } from "@/lib/constants";
+import logger from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
 
 export class TournamentService extends Service {
   async scheduleRegistrationStart(tournament: Tournament) {

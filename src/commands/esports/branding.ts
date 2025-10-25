@@ -1,9 +1,10 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { suppress } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class BrandingCommand extends Command {
   data = new SlashCommandBuilder()

@@ -1,7 +1,9 @@
-import { AssignedSlot, RegisteredTeam } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { EmbedBuilder } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam } from "@prisma/client";
+
 import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 export async function registeredTeamDetailsEmbed(
   team: RegisteredTeam,

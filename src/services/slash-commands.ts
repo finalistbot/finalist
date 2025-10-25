@@ -1,9 +1,10 @@
+import { Routes } from "discord.js";
+
 import { BracketClient } from "@/base/classes/client";
 import { CommandRegistory } from "@/base/classes/command";
 import config from "@/config";
 import { rest } from "@/lib/discord-rest";
 import logger from "@/lib/logger";
-import { Routes } from "discord.js";
 
 export async function registerSlashCommands(client: BracketClient) {
   const globalCommands = CommandRegistory.getAllCommands().filter(

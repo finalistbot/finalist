@@ -1,6 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import { GuildConfig } from "@prisma/client";
 import { Guild } from "discord.js";
+
+import { GuildConfig } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
 
 type ValidGuildConfig = GuildConfig & {
   adminRoleId: string;

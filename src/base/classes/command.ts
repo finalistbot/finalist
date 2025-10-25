@@ -5,8 +5,10 @@ import {
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
-import { BracketClient } from "./client";
+
 import { InteractionCheck } from "./check";
+import { BracketClient } from "./client";
+
 import { CommandCategory, CommandInfo } from "@/types/command";
 
 export abstract class Command {

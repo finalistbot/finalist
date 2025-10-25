@@ -1,7 +1,9 @@
+import { EmbedBuilder, TextChannel } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
-import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
-import { EmbedBuilder, TextChannel } from "discord.js";
 
 type EventLoggerPayload = {
   registrationChannelOpened: {

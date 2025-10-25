@@ -1,7 +1,10 @@
-import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
 import { Message, TextChannel } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+
 import { prepareManageParticipantsComponent } from "../components/manage-participants-components";
 import { registeredTeamDetailsEmbed } from "../embeds/registered-team-details";
+
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
 

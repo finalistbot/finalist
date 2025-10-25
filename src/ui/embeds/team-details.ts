@@ -1,7 +1,9 @@
+import { EmbedBuilder } from "discord.js";
+
+import { Team } from "@prisma/client";
+
 import { BRAND_COLOR, MAX_TEAM_SIZE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { Team } from "@prisma/client";
-import { EmbedBuilder } from "discord.js";
 
 export default async function teamDetailsEmbed(team: Team) {
   const teamMembers = await prisma.teamMember.findMany({

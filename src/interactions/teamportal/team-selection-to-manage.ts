@@ -1,13 +1,12 @@
-import { Event } from "@/base/classes/event";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
-import { prisma } from "@/lib/prisma";
 import {
   ButtonInteraction,
-  Interaction,
   LabelBuilder,
   ModalBuilder,
   StringSelectMenuBuilder,
 } from "discord.js";
+
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { prisma } from "@/lib/prisma";
 
 export default class ShowTeamSelectionToManage extends IdentityInteraction<"button"> {
   id = "show_manage_team_options";

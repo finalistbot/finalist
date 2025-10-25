@@ -1,8 +1,10 @@
-import { ScrimService } from "@/services/scrim";
 import { Job } from "bullmq";
-import { prisma } from "../lib/prisma";
+
 import logger from "../lib/logger";
+import { prisma } from "../lib/prisma";
 import { JobHandler } from "./job-registry";
+
+import { ScrimService } from "@/services/scrim";
 
 export class ScrimRegistrationHandler
   implements JobHandler<{ scrimId: number }>

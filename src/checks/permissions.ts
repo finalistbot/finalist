@@ -1,5 +1,6 @@
-import { CheckFailure } from "@/base/classes/error";
 import { Interaction, PermissionResolvable } from "discord.js";
+
+import { CheckFailure } from "@/base/classes/error";
 
 export const botHasPermissions = (...perms: PermissionResolvable[]) => {
   return async (interaction: Interaction) => {

@@ -1,6 +1,7 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { registerSlashCommands } from "@/services/slash-commands";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class SyncSlashCommands extends Command {
   data = new SlashCommandBuilder()

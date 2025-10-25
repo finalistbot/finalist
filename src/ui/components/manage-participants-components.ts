@@ -1,5 +1,6 @@
-import { AssignedSlot, RegisteredTeam } from "@prisma/client";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam } from "@prisma/client";
 
 export async function prepareManageParticipantsComponent(
   team: RegisteredTeam,

@@ -1,7 +1,8 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { prisma } from "@/lib/prisma";
 import { CommandInfo } from "@/types/command";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class ScrimConfig extends Command {
   data = new SlashCommandBuilder()

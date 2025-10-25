@@ -1,12 +1,13 @@
-import { Command } from "@/base/classes/command";
-import { BracketError } from "@/base/classes/error";
-import { popularTimeZones } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { popularTimeZones } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 export default class ConfigCommand extends Command {
   data = new SlashCommandBuilder()

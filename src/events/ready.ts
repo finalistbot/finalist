@@ -1,6 +1,7 @@
+import { ActivityType } from "discord.js";
+
 import { Event } from "@/base/classes/event";
 import logger from "@/lib/logger";
-import { ActivityType } from "discord.js";
 
 export default class Ready extends Event<"clientReady"> {
   public event = "clientReady" as const;

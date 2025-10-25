@@ -1,10 +1,12 @@
+import { Client, ClientOptions } from "discord.js";
+
+import { Worker } from "bullmq";
+
 import { EventLogger } from "@/services/event-logger";
 import { RoleManageService } from "@/services/role-manage";
 import { ScrimService } from "@/services/scrim";
 import { TeamManageService } from "@/services/team-manage";
 import { createWorker } from "@/workers/worker";
-import { Worker } from "bullmq";
-import { Client, ClientOptions } from "discord.js";
 
 export class BracketClient extends Client {
   public ownerIds: Set<string>;

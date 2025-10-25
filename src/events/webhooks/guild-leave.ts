@@ -1,7 +1,8 @@
+import { Colors, EmbedBuilder, Guild, WebhookClient } from "discord.js";
+
 import { BracketClient } from "@/base/classes/client";
 import { Event } from "@/base/classes/event";
 import config from "@/config";
-import { Guild, WebhookClient, EmbedBuilder, Colors } from "discord.js";
 
 export default class GuildLeave extends Event<"guildDelete"> {
   public event = "guildDelete" as const;

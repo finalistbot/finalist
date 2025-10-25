@@ -5,14 +5,17 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { prisma } from "@/lib/prisma";
+
 import { Scrim } from "@prisma/client";
 import * as dateFns from "date-fns";
-import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { v4 as uuid4 } from "uuid";
 import z from "zod";
+
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { prisma } from "@/lib/prisma";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 
 const TimingConfigSchema = z.object({
   registrationStartTime: z.string().transform((val, ctx) => {
@@ -72,7 +75,6 @@ async function timingConfigModal(scrim: Scrim) {
     input.setValue(dateFns.format(zonedRegistrationTime, "yyyy-MM-dd HH:mm"));
   }
   return new ModalBuilder()
-    .setCustomId(`scrim_timing_config_submit:${scrim.id}`)
     .setTitle("Scrim Timing Configuration")
     .addLabelComponents(
       new LabelBuilder()
@@ -142,9 +144,13 @@ export default class ScrimTimingConfig extends IdentityInteraction<"button"> {
       return;
     }
     const modal = await timingConfigModal(scrim);
+    const modalId = uuid4();
+    modal.setCustomId(modalId);
     await interaction.showModal(modal);
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.user.id === interaction.user.id && i.customId === modalId,
     });
 
     const rawBody = {

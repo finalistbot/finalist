@@ -1,5 +1,3 @@
-import { prisma } from "@/lib/prisma";
-import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import {
   ButtonInteraction,
   LabelBuilder,
@@ -9,15 +7,18 @@ import {
 } from "discord.js";
 
 import { RegisteredTeam } from "@prisma/client";
-import { getFirstAvailableSlot } from "@/database";
-import { isScrimAdmin } from "@/checks/scrim-admin";
+import { v4 as uuid4 } from "uuid";
+
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { getFirstAvailableSlot } from "@/database";
+import { prisma } from "@/lib/prisma";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
 
 function createAssignSlotModal(team: RegisteredTeam, defaultSlot: number) {
   const modal = new ModalBuilder()
     .setTitle(`Assign Slot for ${team.name}`)
-    .setCustomId(`assign_slot_submit:${team.id}`)
     .addLabelComponents(
       new LabelBuilder()
         .setLabel("Slot Number")
@@ -79,9 +80,13 @@ export default class AssignSlotModal extends IdentityInteraction<"button"> {
       return;
     }
     const modal = createAssignSlotModal(team, availableSlot);
+    const modalId = uuid4();
+    modal.setCustomId(modalId);
     await interaction.showModal(modal);
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.customId === modalId && i.user.id === interaction.user.id,
     });
     await modalSubmit.deferReply({ flags: ["Ephemeral"] });
 

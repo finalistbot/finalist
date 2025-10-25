@@ -1,6 +1,7 @@
+import { ButtonInteraction } from "discord.js";
+
 import { BracketError } from "@/base/classes/error";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
-import { ButtonInteraction, Interaction } from "discord.js";
 
 export default class DisbandTeamSelection extends IdentityInteraction<"button"> {
   id = "disband_team_confirmation";

@@ -1,10 +1,11 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { botHasPermissions } from "@/checks/permissions";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class ReserveSlotCommand extends Command {
   data = new SlashCommandBuilder()

@@ -1,17 +1,19 @@
-import { Command } from "@/base/classes/command";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
-import { prisma } from "@/lib/prisma";
+
+import { Scrim } from "@prisma/client";
 import { stringify as csvStringify } from "csv-stringify/sync";
 import { table } from "table";
-import { BRAND_COLOR } from "@/lib/constants";
-import { Scrim } from "@prisma/client";
-import { CommandInfo } from "@/types/command";
+
+import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 type SlotDetails = {
   slotNumber: number;

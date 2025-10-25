@@ -1,17 +1,18 @@
 import {
-  SlashCommandBuilder,
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   InteractionContextType,
   PermissionFlagsBits,
-  AutocompleteInteraction,
+  SlashCommandBuilder,
 } from "discord.js";
+
 import { Command } from "@/base/classes/command";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { popularTimeZones } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks, suppress } from "@/lib/utils";
-import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CommandInfo } from "@/types/command";
-import { popularTimeZones } from "@/lib/constants";
-import { botHasPermissions } from "@/checks/permissions";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()

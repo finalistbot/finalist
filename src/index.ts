@@ -1,11 +1,12 @@
 import path from "path";
-import { client } from "./client";
-import { Event } from "./base/classes/event";
-import config from "./config";
-import logger from "./lib/logger";
-import { getHandlerFiles } from "./lib/fs";
+
 import { CommandRegistory } from "./base/classes/command";
+import { Event } from "./base/classes/event";
 import { IdentityInteractionRegistry } from "./base/classes/identity-interaction";
+import { client } from "./client";
+import config from "./config";
+import { getHandlerFiles } from "./lib/fs";
+import logger from "./lib/logger";
 
 function registerEvent(filePath: string) {
   import(path.resolve(filePath)).then((mod) => {

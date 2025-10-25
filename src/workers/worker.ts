@@ -1,12 +1,14 @@
-import { BracketClient } from "@/base/classes/client";
-import { JobRegistry } from "./job-registry";
+import { Worker } from "bullmq";
+
 import {
   ScrimAutoCleanHandler,
   ScrimRegistrationHandler,
 } from "./job-handlers";
-import { Worker } from "bullmq";
-import { redis } from "@/lib/redis";
+import { JobRegistry } from "./job-registry";
+
+import { BracketClient } from "@/base/classes/client";
 import { SCRIM_AUTO_CLEAN, SCRIM_REGISTRATION_START } from "@/lib/constants";
+import { redis } from "@/lib/redis";
 
 export function createWorker(client: BracketClient) {
   const jobRegistry = new JobRegistry();

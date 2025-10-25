@@ -5,13 +5,15 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { prisma } from "@/lib/prisma";
+
 import { Scrim } from "@prisma/client";
-import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import z from "zod";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { v4 as uuid4 } from "uuid";
+import z from "zod";
+
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { prisma } from "@/lib/prisma";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 
 const TeamConfigSchema = z.object({
   maxTeams: z.coerce.number().min(2).max(999),

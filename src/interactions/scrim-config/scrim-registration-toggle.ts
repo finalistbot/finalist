@@ -1,8 +1,9 @@
 import { ButtonInteraction, Interaction } from "discord.js";
+
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
 
 export default class ScrimTeamConfig extends IdentityInteraction<"button"> {
   id = "toggle_scrim_registration_auto_close";

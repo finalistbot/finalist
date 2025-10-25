@@ -1,8 +1,8 @@
 import { ButtonInteraction } from "discord.js";
 
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { prisma } from "@/lib/prisma";
 import teamDetailsEmbed from "@/ui/embeds/team-details";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
 
 export default class ShowTeamInfo extends IdentityInteraction<"button"> {
   id = "show_team_info";

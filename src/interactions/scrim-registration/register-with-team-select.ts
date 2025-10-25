@@ -1,9 +1,10 @@
 import { ButtonInteraction, EmbedBuilder, Interaction } from "discord.js";
-import { Event } from "@/base/classes/event";
-import { prisma } from "@/lib/prisma";
+
 import { BracketError } from "@/base/classes/error";
-import { BRAND_COLOR } from "@/lib/constants";
+import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 export default class RegisterWithTeamSelect extends IdentityInteraction<"button"> {
   id = "register_team_for_registration";

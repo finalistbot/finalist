@@ -1,15 +1,16 @@
-import { Command } from "@/base/classes/command";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { filterPresets } from "@/database";
-import { prisma } from "@/lib/prisma";
-import { safeRunChecks } from "@/lib/utils";
-import { ScrimSettings } from "@/types";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { filterPresets } from "@/database";
+import { prisma } from "@/lib/prisma";
+import { safeRunChecks } from "@/lib/utils";
+import { ScrimSettings } from "@/types";
 
 export default class SavePresetCommand extends Command {
   data = new SlashCommandBuilder()

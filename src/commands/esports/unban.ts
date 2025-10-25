@@ -1,14 +1,15 @@
+import {
+  ChatInputCommandInteraction,
+  InteractionContextType,
+  SlashCommandBuilder,
+} from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { isUserBanned } from "@/checks/banned";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { mentionUser, safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import {
-  ChatInputCommandInteraction,
-  InteractionContextType,
-  SlashCommandBuilder,
-} from "discord.js";
 
 export default class UnbanUser extends Command {
   data = new SlashCommandBuilder()

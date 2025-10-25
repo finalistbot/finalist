@@ -5,9 +5,12 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
+
+import { v4 as uuid4 } from "uuid";
 import z from "zod";
+
 import { BracketError } from "@/base/classes/error";
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
 
 const TeamConfigSchema = z.object({
   teamName: z.string().min(2).max(32),
@@ -15,9 +18,8 @@ const TeamConfigSchema = z.object({
   tag: z.string().max(10).optional(),
 });
 
-function CreateTeamModal() {
+function createTeamModal() {
   return new ModalBuilder()
-    .setCustomId(`create_team_submit`)
     .setTitle("Create Your Team")
     .addLabelComponents(
       new LabelBuilder()
@@ -56,14 +58,18 @@ function CreateTeamModal() {
     );
 }
 
-export default class ShowTeamModel extends IdentityInteraction<"button"> {
+export default class ShowTeamModal extends IdentityInteraction<"button"> {
   id = "show_create_team_modal";
   type = "button" as const;
   async execute(interaction: ButtonInteraction) {
-    const modal = CreateTeamModal();
+    const modal = createTeamModal();
+    const modalId = uuid4();
+    modal.setCustomId(modalId);
     await interaction.showModal(modal);
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.customId === modalId && i.user.id === interaction.user.id,
     });
     const rawBody = {
       teamName: modalSubmit.fields.getTextInputValue("team_name"),

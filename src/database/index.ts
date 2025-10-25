@@ -1,6 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import { ScrimPreset } from "@prisma/client";
 import { User } from "discord.js";
+
+import { ScrimPreset } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
 
 export async function getFirstAvailableSlot(scrimId: number) {
   const query = prisma.$queryRaw<{ slot: number }[]>`

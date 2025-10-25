@@ -1,6 +1,7 @@
+import { Interaction } from "discord.js";
+
 import { InteractionCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
-import { Interaction } from "discord.js";
 
 export function randomString(length: number): string {
   const chars =

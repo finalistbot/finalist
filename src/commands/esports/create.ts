@@ -6,19 +6,21 @@ import {
   OverwriteResolvable,
   SlashCommandBuilder,
 } from "discord.js";
-import { Command } from "@/base/classes/command";
-import { prisma } from "@/lib/prisma";
+
 import * as dateFns from "date-fns";
-import { scrimTemplateMap } from "@/templates/scrim";
-import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { safeRunChecks } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
-import { botHasPermissions } from "@/checks/permissions";
-import { ScrimSettings } from "@/types";
-import { BracketError } from "@/base/classes/error";
-import { filterPresets } from "@/database";
 import { fromZonedTime } from "date-fns-tz";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { checkIsGuildSetup } from "@/checks/is-guild-setup";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { filterPresets } from "@/database";
+import { prisma } from "@/lib/prisma";
+import { safeRunChecks } from "@/lib/utils";
+import { scrimTemplateMap } from "@/templates/scrim";
+import { ScrimSettings } from "@/types";
+import { CommandInfo } from "@/types/command";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()

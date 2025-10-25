@@ -1,5 +1,7 @@
 import { Interaction } from "discord.js";
+
 import { Event } from "../base/classes/event";
+
 import {
   IdentityInteractionRegistry,
   IdentityInteractionType,

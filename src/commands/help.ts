@@ -1,23 +1,24 @@
+import {
+  ActionRowBuilder,
+  AutocompleteInteraction,
+  ButtonBuilder,
+  ButtonStyle,
+  ChatInputCommandInteraction,
+  ComponentType,
+  EmbedBuilder,
+  SlashCommandBuilder,
+} from "discord.js";
+
 import { Command, CommandRegistory } from "@/base/classes/command";
 import {
-  botInviteLink,
   BRAND_COLOR,
+  botInviteLink,
   documentationLink,
   supportServerLink,
   youtubeChannelLink,
 } from "@/lib/constants";
 import { convertToTitleCase } from "@/lib/utils";
 import { CommandCategory, CommandInfo } from "@/types/command";
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ComponentType,
-  AutocompleteInteraction,
-} from "discord.js";
 
 export default class HelpCommand extends Command {
   data = new SlashCommandBuilder()

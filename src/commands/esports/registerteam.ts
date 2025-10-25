@@ -1,12 +1,13 @@
-import { Command } from "@/base/classes/command";
-import { BracketError } from "@/base/classes/error";
-import { prisma } from "@/lib/prisma";
-import { CommandInfo } from "@/types/command";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { prisma } from "@/lib/prisma";
+import { CommandInfo } from "@/types/command";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
