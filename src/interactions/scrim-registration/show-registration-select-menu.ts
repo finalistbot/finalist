@@ -8,6 +8,8 @@ import {
   StringSelectMenuBuilder,
 } from "discord.js";
 
+import { v4 as uuid4 } from "uuid";
+
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { prisma } from "@/lib/prisma";
 import teamDetailsEmbed from "@/ui/embeds/team-details";
@@ -66,9 +68,10 @@ export default class ShowRegistrationSelectMenu extends IdentityInteraction<"but
       return acc;
     }, new Map<number, string>());
 
+    const modalId = uuid4();
     const modal = new ModalBuilder()
       .setTitle("Register for Scrim")
-      .setCustomId(`register_for_scrim_modal`)
+      .setCustomId(modalId)
 
       .addLabelComponents(
         new LabelBuilder()
@@ -90,6 +93,8 @@ export default class ShowRegistrationSelectMenu extends IdentityInteraction<"but
     await interaction.showModal(modal);
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.user.id === interaction.user.id && i.customId === modalId,
     });
     await modalSubmit.deferReply({ flags: ["Ephemeral"] });
     const teamId =
