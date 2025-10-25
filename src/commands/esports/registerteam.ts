@@ -1,12 +1,13 @@
-import { Command } from "@/base/classes/command";
-import { BracketError } from "@/base/classes/error";
-import { prisma } from "@/lib/prisma";
-import { CommandInfo } from "@/types/command";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { prisma } from "@/lib/prisma";
+import { CommandInfo } from "@/types/command";
 
 export default class RegisterTeam extends Command {
   data = new SlashCommandBuilder()
@@ -17,7 +18,7 @@ export default class RegisterTeam extends Command {
         .setName("team")
         .setDescription("The team you want to register")
         .setRequired(true)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
   info: CommandInfo = {
     name: "registerteam",
@@ -56,7 +57,7 @@ export default class RegisterTeam extends Command {
     });
     const registeredTeam = await this.client.scrimService.registerTeam(
       scrim,
-      team,
+      team
     );
     await interaction.editReply({
       content: `Team **${registeredTeam!.name}** has been successfully registered for the scrim! If you need to make any changes, please contact a staff member.`,
@@ -89,7 +90,7 @@ export default class RegisterTeam extends Command {
           name = `[${team.tag}] ${name}`;
         }
         return { name, value: team.id };
-      }),
+      })
     );
   }
 }

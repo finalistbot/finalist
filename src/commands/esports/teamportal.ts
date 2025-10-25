@@ -1,9 +1,3 @@
-import { Command } from "@/base/classes/command";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { BRAND_COLOR, ImageUrl, ThumbnailUrl } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
-import { suppress } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,6 +6,13 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BRAND_COLOR, ImageUrl, ThumbnailUrl } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { suppress } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 export default class TeamPortalCommand extends Command {
   data = new SlashCommandBuilder()

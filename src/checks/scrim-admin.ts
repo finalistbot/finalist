@@ -1,10 +1,11 @@
-import { prisma } from "@/lib/prisma";
 import { GuildMember, Interaction } from "discord.js";
+
 import { type InteractionCheck } from "@/base/classes/check";
 import { CheckFailure } from "@/base/classes/error";
+import { prisma } from "@/lib/prisma";
 
 export const isScrimAdmin: InteractionCheck = async (
-  interaction: Interaction,
+  interaction: Interaction
 ) => {
   if (!interaction.inGuild()) return false;
   const member = interaction.member as GuildMember;

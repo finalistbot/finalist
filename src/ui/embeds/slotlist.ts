@@ -1,7 +1,9 @@
+import { EmbedBuilder } from "discord.js";
+
+import { Scrim } from "@prisma/client";
+
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { Scrim } from "@prisma/client";
-import { EmbedBuilder } from "discord.js";
 
 export async function slotListEmbed(scrim: Scrim) {
   const teams = await prisma.assignedSlot.findMany({
@@ -17,7 +19,7 @@ export async function slotListEmbed(scrim: Scrim) {
         name: `Slot ${t.slotNumber}`,
         value: `Team ID: ${t.registeredTeamId}`,
         inline: true,
-      })),
+      }))
     );
 
   return embed;

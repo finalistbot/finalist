@@ -1,11 +1,13 @@
+import { ButtonInteraction, CacheType, Interaction } from "discord.js";
+
+import { Stage } from "@prisma/client";
+
 import { BracketError } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { Stage } from "@prisma/client";
-import { ButtonInteraction, CacheType, Interaction } from "discord.js";
 
 export default class StartRegistrationButtonHandler extends IdentityInteraction<"button"> {
   id = "start_registration";

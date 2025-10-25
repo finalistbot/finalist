@@ -1,6 +1,7 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { registerSlashCommands } from "@/services/slash-commands";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class SyncSlashCommands extends Command {
   data = new SlashCommandBuilder()
@@ -16,7 +17,7 @@ export default class SyncSlashCommands extends Command {
     }
     await interaction.deferReply({ flags: "Ephemeral" });
     const { globalCommands, devCommands } = await registerSlashCommands(
-      this.client,
+      this.client
     );
     await interaction.editReply({
       content: `Registered ${globalCommands.length} global commands and ${devCommands.length} developer commands.`,

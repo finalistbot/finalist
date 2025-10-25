@@ -1,14 +1,16 @@
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ButtonStyle,
+} from "discord.js";
+
+import { Scrim } from "@prisma/client";
+
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, suppress } from "@/lib/utils";
-import { Scrim } from "@prisma/client";
-import {
-  ButtonBuilder,
-  ButtonInteraction,
-  ButtonStyle,
-  ActionRowBuilder,
-} from "discord.js";
 
 export default class OpenDaysConfiguration extends IdentityInteraction<"button"> {
   id = "open_days_config_toggle";
@@ -67,8 +69,8 @@ export default class OpenDaysConfiguration extends IdentityInteraction<"button">
         .setStyle(
           scrim.openDays.includes(i)
             ? ButtonStyle.Success
-            : ButtonStyle.Secondary,
-        ),
+            : ButtonStyle.Secondary
+        )
     );
 
     const chunks: ButtonBuilder[][] = [];
@@ -77,7 +79,7 @@ export default class OpenDaysConfiguration extends IdentityInteraction<"button">
     }
 
     const actionRows = chunks.map((chunk) =>
-      new ActionRowBuilder<ButtonBuilder>().addComponents(chunk),
+      new ActionRowBuilder<ButtonBuilder>().addComponents(chunk)
     );
 
     return {

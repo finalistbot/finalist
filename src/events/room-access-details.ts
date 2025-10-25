@@ -1,10 +1,12 @@
+import { EmbedBuilder, Interaction } from "discord.js";
+
 import { Event } from "@/base/classes/event";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { BRAND_COLOR } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString } from "@/lib/utils";
 import { RoomDetailsField } from "@/types";
-import { EmbedBuilder, Interaction } from "discord.js";
+
 export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
   public async execute(interaction: Interaction) {
@@ -81,7 +83,7 @@ export default class RoomAccessDetailEvent extends Event<"interactionCreate"> {
           name: field.name,
           value: field.value,
           inline: false,
-        })),
+        }))
       )
       .setFooter({
         text: `Requested by ${interaction.user.tag}`,

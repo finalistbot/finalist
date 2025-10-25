@@ -1,13 +1,14 @@
+import { CacheType, ChatInputCommandInteraction } from "discord.js";
+
 import { BracketError } from "@/base/classes/error";
 import { Event } from "@/base/classes/event";
-import { ChatInputCommandInteraction, CacheType } from "discord.js";
 
 export default class CommandErrorHandler extends Event<"commandError"> {
   public event: "commandError" = "commandError";
   async execute(
     interaction: ChatInputCommandInteraction<CacheType>,
     error: Error,
-    commandName: string,
+    commandName: string
   ): Promise<void> {
     if (!(error instanceof BracketError)) {
       console.error(`Unexpected error in command ${commandName}:`, error);

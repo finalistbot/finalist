@@ -1,10 +1,3 @@
-import { Command } from "@/base/classes/command";
-import { isUserBanned, isNotBanned } from "@/checks/banned";
-import { ensureUser } from "@/database";
-import { BRAND_COLOR } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
-import { randomString } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -12,6 +5,14 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { isNotBanned, isUserBanned } from "@/checks/banned";
+import { ensureUser } from "@/database";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { randomString } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 const MAX_TEAM_SIZE = 10;
 

@@ -1,22 +1,24 @@
-import { BracketClient } from "@/base/classes/client";
-import { JobRegistry } from "./job-registry";
+import { Worker } from "bullmq";
+
 import {
   ScrimAutoCleanHandler,
   ScrimRegistrationHandler,
 } from "./job-handlers";
-import { Worker } from "bullmq";
-import { redis } from "@/lib/redis";
+import { JobRegistry } from "./job-registry";
+
+import { BracketClient } from "@/base/classes/client";
 import { SCRIM_AUTO_CLEAN, SCRIM_REGISTRATION_START } from "@/lib/constants";
+import { redis } from "@/lib/redis";
 
 export function createWorker(client: BracketClient) {
   const jobRegistry = new JobRegistry();
   jobRegistry.register(
     SCRIM_REGISTRATION_START,
-    new ScrimRegistrationHandler(client.scrimService),
+    new ScrimRegistrationHandler(client.scrimService)
   );
   jobRegistry.register(
     SCRIM_AUTO_CLEAN,
-    new ScrimAutoCleanHandler(client.scrimService),
+    new ScrimAutoCleanHandler(client.scrimService)
   );
 
   const worker = new Worker(
@@ -44,7 +46,7 @@ export function createWorker(client: BracketClient) {
           return 10000 * attempts;
         },
       },
-    },
+    }
   );
 
   return worker;

@@ -1,5 +1,6 @@
-import { CheckFailure } from "@/base/classes/error";
 import { Interaction, PermissionResolvable } from "discord.js";
+
+import { CheckFailure } from "@/base/classes/error";
 
 export const botHasPermissions = (...perms: PermissionResolvable[]) => {
   return async (interaction: Interaction) => {
@@ -13,7 +14,7 @@ export const botHasPermissions = (...perms: PermissionResolvable[]) => {
       throw new CheckFailure(
         `I am missing the following permissions to execute this command: ${missing
           .map((p) => `\`${p}\``)
-          .join(", ")}`,
+          .join(", ")}`
       );
     }
     return true;

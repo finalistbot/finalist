@@ -1,17 +1,18 @@
 import {
-  SlashCommandBuilder,
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   InteractionContextType,
   PermissionFlagsBits,
-  AutocompleteInteraction,
+  SlashCommandBuilder,
 } from "discord.js";
+
 import { Command } from "@/base/classes/command";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { popularTimeZones } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks, suppress } from "@/lib/utils";
-import { isScrimAdmin } from "@/checks/scrim-admin";
 import { CommandInfo } from "@/types/command";
-import { popularTimeZones } from "@/lib/constants";
-import { botHasPermissions } from "@/checks/permissions";
 
 export default class SetupCommand extends Command {
   data = new SlashCommandBuilder()
@@ -23,20 +24,20 @@ export default class SetupCommand extends Command {
       option
         .setName("timezone")
         .setDescription(
-          "The timezone for the server (e.g., 'India (IST)'). Defaults to UTC if not set.",
+          "The timezone for the server (e.g., 'India (IST)'). Defaults to UTC if not set."
         )
         .setAutocomplete(true)
-        .setRequired(false),
+        .setRequired(false)
     )
     .addIntegerOption((option) =>
       option
         .setName("teams-per-captain")
         .setDescription(
-          "Number of teams each captain can create. Default is 1.",
+          "Number of teams each captain can create. Default is 1."
         )
         .setRequired(false)
         .setMinValue(1)
-        .setMaxValue(10),
+        .setMaxValue(10)
     );
 
   info: CommandInfo = {
@@ -90,7 +91,7 @@ export default class SetupCommand extends Command {
     if (guildConfig) {
       if (guildConfig.adminRoleId) {
         adminRole = await suppress(
-          interaction.guild.roles.fetch(guildConfig.adminRoleId),
+          interaction.guild.roles.fetch(guildConfig.adminRoleId)
         );
       }
     }
@@ -124,10 +125,10 @@ export default class SetupCommand extends Command {
     const filtered = popularTimeZones.filter(
       (tz) =>
         tz.label.toLowerCase().includes(focusedValue.toLowerCase()) ||
-        tz.value.toLowerCase().includes(focusedValue.toLowerCase()),
+        tz.value.toLowerCase().includes(focusedValue.toLowerCase())
     );
     await interaction.respond(
-      filtered.slice(0, 25).map((tz) => ({ name: tz.label, value: tz.value })),
+      filtered.slice(0, 25).map((tz) => ({ name: tz.label, value: tz.value }))
     );
   }
 }

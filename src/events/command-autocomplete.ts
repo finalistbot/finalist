@@ -1,6 +1,8 @@
+import { Interaction } from "discord.js";
+
 import { CommandRegistory } from "@/base/classes/command";
 import { Event } from "@/base/classes/event";
-import { Interaction } from "discord.js";
+
 export default class CommandAutocomplete extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
 
@@ -11,7 +13,7 @@ export default class CommandAutocomplete extends Event<"interactionCreate"> {
 
     if (!command) {
       console.error(
-        `No command matching ${interaction.commandName} was found.`,
+        `No command matching ${interaction.commandName} was found.`
       );
       return;
     }

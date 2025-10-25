@@ -1,23 +1,17 @@
-import { BracketError } from "@/base/classes/error";
-import { Event } from "@/base/classes/event";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
-import { BRAND_COLOR } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
-import { parseIdFromString } from "@/lib/utils";
-import teamDetailsEmbed from "@/ui/embeds/team-details";
 import {
-  Interaction,
-  CacheType,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
   ButtonBuilder,
-  ButtonStyle,
-  Embed,
-  EmbedBuilder,
   ButtonInteraction,
-  ModalBuilder,
+  ButtonStyle,
   LabelBuilder,
+  ModalBuilder,
+  StringSelectMenuBuilder,
 } from "discord.js";
+
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { prisma } from "@/lib/prisma";
+import teamDetailsEmbed from "@/ui/embeds/team-details";
+
 export default class ShowRegistrationSelectMenu extends IdentityInteraction<"button"> {
   id = "show_registration_select_menu";
   type = "button" as const;

@@ -1,21 +1,22 @@
-import { Command } from "@/base/classes/command";
-import { isUserBanned } from "@/checks/banned";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { prisma } from "@/lib/prisma";
-import { mentionUser, safeRunChecks } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
 import {
   ChatInputCommandInteraction,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
 
+import { Command } from "@/base/classes/command";
+import { isUserBanned } from "@/checks/banned";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { prisma } from "@/lib/prisma";
+import { mentionUser, safeRunChecks } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
+
 export default class BanUser extends Command {
   data = new SlashCommandBuilder()
     .setName("ban")
     .setDescription("Ban a player from any event in this server.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("User to ban").setRequired(true),
+      option.setName("user").setDescription("User to ban").setRequired(true)
     )
     .setContexts(InteractionContextType.Guild);
 

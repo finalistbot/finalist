@@ -1,16 +1,18 @@
-import { Command } from "@/base/classes/command";
-import { BracketError } from "@/base/classes/error";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { prisma } from "@/lib/prisma";
-import { suppress } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
-import { Stage } from "@prisma/client";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   InteractionContextType,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Stage } from "@prisma/client";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { prisma } from "@/lib/prisma";
+import { suppress } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 export default class EndScrim extends Command {
   data = new SlashCommandBuilder()
@@ -22,7 +24,7 @@ export default class EndScrim extends Command {
         .setName("scrim")
         .setDescription("Scrim to end")
         .setRequired(true)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
   info: CommandInfo = {
     name: "end",
@@ -98,7 +100,7 @@ export default class EndScrim extends Command {
       scrims.map((scrim) => ({
         name: `${scrim.id}: ${scrim.name}`,
         value: scrim.id,
-      })),
+      }))
     );
   }
 }

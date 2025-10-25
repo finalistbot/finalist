@@ -1,6 +1,9 @@
-import { ScrimService } from "./scrim";
 import { Guild } from "discord.js";
+
 import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+
+import { ScrimService } from "./scrim";
+
 import { prisma } from "@/lib/prisma";
 
 export class RoleManageService extends ScrimService {

@@ -1,15 +1,15 @@
-import { BracketError } from "@/base/classes/error";
-import { Event } from "@/base/classes/event";
-import { IdentityInteraction } from "@/base/classes/identity-interaction";
-import { BRAND_COLOR } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
 import {
-  ActionRowBuilder,
   ButtonInteraction,
   LabelBuilder,
   ModalBuilder,
   StringSelectMenuBuilder,
 } from "discord.js";
+
+import { v4 as uuid4 } from "uuid";
+
+import { BracketError } from "@/base/classes/error";
+import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { prisma } from "@/lib/prisma";
 
 export default class KickMemberFromteam extends IdentityInteraction<"button"> {
   id = "show_member_to_kick_selection";
@@ -32,9 +32,10 @@ export default class KickMemberFromteam extends IdentityInteraction<"button"> {
       return;
     }
 
+    const modalId = uuid4();
     const modal = new ModalBuilder()
       .setTitle("Kick Team Member")
-      .setCustomId(`kick_member_modal`)
+      .setCustomId(modalId)
       .addLabelComponents(
         new LabelBuilder()
           .setLabel("Select Team member")
@@ -56,6 +57,8 @@ export default class KickMemberFromteam extends IdentityInteraction<"button"> {
 
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.customId === modalId && i.user.id === interaction.user.id,
     });
     await modalSubmit.deferReply({ flags: ["Ephemeral"] });
     const memberId = modalSubmit.fields.getStringSelectValues(

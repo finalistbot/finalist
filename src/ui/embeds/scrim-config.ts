@@ -1,8 +1,10 @@
+import { EmbedBuilder } from "discord.js";
+
+import { Scrim } from "@prisma/client";
+
 import { BracketClient } from "@/base/classes/client";
 import { BRAND_COLOR } from "@/lib/constants";
 import { discordTimestamp } from "@/lib/utils";
-import { Scrim } from "@prisma/client";
-import { EmbedBuilder } from "discord.js";
 
 export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
   return new EmbedBuilder()
@@ -49,7 +51,7 @@ export function scrimConfigEmbed(scrim: Scrim, client: BracketClient) {
         name: "🎯 Slotlist Mode",
         value: scrim.autoSlotList ? "⚡ Auto" : "📝 Manual",
         inline: false,
-      },
+      }
     )
     .setFooter({
       text: "Configuration locks once the registration opens.",

@@ -8,7 +8,7 @@ export const isNotBanned: InteractionCheck = async (interaction) => {
   const bannedUser = await isUserBanned(guildId, user.id);
   if (bannedUser) {
     throw new CheckFailure(
-      "You are banned from using this bot in this server.",
+      "You are banned from using this bot in this server."
     );
   }
   return true;

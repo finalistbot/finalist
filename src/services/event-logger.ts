@@ -1,7 +1,9 @@
+import { EmbedBuilder, TextChannel } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";
-import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
-import { EmbedBuilder, TextChannel } from "discord.js";
 
 type EventLoggerPayload = {
   registrationChannelOpened: {
@@ -57,27 +59,27 @@ export class EventLogger {
   constructor(private client: BracketClient) {}
   async logEvent<T extends keyof EventLoggerPayload>(
     event: T,
-    payload: EventLoggerPayload[T],
+    payload: EventLoggerPayload[T]
   ) {
     switch (event) {
       case "registrationChannelOpened":
         await this.logRegistrationChannelOpened(
-          payload as EventLoggerPayload["registrationChannelOpened"],
+          payload as EventLoggerPayload["registrationChannelOpened"]
         );
         break;
       case "teamRegistered":
         await this.logTeamRegistration(
-          payload as EventLoggerPayload["teamRegistered"],
+          payload as EventLoggerPayload["teamRegistered"]
         );
         break;
       case "slotAssigned":
         await this.logSlotAssignment(
-          payload as EventLoggerPayload["slotAssigned"],
+          payload as EventLoggerPayload["slotAssigned"]
         );
         break;
       case "slotUnassigned":
         await this.logSlotUnassignment(
-          payload as EventLoggerPayload["slotUnassigned"],
+          payload as EventLoggerPayload["slotUnassigned"]
         );
         break;
       case "teamKicked":
@@ -88,12 +90,12 @@ export class EventLogger {
         break;
       case "roomDetailsPosted":
         await this.logRoomDetailsPosted(
-          payload as EventLoggerPayload["roomDetailsPosted"],
+          payload as EventLoggerPayload["roomDetailsPosted"]
         );
         break;
       case "registrationClosed":
         await this.logRegistrationClosed(
-          payload as EventLoggerPayload["registrationClosed"],
+          payload as EventLoggerPayload["registrationClosed"]
         );
         break;
       case "fatalError":
@@ -117,7 +119,7 @@ export class EventLogger {
   }
 
   private async logRegistrationChannelOpened(
-    payload: EventLoggerPayload["registrationChannelOpened"],
+    payload: EventLoggerPayload["registrationChannelOpened"]
   ) {
     const { channelId, trigger } = payload;
     const scrim = await prisma.scrim.findFirst({
@@ -129,14 +131,14 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Registration opened for @everyone in <#${channelId}> **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Aqua");
     await logChannel.send({ embeds: [embed] });
   }
 
   private async logTeamRegistration(
-    payload: EventLoggerPayload["teamRegistered"],
+    payload: EventLoggerPayload["teamRegistered"]
   ) {
     const { team, trigger } = payload;
     const scrim = await prisma.scrim.findFirst({
@@ -148,7 +150,7 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Team **${team.name}** (${team.id}) has registered for the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Green");
     // TODO: Maybe need a jump url
@@ -166,14 +168,14 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Team **${team.name}** has been assigned to slot **${assignedSlot.slotNumber}** in the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Blue");
     await logChannel.send({ embeds: [embed] });
   }
 
   private async logSlotUnassignment(
-    payload: EventLoggerPayload["slotUnassigned"],
+    payload: EventLoggerPayload["slotUnassigned"]
   ) {
     const { team, unassignedSlot, trigger } = payload;
     const scrim = await prisma.scrim.findFirst({
@@ -185,7 +187,7 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Team **${team.name}** has been unassigned from slot **${unassignedSlot.slotNumber}** in the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Orange");
     await logChannel.send({ embeds: [embed] });
@@ -202,7 +204,7 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Team **${team.name}** has been kicked from the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Red");
     await logChannel.send({ embeds: [embed] });
@@ -219,14 +221,14 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Team **${team.name}** has been banned from the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("DarkRed");
     await logChannel.send({ embeds: [embed] });
   }
 
   private async logRoomDetailsPosted(
-    payload: EventLoggerPayload["roomDetailsPosted"],
+    payload: EventLoggerPayload["roomDetailsPosted"]
   ) {
     const { scrimId, trigger } = payload;
     const scrim = await prisma.scrim.findFirst({
@@ -238,21 +240,21 @@ export class EventLogger {
     const embed = new EmbedBuilder()
       .setDescription(
         `Room details have been posted for the scrim **(Scrim ID: ${scrim.id})**` +
-          this.formatTrigger(trigger),
+          this.formatTrigger(trigger)
       )
       .setColor("Purple");
     await logChannel.send({ embeds: [embed] });
   }
 
   private async logRegistrationClosed(
-    payload: EventLoggerPayload["registrationClosed"],
+    payload: EventLoggerPayload["registrationClosed"]
   ) {
     const { scrim } = payload;
     const logChannel = await this.getLogsChannel(scrim.logsChannelId);
     if (!logChannel) return;
     const embed = new EmbedBuilder()
       .setDescription(
-        `Registration has been closed for the scrim **(Scrim ID: ${scrim.id})**`,
+        `Registration has been closed for the scrim **(Scrim ID: ${scrim.id})**`
       )
       .setColor("DarkAqua");
     await logChannel.send({ embeds: [embed] });

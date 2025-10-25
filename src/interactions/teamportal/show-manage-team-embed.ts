@@ -6,8 +6,8 @@ import {
   ModalSubmitInteraction,
 } from "discord.js";
 
-import { BRAND_COLOR } from "@/lib/constants";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { BRAND_COLOR } from "@/lib/constants";
 
 export default class ShowManageTeamEmbed extends IdentityInteraction<"modal"> {
   id = "team_select_modal";

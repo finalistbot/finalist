@@ -1,6 +1,7 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import logger from "@/lib/logger";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class CleanTestServer extends Command {
   developerOnly = true;

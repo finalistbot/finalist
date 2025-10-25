@@ -1,10 +1,11 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { botHasPermissions } from "@/checks/permissions";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class ReserveSlotCommand extends Command {
   data = new SlashCommandBuilder()
@@ -14,13 +15,13 @@ export default class ReserveSlotCommand extends Command {
       option
         .setName("team-leader")
         .setDescription("The team leader of the team to reserve the slot for")
-        .setRequired(true),
+        .setRequired(true)
     )
     .addIntegerOption((option) =>
       option
         .setName("slot-number")
         .setDescription("The slot number to reserve")
-        .setRequired(true),
+        .setRequired(true)
     );
 
   info: CommandInfo = {
@@ -78,7 +79,7 @@ export default class ReserveSlotCommand extends Command {
       },
     });
     await interaction.editReply(
-      `Slot number ${slotNumber} has been reserved for team leader ${teamLeader.tag}.`,
+      `Slot number ${slotNumber} has been reserved for team leader ${teamLeader.tag}.`
     );
   }
 }

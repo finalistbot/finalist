@@ -1,7 +1,8 @@
 import { Interaction } from "discord.js";
-import { Event } from "@/base/classes/event";
-import { CheckFailure } from "@/base/classes/error";
+
 import { CommandRegistory } from "@/base/classes/command";
+import { CheckFailure } from "@/base/classes/error";
+import { Event } from "@/base/classes/event";
 
 export default class CommandHandler extends Event<"interactionCreate"> {
   public event = "interactionCreate" as const;
@@ -13,7 +14,7 @@ export default class CommandHandler extends Event<"interactionCreate"> {
 
     if (!command) {
       console.error(
-        `No command matching ${interaction.commandName} was found.`,
+        `No command matching ${interaction.commandName} was found.`
       );
       return;
     }

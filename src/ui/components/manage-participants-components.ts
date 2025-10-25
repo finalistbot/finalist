@@ -1,9 +1,10 @@
-import { AssignedSlot, RegisteredTeam } from "@prisma/client";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+
+import { AssignedSlot, RegisteredTeam } from "@prisma/client";
 
 export async function prepareManageParticipantsComponent(
   team: RegisteredTeam,
-  assignedSlot: AssignedSlot | null = null,
+  assignedSlot: AssignedSlot | null = null
 ) {
   const assignSlotLabel = assignedSlot ? "Reassign Slot" : "Assign Slot";
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -23,7 +24,7 @@ export async function prepareManageParticipantsComponent(
     new ButtonBuilder()
       .setCustomId(`ban_team:${team.id}`)
       .setLabel("Ban Team")
-      .setStyle(ButtonStyle.Danger),
+      .setStyle(ButtonStyle.Danger)
   );
 
   return [row];

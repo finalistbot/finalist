@@ -1,10 +1,12 @@
+import { ButtonInteraction, CacheType, Interaction } from "discord.js";
+
 import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { parseIdFromString, safeRunChecks, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
-import { Interaction, CacheType, ButtonInteraction } from "discord.js";
+
 export default class UnassignSlot extends IdentityInteraction<"button"> {
   id = "unassign_slot";
   type = "button" as const;

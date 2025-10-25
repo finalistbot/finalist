@@ -1,14 +1,14 @@
-import { Command } from "@/base/classes/command";
-
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { BRAND_COLOR } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
-import { safeRunChecks } from "@/lib/utils";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { safeRunChecks } from "@/lib/utils";
 
 export default class SlotlistInfo extends Command {
   data = new SlashCommandBuilder()
@@ -18,7 +18,7 @@ export default class SlotlistInfo extends Command {
       option
         .setName("user")
         .setDescription("The user to get the slot information for")
-        .setRequired(true),
+        .setRequired(true)
     );
   info = {
     name: "slotinfo",
@@ -113,7 +113,7 @@ export default class SlotlistInfo extends Command {
             ? `Slot Number: **${assignedSlot.slotNumber}**`
             : "No slot assigned",
           inline: false,
-        },
+        }
       )
       .setTimestamp()
       .setFooter({

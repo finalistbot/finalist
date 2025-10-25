@@ -6,19 +6,21 @@ import {
   OverwriteResolvable,
   SlashCommandBuilder,
 } from "discord.js";
-import { Command } from "@/base/classes/command";
-import { prisma } from "@/lib/prisma";
+
 import * as dateFns from "date-fns";
-import { scrimTemplateMap } from "@/templates/scrim";
-import { checkIsGuildSetup } from "@/checks/is-guild-setup";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { safeRunChecks } from "@/lib/utils";
-import { CommandInfo } from "@/types/command";
-import { botHasPermissions } from "@/checks/permissions";
-import { ScrimSettings } from "@/types";
-import { BracketError } from "@/base/classes/error";
-import { filterPresets } from "@/database";
 import { fromZonedTime } from "date-fns-tz";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { checkIsGuildSetup } from "@/checks/is-guild-setup";
+import { botHasPermissions } from "@/checks/permissions";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { filterPresets } from "@/database";
+import { prisma } from "@/lib/prisma";
+import { safeRunChecks } from "@/lib/utils";
+import { scrimTemplateMap } from "@/templates/scrim";
+import { ScrimSettings } from "@/types";
+import { CommandInfo } from "@/types/command";
 
 export default class CreateScrim extends Command {
   data = new SlashCommandBuilder()
@@ -31,7 +33,7 @@ export default class CreateScrim extends Command {
         .setDescription("Name of the scrim")
         .setRequired(true)
         .setMinLength(3)
-        .setMaxLength(50),
+        .setMaxLength(50)
     )
     .addStringOption((option) =>
       option
@@ -42,15 +44,15 @@ export default class CreateScrim extends Command {
           [...scrimTemplateMap.values()].map((template) => ({
             name: template.name,
             value: template.value,
-          })),
-        ),
+          }))
+        )
     )
     .addStringOption((option) =>
       option
         .setName("preset")
         .setDescription("Saved preset to use for the scrim")
         .setRequired(false)
-        .setAutocomplete(true),
+        .setAutocomplete(true)
     );
 
   info: CommandInfo = {
@@ -87,13 +89,13 @@ export default class CreateScrim extends Command {
       "ManageRoles",
       "SendMessages",
       "ViewChannel",
-      "ReadMessageHistory",
+      "ReadMessageHistory"
     ),
   ];
 
   async loadPreset(
     guildId: string,
-    presetName: string,
+    presetName: string
   ): Promise<Partial<ScrimSettings>> {
     const preset = await prisma.scrimPreset.findFirst({
       where: { guildId, name: presetName },
@@ -252,7 +254,7 @@ export default class CreateScrim extends Command {
         seconds: 0,
         milliseconds: 0,
       }),
-      guildConfig?.timezone || "UTC",
+      guildConfig?.timezone || "UTC"
     );
 
     scrim = await prisma.scrim.create({
@@ -290,7 +292,7 @@ export default class CreateScrim extends Command {
       presets.map((preset) => ({
         name: preset.name,
         value: preset.name,
-      })),
+      }))
     );
   }
 }

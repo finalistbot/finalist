@@ -1,17 +1,19 @@
-import { Command } from "@/base/classes/command";
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
-import { prisma } from "@/lib/prisma";
+
+import { Scrim } from "@prisma/client";
 import { stringify as csvStringify } from "csv-stringify/sync";
 import { table } from "table";
-import { BRAND_COLOR } from "@/lib/constants";
-import { Scrim } from "@prisma/client";
-import { CommandInfo } from "@/types/command";
+
+import { Command } from "@/base/classes/command";
 import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
+import { CommandInfo } from "@/types/command";
 
 type SlotDetails = {
   slotNumber: number;
@@ -37,7 +39,7 @@ function slotsToHTML(slots: SlotDetails[]) {
       <td>${slot.teamId}</td>
       <td><a target="_blank" href="${slot.jumpUrl}">Jump to Team</a></td>
     </tr>
-  `,
+  `
     )
     .join("\n");
   return `
@@ -136,8 +138,8 @@ export default class SlotlistExport extends Command {
           { name: "Embedded", value: "embed" },
           { name: "CSV", value: "csv" },
           { name: "Table", value: "table" },
-          { name: "HTML", value: "html" },
-        ),
+          { name: "HTML", value: "html" }
+        )
     );
 
   info: CommandInfo = {
@@ -186,7 +188,7 @@ export default class SlotlistExport extends Command {
 
     if (!scrim) {
       return interaction.editReply(
-        "This command can only be used in a scrim admin channel.",
+        "This command can only be used in a scrim admin channel."
       );
     }
     const slots = scrim.assignedSlots;

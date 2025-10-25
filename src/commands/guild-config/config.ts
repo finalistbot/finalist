@@ -1,12 +1,13 @@
-import { Command } from "@/base/classes/command";
-import { BracketError } from "@/base/classes/error";
-import { popularTimeZones } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { BracketError } from "@/base/classes/error";
+import { popularTimeZones } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 export default class ConfigCommand extends Command {
   data = new SlashCommandBuilder()
@@ -21,14 +22,14 @@ export default class ConfigCommand extends Command {
             .setName("timezone")
             .setDescription("The timezone to set")
             .setRequired(true)
-            .setAutocomplete(true),
-        ),
+            .setAutocomplete(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("teams-per-captain")
         .setDescription(
-          "Number of teams each captain can create. Default is 1.",
+          "Number of teams each captain can create. Default is 1."
         )
         .addIntegerOption((option) =>
           option
@@ -36,8 +37,8 @@ export default class ConfigCommand extends Command {
             .setDescription("The number of teams per captain")
             .setRequired(true)
             .setMinValue(1)
-            .setMaxValue(10),
-        ),
+            .setMaxValue(10)
+        )
     );
 
   async execute(interaction: ChatInputCommandInteraction) {
@@ -98,12 +99,10 @@ export default class ConfigCommand extends Command {
       const filtered = popularTimeZones.filter(
         (tz) =>
           tz.label.toLowerCase().includes(focusedValue.toLowerCase()) ||
-          tz.value.toLowerCase().includes(focusedValue.toLowerCase()),
+          tz.value.toLowerCase().includes(focusedValue.toLowerCase())
       );
       await interaction.respond(
-        filtered
-          .slice(0, 25)
-          .map((tz) => ({ name: tz.label, value: tz.value })),
+        filtered.slice(0, 25).map((tz) => ({ name: tz.label, value: tz.value }))
       );
     }
   }

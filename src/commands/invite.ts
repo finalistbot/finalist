@@ -4,8 +4,9 @@ import {
   ButtonStyle,
   EmbedBuilder,
 } from "discord.js";
-import { Command } from "@/base/classes/command";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
+import { Command } from "@/base/classes/command";
 import { BRAND_COLOR, botInviteLink, supportServerLink } from "@/lib/constants";
 import { CommandInfo } from "@/types/command";
 
@@ -34,7 +35,7 @@ export default class InviteCommand extends Command {
       new ButtonBuilder()
         .setLabel("💬 Support Server")
         .setStyle(ButtonStyle.Link)
-        .setURL(supportServerLink),
+        .setURL(supportServerLink)
     );
     await interaction.reply({
       embeds: [embed],

@@ -1,6 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import { GuildConfig } from "@prisma/client";
 import { Guild } from "discord.js";
+
+import { GuildConfig } from "@prisma/client";
+
+import { prisma } from "@/lib/prisma";
 
 type ValidGuildConfig = GuildConfig & {
   adminRoleId: string;
@@ -17,7 +19,7 @@ type IsGuildSetupReturn =
     };
 
 function isValidGuildConfig(
-  config: GuildConfig | null,
+  config: GuildConfig | null
 ): config is ValidGuildConfig {
   return !!config?.adminRoleId;
 }
@@ -37,7 +39,7 @@ const fail = (message: string): IsGuildSetupReturn => ({
 });
 
 export async function checkIsGuildSetup(
-  guild: Guild,
+  guild: Guild
 ): Promise<IsGuildSetupReturn> {
   const guildConfig = await prisma.guildConfig.findUnique({
     where: { id: guild.id },

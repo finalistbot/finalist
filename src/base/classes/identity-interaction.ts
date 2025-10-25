@@ -3,6 +3,7 @@ import {
   ModalSubmitInteraction,
   StringSelectMenuInteraction,
 } from "discord.js";
+
 import { BracketClient } from "./client";
 
 export type IdentityInteractionType = "modal" | "button" | "string_select";

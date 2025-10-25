@@ -1,3 +1,15 @@
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  TextChannel,
+} from "discord.js";
+
+import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
+import * as dateFns from "date-fns";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
+
 import { BracketError } from "@/base/classes/error";
 import { Service } from "@/base/classes/service";
 import { slotsToTable } from "@/commands/esports/slotlist";
@@ -13,16 +25,6 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { discordTimestamp, suppress } from "@/lib/utils";
 import { editRegisteredTeamDetails } from "@/ui/messages/teams";
-import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
-import * as dateFns from "date-fns";
-import { fromZonedTime, toZonedTime } from "date-fns-tz";
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  TextChannel,
-} from "discord.js";
 
 export class ScrimService extends Service {
   async scheduleRegistrationStart(scrim: Scrim) {

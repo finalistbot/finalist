@@ -5,8 +5,10 @@ import {
   SlashCommandOptionsOnlyBuilder,
   SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
-import { BracketClient } from "./client";
+
 import { InteractionCheck } from "./check";
+import { BracketClient } from "./client";
+
 import { CommandCategory, CommandInfo } from "@/types/command";
 
 export abstract class Command {
@@ -55,7 +57,7 @@ export class CommandRegistory {
 
   static getCommandsByCategory(category: string): Command[] {
     return this.getAllCommands().filter(
-      (cmd) => (cmd.info?.category || "General") === category,
+      (cmd) => (cmd.info?.category || "General") === category
     );
   }
 

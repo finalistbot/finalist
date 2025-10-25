@@ -1,19 +1,19 @@
 import {
-  ActionRowBuilder,
   ButtonInteraction,
-  Interaction,
   LabelBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import { Event } from "@/base/classes/event";
-import { prisma } from "@/lib/prisma";
+
 import { Scrim } from "@prisma/client";
-import { parseIdFromString, safeRunChecks } from "@/lib/utils";
-import { isScrimAdmin } from "@/checks/scrim-admin";
+import { v4 as uuid4 } from "uuid";
 import z from "zod";
+
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { prisma } from "@/lib/prisma";
+import { parseIdFromString, safeRunChecks } from "@/lib/utils";
 
 const TeamConfigSchema = z.object({
   maxTeams: z.coerce.number().min(2).max(999),
@@ -98,7 +98,6 @@ function teamConfigModal(
       )
   );
   return new ModalBuilder()
-    .setCustomId(`team_config_submit:${scrim.id}`)
     .setTitle("Team Configuration")
     .addLabelComponents(...rows);
 }
@@ -140,10 +139,14 @@ export default class ScrimTeamConfig extends IdentityInteraction<"button"> {
       ...scrim,
       _count: { registeredTeams: registeredTeamsCount },
     });
+    const modalId = uuid4();
+    modal.setCustomId(modalId);
     await interaction.showModal(modal);
 
     const modalSubmit = await interaction.awaitModalSubmit({
       time: 5 * 60 * 1000,
+      filter: (i) =>
+        i.customId === modalId && i.user.id === interaction.user.id,
     });
     await modalSubmit.deferReply({ flags: ["Ephemeral"] });
 

@@ -1,10 +1,3 @@
-import { Command } from "@/base/classes/command";
-import { isScrimAdmin } from "@/checks/scrim-admin";
-import { BRAND_COLOR } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
-import { convertToSlug, convertToTitleCase, safeRunChecks } from "@/lib/utils";
-import { RoomDetailsField } from "@/types";
-import { CommandInfo } from "@/types/command";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,6 +6,14 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
+
+import { Command } from "@/base/classes/command";
+import { isScrimAdmin } from "@/checks/scrim-admin";
+import { BRAND_COLOR } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { convertToSlug, convertToTitleCase, safeRunChecks } from "@/lib/utils";
+import { RoomDetailsField } from "@/types";
+import { CommandInfo } from "@/types/command";
 
 export default class RoomDetailCommand extends Command {
   data = new SlashCommandBuilder()
@@ -26,14 +27,14 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field.")
-            .setRequired(true),
+            .setRequired(true)
         )
         .addStringOption((option) =>
           option
             .setName("value")
             .setDescription("The value of the field.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -43,8 +44,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("channel")
             .setDescription("The channel to post the details in.")
-            .setRequired(true),
-        ),
+            .setRequired(true)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -54,8 +55,8 @@ export default class RoomDetailCommand extends Command {
           option
             .setName("name")
             .setDescription("The name of the field to clear.")
-            .setRequired(false),
-        ),
+            .setRequired(false)
+        )
     );
   info: CommandInfo = {
     name: "rd",
@@ -248,7 +249,7 @@ export default class RoomDetailCommand extends Command {
         .setLabel("View Room Details")
         .setStyle(ButtonStyle.Secondary)
         .setEmoji("🔑")
-        .setCustomId("view_room_details:" + scrim.id),
+        .setCustomId("view_room_details:" + scrim.id)
     );
 
     const embed = new EmbedBuilder()

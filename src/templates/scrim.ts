@@ -26,5 +26,5 @@ const scrimTemplate = [
 ] as const;
 
 export const scrimTemplateMap = new Map(
-  scrimTemplate.map((template) => [template.value, template]),
+  scrimTemplate.map((template) => [template.value, template])
 );

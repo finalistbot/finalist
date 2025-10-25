@@ -1,10 +1,11 @@
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+
 import { Command } from "@/base/classes/command";
 import { botHasPermissions } from "@/checks/permissions";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";
 import { safeRunChecks } from "@/lib/utils";
 import { CommandInfo } from "@/types/command";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default class FillSlotsCommand extends Command {
   data = new SlashCommandBuilder()
@@ -14,11 +15,11 @@ export default class FillSlotsCommand extends Command {
       option
         .addChoices(
           { name: "Normal", value: "Normal" },
-          { name: "Random", value: "Random" },
+          { name: "Random", value: "Random" }
         )
         .setName("filling-method")
         .setDescription("The method to use for filling the slots")
-        .setRequired(true),
+        .setRequired(true)
     );
 
   info: CommandInfo = {
@@ -69,7 +70,7 @@ export default class FillSlotsCommand extends Command {
     });
     await this.client.scrimService.fillSlotList(
       scrim,
-      fillingMethod as "normal" | "random",
+      fillingMethod as "normal" | "random"
     );
     await interaction.editReply({
       content: `Finished filling slots using **${fillingMethod}** method.`,
