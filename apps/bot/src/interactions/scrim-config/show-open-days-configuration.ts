@@ -3,17 +3,14 @@ import {
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
-  CacheType,
-  Interaction,
 } from "discord.js";
 
-import { Scrim } from "@prisma/client";
+import { Scrim } from "@repo/db";
 
-import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { DAYS_OF_WEEK } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
-import { parseIdFromString, suppress } from "@/lib/utils";
+import { parseIdFromString } from "@/lib/utils";
 
 export default class OpenDaysConfiguration extends IdentityInteraction<"button"> {
   id = "open_days_config_show";

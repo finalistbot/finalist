@@ -1,6 +1,6 @@
 import { User } from "discord.js";
 
-import { ScrimPreset } from "@prisma/client";
+import { ScrimPreset } from "@repo/db";
 
 import { prisma } from "@/lib/prisma";
 

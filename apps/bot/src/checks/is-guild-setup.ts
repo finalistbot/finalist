@@ -1,6 +1,6 @@
 import { Guild } from "discord.js";
 
-import { GuildConfig } from "@prisma/client";
+import { GuildConfig } from "@repo/db";
 
 import { prisma } from "@/lib/prisma";
 

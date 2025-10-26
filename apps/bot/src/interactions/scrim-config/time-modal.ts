@@ -6,7 +6,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 
-import { Scrim } from "@prisma/client";
+import { Scrim } from "@repo/db";
 import * as dateFns from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { v4 as uuid4 } from "uuid";

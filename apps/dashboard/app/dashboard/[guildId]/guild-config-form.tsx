@@ -1,7 +1,7 @@
 "use client";
 
 import { upsertGuildConfig } from "@/actions/guild";
-import { GuildConfig } from "@prisma/client";
+import { GuildConfig } from "@repo/db";
 import { APIGuild, APIGuildChannel, APIRole } from "discord-api-types/v10";
 import React from "react";
 

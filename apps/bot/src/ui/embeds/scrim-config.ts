@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-import { Scrim } from "@prisma/client";
+import { Scrim } from "@repo/db";
 
 import { BracketClient } from "@/base/classes/client";
 import { BRAND_COLOR } from "@/lib/constants";

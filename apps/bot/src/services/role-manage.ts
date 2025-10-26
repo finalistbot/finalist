@@ -1,6 +1,6 @@
 import { Guild } from "discord.js";
 
-import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+import { AssignedSlot, RegisteredTeam, Scrim } from "@repo/db";
 
 import { ScrimService } from "./scrim";
 

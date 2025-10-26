@@ -1,6 +1,6 @@
 import { EmbedBuilder, TextChannel } from "discord.js";
 
-import { AssignedSlot, RegisteredTeam, Scrim, Team } from "@prisma/client";
+import { AssignedSlot, RegisteredTeam, Scrim } from "@repo/db";
 
 import { BracketClient } from "@/base/classes/client";
 import { prisma } from "@/lib/prisma";

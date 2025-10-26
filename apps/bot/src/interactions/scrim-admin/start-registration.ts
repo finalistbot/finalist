@@ -1,9 +1,8 @@
-import { ButtonInteraction, CacheType, Interaction } from "discord.js";
+import { ButtonInteraction } from "discord.js";
 
-import { Stage } from "@prisma/client";
+import { Stage } from "@repo/db";
 
 import { BracketError } from "@/base/classes/error";
-import { Event } from "@/base/classes/event";
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { isScrimAdmin } from "@/checks/scrim-admin";
 import { prisma } from "@/lib/prisma";

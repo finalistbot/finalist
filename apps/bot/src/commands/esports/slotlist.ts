@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { Scrim } from "@prisma/client";
+import { Scrim } from "@repo/db";
 import { stringify as csvStringify } from "csv-stringify/sync";
 import { table } from "table";
 

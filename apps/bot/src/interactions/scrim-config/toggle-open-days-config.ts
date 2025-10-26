@@ -5,7 +5,7 @@ import {
   ButtonStyle,
 } from "discord.js";
 
-import { Scrim } from "@prisma/client";
+import { Scrim } from "@repo/db";
 
 import { IdentityInteraction } from "@/base/classes/identity-interaction";
 import { DAYS_OF_WEEK } from "@/lib/constants";

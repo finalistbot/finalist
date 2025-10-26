@@ -6,7 +6,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 
-import { RegisteredTeam } from "@prisma/client";
+import { RegisteredTeam } from "@repo/db";
 import { v4 as uuid4 } from "uuid";
 
 import { IdentityInteraction } from "@/base/classes/identity-interaction";

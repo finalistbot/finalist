@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
 
-import { Team } from "@prisma/client";
+import { Team } from "@repo/db";
 
 import { BRAND_COLOR, MAX_TEAM_SIZE } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";

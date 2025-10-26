@@ -1,6 +1,6 @@
 import { Guild, User } from "discord.js";
 
-import { Stage, TeamRole } from "@prisma/client";
+import { Stage, TeamRole } from "@repo/db";
 
 import { ScrimService } from "./scrim";
 

@@ -5,7 +5,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { Scrim, Stage } from "@prisma/client";
+import { Scrim } from "@repo/db";
 
 import { Command } from "@/base/classes/command";
 import { botHasPermissions } from "@/checks/permissions";

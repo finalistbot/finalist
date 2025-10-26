@@ -6,7 +6,7 @@ import {
   TextChannel,
 } from "discord.js";
 
-import { RegisteredTeam, Scrim, Stage, Team } from "@prisma/client";
+import { RegisteredTeam, Scrim, Stage, Team } from "@repo/db";
 import * as dateFns from "date-fns";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 

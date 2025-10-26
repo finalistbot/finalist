@@ -5,7 +5,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { Stage } from "@prisma/client";
+import { Stage } from "@repo/db";
 
 import { Command } from "@/base/classes/command";
 import { BracketError } from "@/base/classes/error";
