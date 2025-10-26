@@ -1,0 +1,293 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pg_trgm]
+}
+
+model WebUser {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("web_user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      WebUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  WebUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+model GuildConfig {
+  id              String   @id @map("id")
+  adminRoleId     String?  @map("admin_role_id")
+  teamsPerCaptain Int      @default(1) @map("teams_per_captain")
+  timezone        String?  @map("timezone")
+  logoUrl         String?  @map("logo_url")
+  bannerUrl       String?  @map("banner_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("guild_config")
+}
+
+enum Stage {
+  IDLE
+  REGISTRATION
+  CLOSED
+  COMPLETED
+}
+
+enum AutoCleanType {
+  CHANNELS
+  ROLES
+}
+
+model User {
+  id                    String                 @id @map("id")
+  name                  String                 @map("name")
+  avatarUrl             String?                @map("avatar_url")
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  registeredTeamMembers RegisteredTeamMember[]
+  teamMembers           TeamMember[]
+  bannedUsers           BannedUser[]
+  reservedSlots         ReservedSlot[]
+
+  @@map("user")
+}
+
+model Scrim {
+  id                    Int       @id @default(autoincrement()) @map("id")
+  guildId               String    @map("guild_id")
+  name                  String    @map("name")
+  registrationStartTime DateTime  @map("registration_start_time") @db.Timestamptz(6)
+  registrationEndedTime DateTime? @map("registration_ended_time") @db.Timestamptz(6)
+  maxTeams              Int       @map("max_teams")
+  minPlayersPerTeam     Int       @map("min_players_per_team")
+  maxPlayersPerTeam     Int       @map("max_players_per_team")
+  maxSubstitutePerTeam  Int       @map("max_substitute_per_team")
+  autoSlotList          Boolean   @default(true) @map("auto_slot_list")
+
+  registrationChannelId String          @map("registration_channel_id")
+  logsChannelId         String          @map("logs_channel_id")
+  participantsChannelId String          @map("participants_channel_id")
+  participantRoleId     String?         @map("participant_role_id")
+  discordCategoryId     String          @map("discord_category_id")
+  adminChannelId        String          @map("admin_channel_id")
+  adminConfigMessageId  String?         @map("admin_config_message_id")
+  stage                 Stage           @default(IDLE) @map("stage")
+  autoCloseRegistration Boolean         @default(true) @map("auto_close_registration")
+  autocleanTypes        AutoCleanType[] @map("autoclean_types")
+  autocleanTime         DateTime?       @map("autoclean_time") @db.Timestamptz(6)
+  openDays              Int[]           @map("open_days")
+
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  assignedSlots   AssignedSlot[]
+  roomDetail      RoomDetail?
+  reservedSlots   ReservedSlot[]
+  registeredTeams RegisteredTeam[]
+
+  @@map("scrim")
+}
+
+model Team {
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String   @map("name")
+  code      String   @unique @map("code")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  banned    Boolean  @default(false) @map("banned")
+  banReason String?  @map("ban_reason")
+  guildId   String   @map("guild_id")
+  tag       String?  @map("tag")
+
+  teamMembers     TeamMember[]
+  registeredTeams RegisteredTeam[]
+
+  @@map("team")
+}
+
+enum TeamRole {
+  CAPTAIN
+  MEMBER
+  SUBSTITUTE
+}
+
+model TeamMember {
+  id         Int      @id @default(autoincrement()) @map("id")
+  teamId     Int      @map("team_id")
+  userId     String   @map("user_id")
+  role       TeamRole @default(MEMBER) @map("role")
+  ingameName String?  @map("ingame_name")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  position   Int      @default(0) @map("position")
+
+  user User @relation(fields: [userId], references: [id])
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@unique([teamId, position])
+  @@map("team_member")
+}
+
+// Snapshot of a team when they register for a scrim
+model RegisteredTeam {
+  id                    Int                    @id @default(autoincrement()) @map("id")
+  scrimId               Int                    @map("scrim_id")
+  teamId                Int                    @map("team_id")
+  name                  String                 @map("name")
+  messageId             String?                @map("message_id")
+  createdAt             DateTime               @default(now()) @map("created_at")
+  assignedSlots         AssignedSlot[]
+  registeredTeamMembers RegisteredTeamMember[]
+  team                  Team                   @relation(fields: [teamId], references: [id])
+  scrim                 Scrim                  @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@unique([scrimId, teamId])
+  @@map("registered_team")
+}
+
+// Snapshot of a team when they register for a scrim
+model RegisteredTeamMember {
+  id               Int      @id @default(autoincrement()) @map("id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  ingameName       String?  @map("ingame_name")
+  userId           String
+  registeredTeamId Int      @map("registered_team_id")
+  role             TeamRole @default(MEMBER) @map("role")
+  position         Int      @default(0) @map("position")
+
+  user           User           @relation(fields: [userId], references: [id])
+  registeredTeam RegisteredTeam @relation(fields: [registeredTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([registeredTeamId, position])
+  @@unique([registeredTeamId, userId])
+  @@map("registered_team_member")
+}
+
+model BannedUser {
+  id        Int      @id @default(autoincrement()) @map("id")
+  guildId   String   @map("guild_id")
+  userId    String   @map("user_id")
+  reason    String?  @map("reason")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([guildId, userId])
+  @@map("banned_user")
+}
+
+model AssignedSlot {
+  id               Int      @id @default(autoincrement()) @map("id")
+  scrimId          Int      @map("scrim_id")
+  slotNumber       Int      @map("slot_number")
+  messageId        String?  @map("message_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  registeredTeamId Int      @unique @map("registered_team_id")
+
+  registeredTeam RegisteredTeam @relation(fields: [registeredTeamId], references: [id], onDelete: Cascade)
+
+  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@unique([scrimId, slotNumber])
+  @@map("assigned_slot")
+}
+
+model ReservedSlot {
+  id         Int      @id @default(autoincrement()) @map("id")
+  userId     String   @map("user_id")
+  scrimId    Int      @map("scrim_id")
+  slotNumber Int      @map("slot_number")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id])
+  scrim Scrim @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@unique([scrimId, slotNumber])
+  @@map("reserved_slot")
+}
+
+model RoomDetail {
+  id        Int      @id @default(autoincrement()) @map("id")
+  scrimId   Int      @unique @map("scrim_id")
+  fields    Json     @map("fields") @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  scrim     Scrim    @relation(fields: [scrimId], references: [id], onDelete: Cascade)
+
+  @@map("room_detail")
+}
+
+model ScrimPreset {
+  id        Int      @id @default(autoincrement()) @map("id")
+  settings  Json     @map("settings") @db.JsonB
+  guildId   String   @map("guild_id")
+  name      String   @map("name")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([guildId, name])
+  @@map("scrim_preset")
+}

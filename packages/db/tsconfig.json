@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src/",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "nodenext",
+    "target": "esnext",
+    "lib": [
+      "esnext"
+    ],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": false,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "@/*": [
+        "*"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tsup.config.ts"
+  ]
+}
