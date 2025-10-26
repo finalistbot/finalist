@@ -1,9 +1,10 @@
 "use client";
 
-import { upsertGuildConfig } from "@/actions/guild";
 import { GuildConfig } from "@repo/db";
 import { APIGuild, APIGuildChannel, APIRole } from "discord-api-types/v10";
 import React from "react";
+
+import { upsertGuildConfig } from "@/actions/guild";
 
 export default function GuildConfigForm({
   guild,
@@ -19,10 +20,10 @@ export default function GuildConfigForm({
   console.log(guildConfig);
   console.log(roles);
   const filteredRoles = roles.filter(
-    (role) => role.name !== "@everyone" && !role.managed,
+    (role) => role.name !== "@everyone" && !role.managed
   );
   const [adminRoleId, setAdminRoleId] = React.useState(
-    guildConfig?.adminRoleId || "",
+    guildConfig?.adminRoleId || ""
   );
   return (
     <form

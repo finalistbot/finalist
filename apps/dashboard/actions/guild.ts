@@ -1,17 +1,18 @@
 "use server";
 
+import {
+  APIGuild,
+  type APIGuildChannel,
+  type APIRole,
+  Routes,
+} from "discord-api-types/v10";
+
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { discordRest } from "@/lib/discord";
 import { requireGuildAdmin } from "@/lib/guild";
 import { redis } from "@/lib/redis";
 import { getUserToken } from "@/lib/user";
-import {
-  APIGuild,
-  Routes,
-  type APIGuildChannel,
-  type APIRole,
-} from "discord-api-types/v10";
 
 const GUILD_DATA_CACHE_TTL = 300; // 5 minutes in seconds
 
@@ -19,7 +20,7 @@ async function getCached<T>(
   key: string,
   ttl: number,
   fetcher: () => Promise<T>,
-  refresh = false,
+  refresh = false
 ): Promise<T> {
   if (!refresh) {
     const cached = await redis.get(key);
@@ -35,7 +36,7 @@ async function getCached<T>(
 
 export async function getGuildChannels(
   guildId: string,
-  refresh = false,
+  refresh = false
 ): Promise<APIGuildChannel[]> {
   const CACHE_KEY = `guild:${guildId}:channels`;
 
@@ -50,17 +51,17 @@ export async function getGuildChannels(
         return channels as APIGuildChannel[];
       } catch (error) {
         throw new Error(
-          `Failed to fetch guild channels: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to fetch guild channels: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     },
-    refresh,
+    refresh
   );
 }
 
 export async function getGuildRoles(
   guildId: string,
-  refresh = false,
+  refresh = false
 ): Promise<APIRole[]> {
   const CACHE_KEY = `guild:${guildId}:roles`;
 
@@ -75,11 +76,11 @@ export async function getGuildRoles(
         return roles as APIRole[];
       } catch (error) {
         throw new Error(
-          `Failed to fetch guild roles: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to fetch guild roles: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     },
-    refresh,
+    refresh
   );
 }
 
@@ -104,7 +105,7 @@ export async function getUserGuilds(): Promise<APIGuild[]> {
       return userGuilds as APIGuild[];
     } catch (error) {
       throw new Error(
-        `Failed to fetch user guilds: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to fetch user guilds: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   });

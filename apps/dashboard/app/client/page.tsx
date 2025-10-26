@@ -1,7 +1,7 @@
 "use client";
 
-import { getUserToken } from "@/lib/user";
 import { authClient } from "@/lib/auth-client";
+import { getUserToken } from "@/lib/user";
 
 export default function Page() {
   const session = authClient.useSession();

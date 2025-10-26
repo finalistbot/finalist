@@ -1,7 +1,8 @@
-import { getUserGuilds } from "@/actions/guild";
-import { auth } from "@/lib/auth";
 import { APIGuild } from "discord-api-types/v10";
 import { headers } from "next/headers";
+
+import { getUserGuilds } from "@/actions/guild";
+import { auth } from "@/lib/auth";
 
 export default async function Home() {
   const session = await auth.api.getSession({

@@ -1,10 +1,11 @@
+import GuildConfigForm from "./guild-config-form";
+
 import {
   getGuild,
   getGuildChannels,
   getGuildConfig,
   getGuildRoles,
 } from "@/actions/guild";
-import GuildConfigForm from "./guild-config-form";
 
 export default async function Page({
   params,
